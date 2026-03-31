@@ -126,7 +126,6 @@ function AdminNavigation({
 
           <ul className="space-y-1">
             {section.items.map((item) => {
-              const Icon = item.icon;
               const isCurrent = isCurrentItem(item, currentPath);
 
               return (
@@ -142,11 +141,10 @@ function AdminNavigation({
                         : "text-text-secondary hover:border-border-subtle hover:bg-elevated hover:text-foreground border-transparent",
                     )}
                   >
-                    {Icon ? (
-                      <Icon
-                        className="mt-0.5 size-4 shrink-0"
-                        aria-hidden="true"
-                      />
+                    {item.icon ? (
+                      <span className="mt-0.5 size-4 shrink-0 [&_svg]:size-4">
+                        {item.icon}
+                      </span>
                     ) : null}
 
                     <span className="min-w-0 flex-1">

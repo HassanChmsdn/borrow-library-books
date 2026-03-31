@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { BookCopy, PackageOpen, ScrollText, Users } from "lucide-react";
 
 import {
   AdminShell,
@@ -16,28 +17,32 @@ const adminNavigationSections = [
       {
         href: "/admin",
         label: "Overview",
-        description: "Preview the reusable admin layout shell.",
+        description: "Library operations summary and daily system health.",
+        icon: <ScrollText aria-hidden="true" />,
         matchStrategy: "exact" as const,
       },
       {
-        href: "/admin#navigation",
-        label: "Navigation",
-        description: "Anchor preview for sidebar and drawer behavior.",
+        href: "/admin#borrow-requests",
+        label: "Borrow Requests",
+        description: "Review holds, renewals, and pending pickup reminders.",
+        icon: <BookCopy aria-hidden="true" />,
       },
       {
-        href: "/admin#content-canvas",
-        label: "Content Canvas",
-        description: "Review spacing, wrappers, and card rhythm.",
+        href: "/admin#inventory",
+        label: "Inventory",
+        description: "Track collection health and low-stock signals.",
+        icon: <PackageOpen aria-hidden="true" />,
       },
     ],
   },
   {
-    title: "Shell Regions",
+    title: "Operations",
     items: [
       {
-        href: "/admin#action-surface",
-        label: "Action Surface",
-        description: "Preview the shared page action bar region.",
+        href: "/admin#members",
+        label: "Members",
+        description: "Monitor engagement patterns across branches and plans.",
+        icon: <Users aria-hidden="true" />,
       },
     ],
   },
@@ -63,15 +68,15 @@ export default function AdminSectionLayout({
       topHeader={
         <AdminTopHeader
           eyebrow="Admin Shell"
-          title="Operations workspace preview"
-          description="Shared navigation, sticky header, and content framing are now mounted at the route-group layout level for admin routes."
+          title="Library Operations"
+          description="Shared navigation, sticky header, and content framing now host static admin modules that can be replaced with real data later."
           actions={
             <>
               <Button asChild size="sm" variant="outline">
-                <Link href="/">Public Preview</Link>
+                <Link href="/">Reader Experience</Link>
               </Button>
               <Button size="sm" type="button" variant="secondary">
-                Layout Actions
+                Review today
               </Button>
             </>
           }
@@ -80,16 +85,16 @@ export default function AdminSectionLayout({
       pageActionBar={
         <PageActionBar
           id="action-surface"
-          eyebrow="Reusable Region"
-          title="Action bar preview"
+          eyebrow="Daily Actions"
+          title="Operations action bar"
           description="Use this surface for cross-page controls, status context, and task actions once admin workflows are implemented."
           actions={
             <>
               <Button size="sm" type="button">
-                Primary Action
+                Add book
               </Button>
               <Button size="sm" type="button" variant="outline">
-                Secondary Action
+                Export report
               </Button>
             </>
           }
@@ -98,16 +103,16 @@ export default function AdminSectionLayout({
       userSlot={
         <div className="bg-secondary rounded-xl px-3 py-3">
           <p className="text-label text-primary font-medium tracking-[0.18em] uppercase">
-            Preview User
+            Shift lead
           </p>
           <p className="text-body-sm text-text-secondary mt-1">
-            Shared user summary slot for the admin shell.
+            Samir Chahine is covering catalog operations this afternoon.
           </p>
         </div>
       }
       footerSlot={
         <p className="text-caption text-text-tertiary">
-          Layout-only scaffold. No admin business logic is mounted yet.
+          Static module scaffold. No admin business logic is mounted yet.
         </p>
       }
     >

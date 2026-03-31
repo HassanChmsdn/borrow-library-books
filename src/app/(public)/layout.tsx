@@ -7,16 +7,16 @@ import { Button } from "@/components/ui/button";
 const publicNavigationItems = [
   {
     href: "/",
-    label: "Overview",
+    label: "Browse",
     matchStrategy: "exact" as const,
   },
   {
-    href: "/#layout-regions",
-    label: "Layout Regions",
+    href: "/#my-borrowings",
+    label: "My Borrowings",
   },
   {
-    href: "/#responsive-behavior",
-    label: "Responsive Behavior",
+    href: "/#profile",
+    label: "Profile",
   },
 ];
 
@@ -40,10 +40,10 @@ export default function PublicSectionLayout({
       utilitySlot={
         <>
           <Button asChild size="sm" variant="outline">
-            <Link href="/#token-note">View Notes</Link>
+            <Link href="/#browse">Browse</Link>
           </Button>
           <Button asChild size="sm">
-            <Link href="/admin">Admin Preview</Link>
+            <Link href="/admin">Admin</Link>
           </Button>
         </>
       }
