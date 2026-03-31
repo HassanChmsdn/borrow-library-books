@@ -47,6 +47,21 @@ Set the smallest layout first, then scale up only where the component changes ma
 
 Keep the token names stable across breakpoints. Change the utility usage, not the design language.
 
+## Layout Shells
+
+Use the reusable shell components in `@/components/layout` to keep page composition aligned with the Figma-derived proportions.
+
+- `ShellContainer`: constrains public shell content to the responsive max width token.
+- `ShellBrand`: shared brand treatment for public and admin surfaces.
+- `PublicShell` and `PublicTopNavigation`: mobile-first top navigation with a responsive content container.
+- `PageHeader`: shared public-facing header pattern for title, description, and actions.
+- `AdminShell`: mobile drawer plus desktop sidebar with a sticky top header.
+- `AdminTopHeader`: compact header block for dashboard titles and actions.
+- `AdminContentWrapper`: responsive content frame for dashboard pages.
+- `PageActionBar`: compact action surface for filters, bulk actions, or status summaries.
+
+Favor the shell props and slot areas before creating page-specific wrappers. That keeps layout behavior centralized while allowing feature modules to supply their own content.
+
 ## Avoid
 
 - Raw hex colors in component classes
