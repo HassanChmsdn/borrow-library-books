@@ -1,19 +1,14 @@
 "use client";
 
 import { useDeferredValue, useState } from "react";
+import Link from "next/link";
 import { BookOpenText, Search, SlidersHorizontal } from "lucide-react";
 
 import { EmptyState, LoadingSkeleton } from "@/components/feedback";
-import {
-  BookCard,
-  type AvailabilityBadgeTone,
-  type BookCardStatusTone,
-  type FeeBadgeTone,
-} from "@/components/library";
+import { BookCard } from "@/components/library";
 import { PageHeader } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
 
 import {
   allBooksCatalog,
@@ -22,106 +17,16 @@ import {
   type AllBooksCategory,
   type AllBooksItem,
   type AllBooksSortValue,
-  type BookCoverTone,
 } from "./all-books-data";
-
-const coverToneClasses: Record<
-  BookCoverTone,
-  { accent: string; body: string; text: string; meta: string }
-> = {
-  amber: {
-    accent: "bg-brand-500",
-    body: "bg-brand-100",
-    text: "text-brand-900",
-    meta: "text-brand-800/80",
-  },
-  brand: {
-    accent: "bg-brand-700",
-    body: "bg-brand-200",
-    text: "text-brand-900",
-    meta: "text-brand-800/80",
-  },
-  forest: {
-    accent: "bg-success",
-    body: "bg-success-surface",
-    text: "text-success",
-    meta: "text-success/80",
-  },
-  ocean: {
-    accent: "bg-info",
-    body: "bg-info-surface",
-    text: "text-info",
-    meta: "text-info/80",
-  },
-  rose: {
-    accent: "bg-danger",
-    body: "bg-danger-surface",
-    text: "text-danger",
-    meta: "text-danger/80",
-  },
-  stone: {
-    accent: "bg-stone-700",
-    body: "bg-stone-100",
-    text: "text-stone-900",
-    meta: "text-stone-700/80",
-  },
-};
-
-function formatFeeLabel(feeCents: number) {
-  if (feeCents === 0) {
-    return "Free";
-  }
-
-  return `$${(feeCents / 100).toFixed(2)} cash`;
-}
-
-function getFeeTone(feeCents: number): FeeBadgeTone {
-  return feeCents === 0 ? "free" : "paid";
-}
-
-function getAvailabilityTone(book: AllBooksItem): AvailabilityBadgeTone {
-  if (book.availableCopies === 0) {
-    return "unavailable";
-  }
-
-  if (book.availableCopies / book.totalCopies <= 0.34) {
-    return "limited";
-  }
-
-  return "available";
-}
-
-function getStatusLabel(book: AllBooksItem) {
-  if (book.feeCents === 0) {
-    return "Free pick";
-  }
-
-  if (book.availableCopies === 0) {
-    return "Waitlist";
-  }
-
-  if (book.availableCopies === 1) {
-    return "Low stock";
-  }
-
-  return "Available";
-}
-
-function getStatusTone(book: AllBooksItem): BookCardStatusTone {
-  if (book.availableCopies === 0) {
-    return "danger";
-  }
-
-  if (book.availableCopies === 1) {
-    return "warning";
-  }
-
-  return book.feeCents === 0 ? "success" : "info";
-}
-
-function formatAvailabilityLabel(book: AllBooksItem) {
-  return `${book.availableCopies}/${book.totalCopies} available`;
-}
+import { BookCoverArt } from "./book-cover-art";
+import {
+  formatBookAvailabilityLabel,
+  formatBookFeeLabel,
+  getBookAvailabilityTone,
+  getBookFeeTone,
+  getBookStatusLabel,
+  getBookStatusTone,
+} from "./book-presentation";
 
 function sortBooks(
   books: ReadonlyArray<AllBooksItem>,
@@ -152,52 +57,6 @@ function sortBooks(
   }
 
   return nextBooks;
-}
-
-function BookCover({
-  author,
-  coverLabel,
-  title,
-  tone,
-}: {
-  author: string;
-  coverLabel: string;
-  title: string;
-  tone: BookCoverTone;
-}) {
-  const coverTone = coverToneClasses[tone];
-
-  return (
-    <div
-      className={cn(
-        "relative aspect-[4/5] overflow-hidden rounded-2xl border border-black/5 p-4 shadow-xs",
-        coverTone.body,
-      )}
-    >
-      <div className={cn("absolute inset-y-0 left-0 w-3", coverTone.accent)} />
-      <div className="flex h-full flex-col justify-between pl-4">
-        <p
-          className={cn(
-            "text-caption font-medium tracking-[0.18em] uppercase",
-            coverTone.meta,
-          )}
-        >
-          {coverLabel}
-        </p>
-        <div className="space-y-2">
-          <h3
-            className={cn(
-              "text-base leading-snug font-semibold text-balance",
-              coverTone.text,
-            )}
-          >
-            {title}
-          </h3>
-          <p className={cn("text-caption", coverTone.meta)}>{author}</p>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 function AllBooksModule() {
@@ -326,22 +185,27 @@ function AllBooksModule() {
             {filteredBooks.map((book) => (
               <BookCard
                 key={book.id}
+                action={
+                  <Button asChild size="sm" variant="outline">
+                    <Link href={`/books/${book.id}`}>Details</Link>
+                  </Button>
+                }
                 author={book.author}
-                availabilityLabel={formatAvailabilityLabel(book)}
-                availabilityTone={getAvailabilityTone(book)}
+                availabilityLabel={formatBookAvailabilityLabel(book)}
+                availabilityTone={getBookAvailabilityTone(book)}
                 category={book.category}
                 cover={
-                  <BookCover
+                  <BookCoverArt
                     author={book.author}
                     coverLabel={book.coverLabel}
                     title={book.title}
                     tone={book.coverTone}
                   />
                 }
-                feeLabel={formatFeeLabel(book.feeCents)}
-                feeTone={getFeeTone(book.feeCents)}
-                statusLabel={getStatusLabel(book)}
-                statusTone={getStatusTone(book)}
+                feeLabel={formatBookFeeLabel(book.feeCents)}
+                feeTone={getBookFeeTone(book.feeCents)}
+                statusLabel={getBookStatusLabel(book)}
+                statusTone={getBookStatusTone(book)}
                 title={book.title}
               />
             ))}
