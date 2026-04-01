@@ -1,3 +1,14 @@
+import {
+  AdminTable,
+  AdminTableBody,
+  AdminTableCell,
+  AdminTableHead,
+  AdminTableHeader,
+  AdminTableRow,
+  KpiCard,
+} from "@/components/admin";
+import { EmptyState } from "@/components/feedback";
+import { BorrowStatusBadge } from "@/components/library";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,6 +31,18 @@ const statusToneClasses = {
   warning: "border-warning-border bg-warning-surface text-warning",
   danger: "border-danger-border bg-danger-surface text-danger",
   info: "border-info-border bg-info-surface text-info",
+} as const;
+
+const queueToneMap = {
+  Eligible: "success",
+  "Needs assignment": "warning",
+  "Send reminder": "info",
+} as const;
+
+const memberSignalToneMap = {
+  Healthy: "success",
+  Stable: "info",
+  Opportunity: "warning",
 } as const;
 
 function AdminOverviewModule() {
@@ -54,26 +77,13 @@ function AdminOverviewModule() {
             const Icon = metric.icon;
 
             return (
-              <Card key={metric.label}>
-                <CardHeader className="gap-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-                      {metric.label}
-                    </p>
-                    <span className="bg-secondary text-primary flex size-10 items-center justify-center rounded-xl">
-                      <Icon className="size-4" aria-hidden="true" />
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-title-lg text-foreground font-semibold">
-                      {metric.value}
-                    </p>
-                    <p className="text-body-sm text-text-secondary mt-1">
-                      {metric.supportingText}
-                    </p>
-                  </div>
-                </CardHeader>
-              </Card>
+              <KpiCard
+                key={metric.label}
+                icon={<Icon aria-hidden="true" className="size-4" />}
+                label={metric.label}
+                supportingText={metric.supportingText}
+                value={metric.value}
+              />
             );
           })}
         </div>
@@ -92,30 +102,51 @@ function AdminOverviewModule() {
               request workflows without changing the admin shell.
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-3">
-            {borrowRequestQueue.map((item) => (
-              <div
-                key={item.title}
-                className="border-border-subtle bg-elevated rounded-xl border px-4 py-4"
-              >
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <p className="text-body text-foreground font-medium">
-                      {item.title}
-                    </p>
-                    <p className="text-body-sm text-text-secondary mt-1">
-                      {item.description}
-                    </p>
-                  </div>
-                  <span className="bg-secondary text-primary text-caption rounded-pill inline-flex px-2.5 py-1 font-medium tracking-[0.18em] uppercase">
-                    {item.status}
-                  </span>
-                </div>
-                <p className="text-caption text-text-tertiary mt-3">
-                  {item.meta}
-                </p>
-              </div>
-            ))}
+          <CardContent>
+            {borrowRequestQueue.length > 0 ? (
+              <AdminTable>
+                <AdminTableHeader>
+                  <AdminTableRow>
+                    <AdminTableHead>Request</AdminTableHead>
+                    <AdminTableHead>Status</AdminTableHead>
+                    <AdminTableHead>Timing</AdminTableHead>
+                  </AdminTableRow>
+                </AdminTableHeader>
+                <AdminTableBody>
+                  {borrowRequestQueue.map((item) => (
+                    <AdminTableRow key={item.title}>
+                      <AdminTableCell>
+                        <p className="text-body text-foreground font-medium">
+                          {item.title}
+                        </p>
+                        <p className="text-body-sm text-text-secondary mt-1">
+                          {item.description}
+                        </p>
+                      </AdminTableCell>
+                      <AdminTableCell>
+                        <BorrowStatusBadge
+                          label={item.status}
+                          tone={
+                            queueToneMap[
+                              item.status as keyof typeof queueToneMap
+                            ]
+                          }
+                        />
+                      </AdminTableCell>
+                      <AdminTableCell className="text-body-sm text-text-secondary">
+                        {item.meta}
+                      </AdminTableCell>
+                    </AdminTableRow>
+                  ))}
+                </AdminTableBody>
+              </AdminTable>
+            ) : (
+              <EmptyState
+                description="Pending borrow requests can render here once the queue is connected."
+                size="sm"
+                title="No borrow requests yet"
+              />
+            )}
           </CardContent>
         </Card>
 
@@ -210,28 +241,51 @@ function AdminOverviewModule() {
               reminders, and branch planning tools.
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-3 md:grid-cols-3">
-            {memberSignals.map((item) => (
-              <div
-                key={item.title}
-                className="border-border-subtle bg-elevated rounded-xl border px-4 py-4"
-              >
-                <p className="text-body text-foreground font-medium">
-                  {item.title}
-                </p>
-                <p className="text-body-sm text-text-secondary mt-2">
-                  {item.description}
-                </p>
-                <div className="mt-4 flex items-center justify-between gap-3">
-                  <span className="text-caption text-text-tertiary">
-                    {item.meta}
-                  </span>
-                  <span className="bg-muted text-text-secondary text-caption rounded-pill inline-flex px-2.5 py-1 font-medium tracking-[0.18em] uppercase">
-                    {item.status}
-                  </span>
-                </div>
-              </div>
-            ))}
+          <CardContent>
+            {memberSignals.length > 0 ? (
+              <AdminTable>
+                <AdminTableHeader>
+                  <AdminTableRow>
+                    <AdminTableHead>Signal</AdminTableHead>
+                    <AdminTableHead>Context</AdminTableHead>
+                    <AdminTableHead>Status</AdminTableHead>
+                  </AdminTableRow>
+                </AdminTableHeader>
+                <AdminTableBody>
+                  {memberSignals.map((item) => (
+                    <AdminTableRow key={item.title}>
+                      <AdminTableCell>
+                        <p className="text-body text-foreground font-medium">
+                          {item.title}
+                        </p>
+                        <p className="text-body-sm text-text-secondary mt-1">
+                          {item.description}
+                        </p>
+                      </AdminTableCell>
+                      <AdminTableCell className="text-body-sm text-text-secondary">
+                        {item.meta}
+                      </AdminTableCell>
+                      <AdminTableCell>
+                        <BorrowStatusBadge
+                          label={item.status}
+                          tone={
+                            memberSignalToneMap[
+                              item.status as keyof typeof memberSignalToneMap
+                            ]
+                          }
+                        />
+                      </AdminTableCell>
+                    </AdminTableRow>
+                  ))}
+                </AdminTableBody>
+              </AdminTable>
+            ) : (
+              <EmptyState
+                description="Member engagement signals can render here once branch activity is connected."
+                size="sm"
+                title="No member signals yet"
+              />
+            )}
           </CardContent>
         </Card>
       </section>

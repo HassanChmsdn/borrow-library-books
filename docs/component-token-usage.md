@@ -62,6 +62,16 @@ Use the reusable shell components in `@/components/layout` to keep page composit
 
 Favor the shell props and slot areas before creating page-specific wrappers. That keeps layout behavior centralized while allowing feature modules to supply their own content.
 
+## Reusable Feature Components
+
+The reusable mobile-first components built from the Figma-derived patterns live in focused component groups:
+
+- `@/components/library`: `BookCard`, `FeeBadge`, `AvailabilityBadge`, `BorrowDurationSelector`, `BorrowStatusBadge`
+- `@/components/admin`: `KpiCard`, `AdminTable` and its table subcomponents
+- `@/components/feedback`: `EmptyState`, `LoadingSkeleton`
+
+Use these before writing module-local markup when the surface matches an existing catalog, status, dashboard, or placeholder pattern.
+
 ## Avoid
 
 - Raw hex colors in component classes

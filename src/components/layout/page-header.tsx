@@ -28,7 +28,7 @@ function PageHeader({
       {...props}
     >
       <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-        <div className="max-w-[var(--layout-reading-max-width)] space-y-3">
+        <div className="max-w-(--layout-reading-max-width) space-y-3">
           {eyebrow ? (
             <p className="text-caption text-text-tertiary font-medium tracking-[0.24em] uppercase">
               {eyebrow}
