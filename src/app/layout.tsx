@@ -5,6 +5,7 @@ import "./globals.css";
 const inter = Inter({
   variable: "--font-body",
   subsets: ["latin"],
+  preload: false,
 });
 
 const playfairDisplay = Playfair_Display({
@@ -16,6 +17,7 @@ const playfairDisplay = Playfair_Display({
 const geistMono = Geist_Mono({
   variable: "--font-code",
   subsets: ["latin"],
+  preload: false,
 });
 
 export const metadata: Metadata = {

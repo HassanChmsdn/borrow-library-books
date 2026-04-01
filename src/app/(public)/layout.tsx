@@ -21,6 +21,11 @@ const publicNavigationItems = [
     label: "My Borrowings",
     matchStrategy: "exact" as const,
   },
+  {
+    href: "/profile",
+    label: "Profile",
+    matchStrategy: "exact" as const,
+  },
 ];
 
 export default function PublicSectionLayout({
