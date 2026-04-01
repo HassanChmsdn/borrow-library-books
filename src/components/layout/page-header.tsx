@@ -2,6 +2,10 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+const pageHeaderContentStyle = {
+  maxWidth: "var(--layout-reading-max-width)",
+} satisfies React.CSSProperties;
+
 interface PageHeaderProps extends Omit<
   React.ComponentProps<"header">,
   "title"
@@ -28,7 +32,7 @@ function PageHeader({
       {...props}
     >
       <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-        <div className="max-w-(--layout-reading-max-width) space-y-3">
+        <div className="space-y-3" style={pageHeaderContentStyle}>
           {eyebrow ? (
             <p className="text-caption text-text-tertiary font-medium tracking-[0.24em] uppercase">
               {eyebrow}

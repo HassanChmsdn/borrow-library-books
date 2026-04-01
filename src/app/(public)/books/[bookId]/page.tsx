@@ -4,7 +4,13 @@ import {
 } from "@/modules/catalog/all-books-data";
 import { BookDetailsEmptyState, BookDetailsModule } from "@/modules/catalog";
 
-export async function generateMetadata(props: PageProps<"/books/[bookId]">) {
+type BookDetailsPageProps = {
+  params: Promise<{
+    bookId: string;
+  }>;
+};
+
+export async function generateMetadata(props: BookDetailsPageProps) {
   const { bookId } = await props.params;
   const book = getAllBooksItemById(bookId);
 
@@ -17,9 +23,7 @@ export function generateStaticParams() {
   return allBooksCatalog.map((book) => ({ bookId: book.id }));
 }
 
-export default async function BookDetailsPage(
-  props: PageProps<"/books/[bookId]">,
-) {
+export default async function BookDetailsPage(props: BookDetailsPageProps) {
   const { bookId } = await props.params;
   const book = getAllBooksItemById(bookId);
 

@@ -289,7 +289,10 @@ function BookDetailsLoadingState() {
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(18rem,22rem)] xl:items-start">
         <div className="grid gap-5 lg:grid-cols-[minmax(14rem,18rem)_minmax(0,1fr)] lg:items-start">
           <div className="mx-auto w-full max-w-sm lg:mx-0">
-            <div className="rounded-card border-border-subtle bg-card aspect-4/5 border p-4 shadow-xs" />
+            <div
+              className="rounded-card border-border-subtle bg-card border p-4 shadow-xs"
+              style={{ aspectRatio: "4 / 5" }}
+            />
           </div>
 
           <div className="grid gap-5">

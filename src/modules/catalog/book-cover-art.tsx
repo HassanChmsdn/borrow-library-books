@@ -4,6 +4,10 @@ import { cn } from "@/lib/utils";
 
 import type { BookCoverTone } from "./all-books-data";
 
+const bookCoverAspectRatioStyle = {
+  aspectRatio: "4 / 5",
+} satisfies ComponentProps<"div">["style"];
+
 const coverToneClasses: Record<
   BookCoverTone,
   { accent: string; body: string; text: string; meta: string }
@@ -70,9 +74,10 @@ function BookCoverArt({
       className={cn(
         "relative overflow-hidden rounded-2xl border border-black/5 shadow-xs",
         coverTone.body,
-        size === "detail" ? "aspect-4/5 p-5 sm:p-6" : "aspect-4/5 p-4",
+        size === "detail" ? "p-5 sm:p-6" : "p-4",
         className,
       )}
+      style={bookCoverAspectRatioStyle}
       {...props}
     >
       <div className={cn("absolute inset-y-0 left-0 w-3", coverTone.accent)} />

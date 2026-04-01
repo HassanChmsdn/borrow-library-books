@@ -16,6 +16,11 @@ const publicNavigationItems = [
     badge: "12",
     matchStrategy: "exact" as const,
   },
+  {
+    href: "/borrowings",
+    label: "My Borrowings",
+    matchStrategy: "exact" as const,
+  },
 ];
 
 export default function PublicSectionLayout({

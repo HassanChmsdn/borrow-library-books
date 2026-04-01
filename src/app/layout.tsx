@@ -37,7 +37,10 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${playfairDisplay.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="bg-background text-foreground min-h-full font-sans">
+      <body
+        suppressHydrationWarning
+        className="bg-background text-foreground min-h-full font-sans"
+      >
         {children}
       </body>
     </html>
