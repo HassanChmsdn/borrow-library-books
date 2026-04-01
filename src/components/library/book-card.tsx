@@ -43,6 +43,7 @@ interface BookCardProps {
   availabilityTone?: AvailabilityBadgeTone;
   category: string;
   className?: string;
+  cover?: React.ReactNode;
   feeLabel?: string;
   feeTone?: FeeBadgeTone;
   statusLabel?: string;
@@ -57,6 +58,7 @@ function BookCard({
   availabilityTone = "neutral",
   category,
   className,
+  cover,
   feeLabel,
   feeTone = "paid",
   statusLabel,
@@ -65,6 +67,12 @@ function BookCard({
 }: BookCardProps) {
   return (
     <Card className={cn("overflow-hidden", className)}>
+      {cover ? (
+        <div className="border-border-subtle bg-elevated border-b p-4 sm:p-5">
+          {cover}
+        </div>
+      ) : null}
+
       <CardHeader className="gap-4">
         {statusLabel || feeLabel ? (
           <div className="flex items-start justify-between gap-3">
@@ -73,7 +81,7 @@ function BookCard({
                 {statusLabel}
               </span>
             ) : (
-              <span />
+              <span className="sr-only">Book fee</span>
             )}
             {feeLabel ? <FeeBadge label={feeLabel} tone={feeTone} /> : null}
           </div>

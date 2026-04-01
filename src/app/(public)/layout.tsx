@@ -7,16 +7,14 @@ import { Button } from "@/components/ui/button";
 const publicNavigationItems = [
   {
     href: "/",
-    label: "Browse",
+    label: "Overview",
     matchStrategy: "exact" as const,
   },
   {
-    href: "/#my-borrowings",
-    label: "My Borrowings",
-  },
-  {
-    href: "/#profile",
-    label: "Profile",
+    href: "/books",
+    label: "All Books",
+    badge: "12",
+    matchStrategy: "exact" as const,
   },
 ];
 
@@ -36,11 +34,10 @@ export default function PublicSectionLayout({
         />
       }
       navigationItems={publicNavigationItems}
-      currentPath="/"
       utilitySlot={
         <>
           <Button asChild size="sm" variant="outline">
-            <Link href="/#browse">Browse</Link>
+            <Link href="/books">Browse Books</Link>
           </Button>
           <Button asChild size="sm">
             <Link href="/admin">Admin</Link>

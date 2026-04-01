@@ -1,5 +1,8 @@
+"use client";
+
 import * as React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 
@@ -42,6 +45,9 @@ function PublicTopNavigation({
   className,
   ...props
 }: PublicTopNavigationProps) {
+  const pathname = usePathname();
+  const activePath = currentPath ?? pathname;
+
   return (
     <header
       data-slot="public-top-navigation"
@@ -68,7 +74,7 @@ function PublicTopNavigation({
           >
             <ul className="flex min-w-max items-center gap-2">
               {navigationItems.map((item) => {
-                const isCurrent = isCurrentItem(item, currentPath);
+                const isCurrent = isCurrentItem(item, activePath);
 
                 return (
                   <li key={item.href}>
