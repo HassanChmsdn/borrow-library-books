@@ -1,14 +1,17 @@
 import {
+  AdminEmptyState,
+  AdminMetricStrip,
+  AdminRowActions,
+  AdminDetailSection,
+  AdminStatusBadge,
   AdminTable,
   AdminTableBody,
   AdminTableCell,
   AdminTableHead,
   AdminTableHeader,
   AdminTableRow,
-  KpiCard,
+  AdminUserAvatar,
 } from "@/components/admin";
-import { EmptyState } from "@/components/feedback";
-import { BorrowStatusBadge } from "@/components/library";
 import { Card, CardContent } from "@/components/ui/card";
 
 import type { AdminUserRecord, AdminUsersMetric } from "./types";
@@ -17,21 +20,18 @@ function AdminUsersMetricGrid({
   metrics,
 }: Readonly<{ metrics: ReadonlyArray<AdminUsersMetric> }>) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {metrics.map((metric) => {
+    <AdminMetricStrip
+      items={metrics.map((metric) => {
         const Icon = metric.icon;
 
-        return (
-          <KpiCard
-            key={metric.label}
-            icon={<Icon aria-hidden="true" className="size-4" />}
-            label={metric.label}
-            supportingText={metric.supportingText}
-            value={metric.value}
-          />
-        );
+        return {
+          icon: <Icon aria-hidden="true" className="size-4" />,
+          label: metric.label,
+          supportingText: metric.supportingText,
+          value: metric.value,
+        };
       })}
-    </div>
+    />
   );
 }
 
@@ -44,50 +44,48 @@ function AdminUsersMobileList({
         <Card key={record.id}>
           <CardContent className="grid gap-4 p-4 sm:p-5">
             <div className="flex items-start justify-between gap-3">
-              <div className="space-y-1">
-                <p className="text-title-sm text-foreground font-semibold">
-                  {record.name}
-                </p>
-                <p className="text-body-sm text-text-secondary">
-                  {record.email}
-                </p>
-                <p className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-                  {record.plan} · {record.branch}
-                </p>
-              </div>
-              <BorrowStatusBadge
+              <AdminUserAvatar
+                name={record.name}
+                subtitle={record.email}
+                meta={`${record.plan} · ${record.branch}`}
+              />
+              <AdminStatusBadge
                 label={record.statusLabel}
                 tone={record.statusTone}
               />
             </div>
 
-            <div className="grid gap-3 rounded-2xl border border-dashed border-black/5 p-4">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-body-sm text-text-secondary">
-                  Borrowing
-                </span>
-                <span className="text-body-sm text-foreground font-medium">
-                  {record.activeLoans}
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-body-sm text-text-secondary">
-                  Balance
-                </span>
-                <span className="text-body-sm text-foreground font-medium">
-                  {record.balanceLabel}
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-body-sm text-text-secondary">
-                  Payment
-                </span>
-                <BorrowStatusBadge
-                  label={record.paymentLabel}
-                  tone={record.paymentTone}
-                />
-              </div>
-            </div>
+            <AdminDetailSection
+              items={[
+                { label: "Borrowing", value: record.activeLoans },
+                { label: "Balance", value: record.balanceLabel },
+                {
+                  label: "Payment",
+                  value: (
+                    <AdminStatusBadge
+                      label={record.paymentLabel}
+                      tone={record.paymentTone}
+                    />
+                  ),
+                },
+              ]}
+            />
+
+            <AdminRowActions
+              align="end"
+              actions={[
+                {
+                  label: "Pause",
+                  variant: "ghost",
+                  confirm: {
+                    title: `Pause ${record.name}'s access?`,
+                    description:
+                      "This mock confirmation keeps the admin member workflow ready for future policy actions.",
+                    confirmLabel: "Pause access",
+                  },
+                },
+              ]}
+            />
           </CardContent>
         </Card>
       ))}
@@ -108,23 +106,19 @@ function AdminUsersDesktopTable({
             <AdminTableHead>Balance</AdminTableHead>
             <AdminTableHead>Payment</AdminTableHead>
             <AdminTableHead>Status</AdminTableHead>
+            <AdminTableHead className="text-right">Action</AdminTableHead>
           </AdminTableRow>
         </AdminTableHeader>
         <AdminTableBody>
           {records.map((record) => (
             <AdminTableRow key={record.id}>
               <AdminTableCell>
-                <div className="space-y-1.5">
-                  <p className="text-body text-foreground font-medium">
-                    {record.name}
-                  </p>
-                  <p className="text-body-sm text-text-secondary">
-                    {record.email}
-                  </p>
-                  <p className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-                    {record.plan} · {record.branch}
-                  </p>
-                </div>
+                <AdminUserAvatar
+                  size="sm"
+                  name={record.name}
+                  subtitle={record.email}
+                  meta={`${record.plan} · ${record.branch}`}
+                />
               </AdminTableCell>
               <AdminTableCell className="text-body-sm text-text-secondary">
                 {record.activeLoans}
@@ -133,15 +127,32 @@ function AdminUsersDesktopTable({
                 {record.balanceLabel}
               </AdminTableCell>
               <AdminTableCell>
-                <BorrowStatusBadge
+                <AdminStatusBadge
                   label={record.paymentLabel}
                   tone={record.paymentTone}
                 />
               </AdminTableCell>
               <AdminTableCell>
-                <BorrowStatusBadge
+                <AdminStatusBadge
                   label={record.statusLabel}
                   tone={record.statusTone}
+                />
+              </AdminTableCell>
+              <AdminTableCell className="text-right">
+                <AdminRowActions
+                  align="end"
+                  actions={[
+                    {
+                      label: "Pause",
+                      variant: "ghost",
+                      confirm: {
+                        title: `Pause ${record.name}'s access?`,
+                        description:
+                          "This mock confirmation keeps the shared admin row action ready for future integration.",
+                        confirmLabel: "Pause access",
+                      },
+                    },
+                  ]}
                 />
               </AdminTableCell>
             </AdminTableRow>
@@ -154,8 +165,7 @@ function AdminUsersDesktopTable({
 
 function AdminUsersEmptyState() {
   return (
-    <EmptyState
-      size="sm"
+    <AdminEmptyState
       title="No members match the current filters"
       description="Adjust the member filter or search term. The admin users view is still powered by local mock data only."
     />

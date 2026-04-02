@@ -1,11 +1,12 @@
 "use client";
 
-import { Search } from "lucide-react";
-
+import {
+  AdminDataTable,
+  AdminPageHeader,
+  AdminSearchBar,
+  AdminTabs,
+} from "@/components/admin";
 import { LoadingSkeleton } from "@/components/feedback";
-import { PageHeader } from "@/components/layout";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 import {
   AdminBorrowingsDesktopTable,
@@ -26,55 +27,34 @@ function AdminBorrowingsModule() {
 
   return (
     <div className="gap-section flex flex-col">
-      <PageHeader
+      <AdminPageHeader
         eyebrow="Circulation"
         title="Borrowing operations"
         description="Manage active loans, pending pickups, returns, and overdue items with the same mobile-first layout logic used across the rest of the app."
-      >
-        <div className="rounded-card border-border-subtle bg-card grid gap-4 border p-4 shadow-xs sm:p-5">
-          <label className="relative block">
-            <span className="sr-only">Search borrowing records</span>
-            <Search className="text-text-tertiary pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2" />
-            <Input
+        controls={
+          <>
+            <AdminSearchBar
               value={searchValue}
               onChange={(event) => setSearchValue(event.target.value)}
+              label="Search borrowing records"
               placeholder="Search member, book, or branch..."
-              className="pl-11"
             />
-          </label>
-          <div className="overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <div className="flex min-w-max gap-2">
-              {tabs.map((tab) => {
-                const isActive = tab.value === activeTab;
+            <AdminTabs
+              items={tabs.map((tab) => ({
+                label: tab.label,
+                value: tab.value,
+              }))}
+              value={activeTab}
+              onValueChange={setActiveTab}
+            />
+          </>
+        }
+      ></AdminPageHeader>
 
-                return (
-                  <Button
-                    key={tab.value}
-                    size="sm"
-                    type="button"
-                    variant={isActive ? "default" : "outline"}
-                    onClick={() => setActiveTab(tab.value)}
-                  >
-                    {tab.label}
-                  </Button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </PageHeader>
-
-      <section className="space-y-4">
-        <div className="space-y-1">
-          <h2 className="text-title-sm text-foreground font-semibold">
-            Borrowing queue
-          </h2>
-          <p className="text-body-sm text-text-secondary">
-            Data-heavy desktop table with card fallbacks on mobile, built to
-            accept real circulation data later.
-          </p>
-        </div>
-
+      <AdminDataTable
+        title="Borrowing queue"
+        description="Data-heavy desktop table with card fallbacks on mobile, built to accept real circulation data later."
+      >
         {records.length > 0 ? (
           <>
             <AdminBorrowingsMobileList records={records} />
@@ -83,7 +63,7 @@ function AdminBorrowingsModule() {
         ) : (
           <AdminBorrowingsEmptyState activeTab={activeTab} />
         )}
-      </section>
+      </AdminDataTable>
     </div>
   );
 }
@@ -91,7 +71,7 @@ function AdminBorrowingsModule() {
 function AdminBorrowingsLoadingState() {
   return (
     <div className="gap-section flex flex-col">
-      <PageHeader
+      <AdminPageHeader
         eyebrow="Circulation"
         title="Borrowing operations"
         description="Loading borrowing operations surfaces."

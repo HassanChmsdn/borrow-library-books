@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { BookCopy, FolderKanban, PackageOpen } from "lucide-react";
 
+import { AdminPageHeader, AdminQuickActionCard } from "@/components/admin";
 import { LoadingSkeleton } from "@/components/feedback";
-import { PageHeader } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 
 import {
@@ -17,9 +18,35 @@ function AdminDashboardModule() {
   const { activity, alerts, branchPulse, metrics, queue } =
     getAdminDashboardModuleData();
 
+  const quickActions = [
+    {
+      actionLabel: "Open queue",
+      description:
+        "Move straight into pending pickups and due-soon follow-ups.",
+      href: "/admin/borrowings",
+      icon: <BookCopy aria-hidden="true" className="size-4" />,
+      title: "Circulation focus",
+    },
+    {
+      actionLabel: "Review books",
+      description: "Check catalog records, fees, and availability changes.",
+      href: "/admin/books",
+      icon: <PackageOpen aria-hidden="true" className="size-4" />,
+      title: "Catalog upkeep",
+    },
+    {
+      actionLabel: "Plan categories",
+      description:
+        "Adjust category mix and curation notes without leaving the admin frame.",
+      href: "/admin/categories",
+      icon: <FolderKanban aria-hidden="true" className="size-4" />,
+      title: "Collection planning",
+    },
+  ] as const;
+
   return (
     <div className="gap-section flex flex-col">
-      <PageHeader
+      <AdminPageHeader
         eyebrow="Dashboard"
         title="Library operations snapshot"
         description="A mobile-first overview of circulation, collection health, and branch activity using typed mock data and reusable admin primitives."
@@ -36,6 +63,12 @@ function AdminDashboardModule() {
       />
 
       <AdminDashboardMetricGrid metrics={metrics} />
+
+      <div className="grid gap-4 xl:grid-cols-3">
+        {quickActions.map((item) => (
+          <AdminQuickActionCard key={item.title} {...item} />
+        ))}
+      </div>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(20rem,0.9fr)]">
         <AdminDashboardQueueSection queue={queue} />
@@ -63,7 +96,7 @@ function AdminDashboardModule() {
 function AdminDashboardLoadingState() {
   return (
     <div className="gap-section flex flex-col">
-      <PageHeader
+      <AdminPageHeader
         eyebrow="Dashboard"
         title="Library operations snapshot"
         description="Loading admin overview surfaces."

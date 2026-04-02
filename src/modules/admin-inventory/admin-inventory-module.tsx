@@ -1,7 +1,11 @@
 "use client";
 
+import {
+  AdminDataTable,
+  AdminFilterSelect,
+  AdminPageHeader,
+} from "@/components/admin";
 import { LoadingSkeleton } from "@/components/feedback";
-import { PageHeader } from "@/components/layout";
 
 import {
   AdminInventoryAlerts,
@@ -22,41 +26,33 @@ function AdminInventoryModule() {
 
   return (
     <div className="gap-section flex flex-col">
-      <PageHeader
+      <AdminPageHeader
         eyebrow="Stock"
         title="Inventory management"
         description="Track shelf health, low-stock titles, and branch readiness using the same table, card, and badge system as the rest of the admin workspace."
-      >
-        <div className="rounded-card border-border-subtle bg-card grid gap-4 border p-4 shadow-xs sm:p-5 lg:grid-cols-[minmax(0,1fr)_14rem]">
-          <div className="space-y-1">
-            <p className="text-title-sm text-foreground font-semibold">
-              Branch filter
-            </p>
-            <p className="text-body-sm text-text-secondary">
-              Narrow the inventory view without changing the visual language or
-              the future data boundary.
-            </p>
-          </div>
-          <label className="grid gap-1.5">
-            <span className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-              Branch
-            </span>
-            <select
-              className="rounded-input border-input bg-card text-body text-foreground focus-visible:border-border-strong focus-visible:bg-elevated focus-visible:ring-ring h-11 w-full border px-4 shadow-xs outline-none focus-visible:ring-4"
+        controls={
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_14rem] lg:items-end">
+            <div className="space-y-1">
+              <p className="text-title-sm text-foreground font-semibold">
+                Branch filter
+              </p>
+              <p className="text-body-sm text-text-secondary">
+                Narrow the inventory view without changing the visual language
+                or the future data boundary.
+              </p>
+            </div>
+            <AdminFilterSelect
+              label="Branch"
+              options={branches.map((branch) => ({
+                label: branch,
+                value: branch,
+              }))}
               value={activeBranch}
-              onChange={(event) =>
-                setActiveBranch(event.target.value as typeof activeBranch)
-              }
-            >
-              {branches.map((branch) => (
-                <option key={branch} value={branch}>
-                  {branch}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-      </PageHeader>
+              onValueChange={setActiveBranch}
+            />
+          </div>
+        }
+      ></AdminPageHeader>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(18rem,0.85fr)]">
         <section className="space-y-4">
@@ -75,18 +71,12 @@ function AdminInventoryModule() {
         <AdminInventoryAlerts alerts={alerts} />
       </div>
 
-      <section className="space-y-4">
-        <div className="space-y-1">
-          <h2 className="text-title-sm text-foreground font-semibold">
-            Restock table
-          </h2>
-          <p className="text-body-sm text-text-secondary">
-            Desktop-optimized for dense review while remaining readable on
-            narrower screens through the shared table shell.
-          </p>
-        </div>
+      <AdminDataTable
+        title="Restock table"
+        description="Desktop-optimized for dense review while remaining readable on narrower screens through the shared table shell."
+      >
         <AdminInventoryTable records={records} />
-      </section>
+      </AdminDataTable>
     </div>
   );
 }
@@ -94,7 +84,7 @@ function AdminInventoryModule() {
 function AdminInventoryLoadingState() {
   return (
     <div className="gap-section flex flex-col">
-      <PageHeader
+      <AdminPageHeader
         eyebrow="Stock"
         title="Inventory management"
         description="Loading inventory surfaces."

@@ -1,5 +1,5 @@
+import { AdminDataTable, AdminPageHeader } from "@/components/admin";
 import { LoadingSkeleton } from "@/components/feedback";
-import { PageHeader } from "@/components/layout";
 
 import {
   AdminCategoriesCards,
@@ -13,7 +13,7 @@ function AdminCategoriesModule() {
 
   return (
     <div className="gap-section flex flex-col">
-      <PageHeader
+      <AdminPageHeader
         eyebrow="Collections"
         title="Category planning"
         description="A clean, tokenized view of category performance, shelf grouping, and curation tasks that fits the existing admin shell and prepares for future API-backed planning tools."
@@ -36,18 +36,12 @@ function AdminCategoriesModule() {
         <AdminCategoriesPlanningList items={planningItems} />
       </div>
 
-      <section className="space-y-4">
-        <div className="space-y-1">
-          <h2 className="text-title-sm text-foreground font-semibold">
-            Category table
-          </h2>
-          <p className="text-body-sm text-text-secondary">
-            A denser desktop summary for loan volume, fee visibility, and
-            current category posture.
-          </p>
-        </div>
+      <AdminDataTable
+        title="Category table"
+        description="A denser desktop summary for loan volume, fee visibility, and current category posture."
+      >
         <AdminCategoriesTable records={records} />
-      </section>
+      </AdminDataTable>
     </div>
   );
 }
@@ -55,7 +49,7 @@ function AdminCategoriesModule() {
 function AdminCategoriesLoadingState() {
   return (
     <div className="gap-section flex flex-col">
-      <PageHeader
+      <AdminPageHeader
         eyebrow="Collections"
         title="Category planning"
         description="Loading category planning surfaces."

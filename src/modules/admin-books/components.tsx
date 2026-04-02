@@ -1,21 +1,17 @@
-import Link from "next/link";
-
 import {
+  AdminDetailSection,
+  AdminEmptyState,
+  AdminMetricStrip,
+  AdminRowActions,
+  AdminStatusBadge,
   AdminTable,
   AdminTableBody,
   AdminTableCell,
   AdminTableHead,
   AdminTableHeader,
   AdminTableRow,
-  KpiCard,
 } from "@/components/admin";
-import { EmptyState } from "@/components/feedback";
-import {
-  AvailabilityBadge,
-  BorrowStatusBadge,
-  FeeBadge,
-} from "@/components/library";
-import { Button } from "@/components/ui/button";
+import { AvailabilityBadge, FeeBadge } from "@/components/library";
 import { Card, CardContent } from "@/components/ui/card";
 import { BookCoverArt } from "@/modules/catalog/book-cover-art";
 import {
@@ -33,21 +29,18 @@ function AdminBooksMetricGrid({
   metrics,
 }: Readonly<{ metrics: ReadonlyArray<AdminBooksMetric> }>) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {metrics.map((metric) => {
+    <AdminMetricStrip
+      items={metrics.map((metric) => {
         const Icon = metric.icon;
 
-        return (
-          <KpiCard
-            key={metric.label}
-            icon={<Icon aria-hidden="true" className="size-4" />}
-            label={metric.label}
-            supportingText={metric.supportingText}
-            value={metric.value}
-          />
-        );
+        return {
+          icon: <Icon aria-hidden="true" className="size-4" />,
+          label: metric.label,
+          supportingText: metric.supportingText,
+          value: metric.value,
+        };
       })}
-    </div>
+    />
   );
 }
 
@@ -69,7 +62,7 @@ function AdminBooksMobileList({
               />
               <div className="min-w-0 flex-1 space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <BorrowStatusBadge
+                  <AdminStatusBadge
                     label={book.workflowLabel}
                     tone={book.workflowTone}
                   />
@@ -92,32 +85,42 @@ function AdminBooksMobileList({
               </div>
             </div>
 
-            <div className="grid gap-3 rounded-2xl border border-dashed border-black/5 p-4">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-body-sm text-text-secondary">
-                  Availability
-                </span>
-                <AvailabilityBadge
-                  label={formatAdminBookAvailabilityLabel(book)}
-                  tone={book.availabilityTone}
-                />
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-body-sm text-text-secondary">Branch</span>
-                <span className="text-body-sm text-foreground font-medium">
-                  {book.branch}
-                </span>
-              </div>
-              <p className="text-body-sm text-text-secondary">
-                {book.lastUpdated}
-              </p>
-            </div>
+            <AdminDetailSection
+              items={[
+                {
+                  label: "Availability",
+                  value: (
+                    <AvailabilityBadge
+                      label={formatAdminBookAvailabilityLabel(book)}
+                      tone={book.availabilityTone}
+                    />
+                  ),
+                },
+                { label: "Branch", value: book.branch },
+                { label: "Last updated", value: book.lastUpdated },
+              ]}
+            />
 
-            <div className="flex justify-end">
-              <Button asChild size="sm" variant="outline">
-                <Link href={`/books/${book.id}`}>View public details</Link>
-              </Button>
-            </div>
+            <AdminRowActions
+              align="end"
+              actions={[
+                {
+                  href: `/books/${book.id}`,
+                  label: "Preview",
+                },
+                {
+                  label: "Flag audit",
+                  variant: "ghost",
+                  confirm: {
+                    title: `Flag ${book.title} for review?`,
+                    description:
+                      "This mock action demonstrates the shared confirmation flow for future admin integrations.",
+                    confirmLabel: "Flag title",
+                    tone: "default",
+                  },
+                },
+              ]}
+            />
           </CardContent>
         </Card>
       ))}
@@ -164,7 +167,7 @@ function AdminBooksDesktopTable({
                       <p className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
                         {book.category} · {book.shelfCode}
                       </p>
-                      <BorrowStatusBadge
+                      <AdminStatusBadge
                         label={book.workflowLabel}
                         tone={book.workflowTone}
                       />
@@ -191,9 +194,27 @@ function AdminBooksDesktopTable({
                 {book.lastUpdated}
               </AdminTableCell>
               <AdminTableCell className="text-right">
-                <Button asChild size="sm" variant="ghost">
-                  <Link href={`/books/${book.id}`}>Preview</Link>
-                </Button>
+                <AdminRowActions
+                  align="end"
+                  actions={[
+                    {
+                      href: `/books/${book.id}`,
+                      label: "Preview",
+                      variant: "ghost",
+                    },
+                    {
+                      label: "Audit",
+                      variant: "ghost",
+                      confirm: {
+                        title: `Queue ${book.title} for audit?`,
+                        description:
+                          "This mock control keeps the table action pattern ready for future workflow hooks.",
+                        confirmLabel: "Queue audit",
+                        tone: "default",
+                      },
+                    },
+                  ]}
+                />
               </AdminTableCell>
             </AdminTableRow>
           ))}
@@ -205,10 +226,9 @@ function AdminBooksDesktopTable({
 
 function AdminBooksEmptyState() {
   return (
-    <EmptyState
+    <AdminEmptyState
       title="No books match the current filters"
       description="Adjust the search term, category, or state filter. This admin catalog remains powered by local mock data for now."
-      size="sm"
     />
   );
 }

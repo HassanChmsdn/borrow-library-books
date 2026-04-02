@@ -1,17 +1,17 @@
-import Link from "next/link";
-
 import {
+  AdminDetailSection,
+  AdminEmptyState,
+  AdminMetricStrip,
+  AdminRowActions,
+  AdminStatusBadge,
   AdminTable,
   AdminTableBody,
   AdminTableCell,
   AdminTableHead,
   AdminTableHeader,
   AdminTableRow,
-  KpiCard,
 } from "@/components/admin";
-import { EmptyState } from "@/components/feedback";
-import { BorrowStatusBadge, FeeBadge } from "@/components/library";
-import { Button } from "@/components/ui/button";
+import { FeeBadge } from "@/components/library";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   formatBookFeeLabel,
@@ -54,21 +54,18 @@ function AdminBorrowingsMetricGrid({
   metrics,
 }: Readonly<{ metrics: ReadonlyArray<AdminBorrowingsMetric> }>) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {metrics.map((metric) => {
+    <AdminMetricStrip
+      items={metrics.map((metric) => {
         const Icon = metric.icon;
 
-        return (
-          <KpiCard
-            key={metric.label}
-            icon={<Icon aria-hidden="true" className="size-4" />}
-            label={metric.label}
-            supportingText={metric.supportingText}
-            value={metric.value}
-          />
-        );
+        return {
+          icon: <Icon aria-hidden="true" className="size-4" />,
+          label: metric.label,
+          supportingText: metric.supportingText,
+          value: metric.value,
+        };
       })}
-    </div>
+    />
   );
 }
 
@@ -81,7 +78,7 @@ function AdminBorrowingsMobileList({
         <Card key={record.id}>
           <CardContent className="grid gap-4 p-4 sm:p-5">
             <div className="flex flex-wrap items-center gap-2">
-              <BorrowStatusBadge
+              <AdminStatusBadge
                 label={record.statusLabel}
                 tone={record.statusTone}
               />
@@ -103,34 +100,39 @@ function AdminBorrowingsMobileList({
               </p>
             </div>
 
-            <div className="grid gap-3 rounded-2xl border border-dashed border-black/5 p-4">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-body-sm text-text-secondary">
-                  {record.dueLabel}
-                </span>
-                <span className="text-body-sm text-foreground font-medium">
-                  {record.dueValue}
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-body-sm text-text-secondary">
-                  Payment
-                </span>
-                <BorrowStatusBadge
-                  label={record.paymentLabel}
-                  tone={record.paymentTone}
-                />
-              </div>
-              <p className="text-body-sm text-text-secondary">
-                {record.branch}
-              </p>
-            </div>
+            <AdminDetailSection
+              items={[
+                { label: record.dueLabel, value: record.dueValue },
+                {
+                  label: "Payment",
+                  value: (
+                    <AdminStatusBadge
+                      label={record.paymentLabel}
+                      tone={record.paymentTone}
+                    />
+                  ),
+                },
+                { label: "Branch", value: record.branch },
+              ]}
+            />
 
-            <div className="flex justify-end">
-              <Button asChild size="sm" variant="outline">
-                <Link href={`/books/${record.bookId}`}>View book</Link>
-              </Button>
-            </div>
+            <AdminRowActions
+              align="end"
+              actions={[
+                { href: `/books/${record.bookId}`, label: "Book" },
+                {
+                  label: "Send reminder",
+                  variant: "ghost",
+                  confirm: {
+                    title: `Send a reminder for ${record.bookTitle}?`,
+                    description:
+                      "This mock action demonstrates the shared confirm flow without backend wiring.",
+                    confirmLabel: "Send reminder",
+                    tone: "default",
+                  },
+                },
+              ]}
+            />
           </CardContent>
         </Card>
       ))}
@@ -171,7 +173,7 @@ function AdminBorrowingsDesktopTable({
                 </div>
               </AdminTableCell>
               <AdminTableCell>
-                <BorrowStatusBadge
+                <AdminStatusBadge
                   label={record.statusLabel}
                   tone={record.statusTone}
                 />
@@ -193,15 +195,33 @@ function AdminBorrowingsDesktopTable({
                 />
               </AdminTableCell>
               <AdminTableCell>
-                <BorrowStatusBadge
+                <AdminStatusBadge
                   label={record.paymentLabel}
                   tone={record.paymentTone}
                 />
               </AdminTableCell>
               <AdminTableCell className="text-right">
-                <Button asChild size="sm" variant="ghost">
-                  <Link href={`/books/${record.bookId}`}>Book</Link>
-                </Button>
+                <AdminRowActions
+                  align="end"
+                  actions={[
+                    {
+                      href: `/books/${record.bookId}`,
+                      label: "Book",
+                      variant: "ghost",
+                    },
+                    {
+                      label: "Remind",
+                      variant: "ghost",
+                      confirm: {
+                        title: `Send a reminder for ${record.memberName}?`,
+                        description:
+                          "This mock action keeps the admin row-action pattern ready for future circulation integrations.",
+                        confirmLabel: "Send reminder",
+                        tone: "default",
+                      },
+                    },
+                  ]}
+                />
               </AdminTableCell>
             </AdminTableRow>
           ))}
@@ -217,8 +237,7 @@ function AdminBorrowingsEmptyState({
   const emptyState = emptyStates[activeTab];
 
   return (
-    <EmptyState
-      size="sm"
+    <AdminEmptyState
       title={emptyState.title}
       description={emptyState.description}
     />
