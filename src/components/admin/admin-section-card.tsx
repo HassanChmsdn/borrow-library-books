@@ -37,7 +37,7 @@ function AdminSectionCard({
       {title || description || actions ? (
         <CardHeader>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div className="space-y-1.5">
+            <div className="min-w-0 flex-1 space-y-1.5">
               {title ? <CardTitle>{title}</CardTitle> : null}
               {description ? (
                 <CardDescription>{description}</CardDescription>

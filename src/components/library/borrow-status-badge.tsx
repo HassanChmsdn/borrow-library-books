@@ -19,7 +19,7 @@ type BorrowStatusBadgeTone =
   | "neutral";
 
 const borrowStatusBadgeVariants = cva(
-  "text-caption inline-flex items-center rounded-pill border px-2.5 py-1 font-medium tracking-[0.08em]",
+  "text-caption inline-flex max-w-full shrink-0 items-center rounded-pill border px-2.5 py-1 font-medium leading-none tracking-[0.08em] whitespace-nowrap",
   {
     variants: {
       tone: {

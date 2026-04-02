@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 type FeeBadgeTone = "free" | "paid" | "neutral";
 
 const feeBadgeVariants = cva(
-  "text-caption inline-flex items-center rounded-pill px-2.5 py-1 font-medium tracking-[0.18em] uppercase",
+  "text-caption inline-flex max-w-full shrink-0 items-center rounded-pill px-2.5 py-1 font-medium leading-none tracking-[0.14em] uppercase whitespace-nowrap",
   {
     variants: {
       tone: {

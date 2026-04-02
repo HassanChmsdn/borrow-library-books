@@ -7,8 +7,9 @@ export { getAdminDashboardModuleData } from "./hooks";
 
 export type {
   AdminDashboardActivityItem,
-  AdminDashboardAlertItem,
-  AdminDashboardBranchPulse,
   AdminDashboardMetric,
-  AdminDashboardQueueItem,
+  AdminDashboardNoticeItem,
+  AdminDashboardQuickAction,
+  AdminDashboardTrendPoint,
+  AdminDashboardTrendSummaryItem,
 } from "./types";

@@ -10,7 +10,7 @@ type AvailabilityBadgeTone =
   | "neutral";
 
 const availabilityBadgeVariants = cva(
-  "text-caption inline-flex items-center rounded-pill border px-2.5 py-1 font-medium",
+  "text-caption inline-flex max-w-full shrink-0 items-center rounded-pill border px-2.5 py-1 font-medium leading-none whitespace-nowrap",
   {
     variants: {
       tone: {
