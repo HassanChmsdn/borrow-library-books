@@ -1,0 +1,185 @@
+import {
+  BookCopy,
+  CircleDollarSign,
+  FolderKanban,
+  PackageOpen,
+} from "lucide-react";
+
+import type {
+  AdminBookRecord,
+  AdminBooksCategory,
+  AdminBooksMetric,
+  AdminBooksSortValue,
+  AdminBooksStatusFilter,
+} from "./types";
+
+export const adminBooksMetrics: ReadonlyArray<AdminBooksMetric> = [
+  {
+    label: "Titles",
+    value: "126",
+    supportingText: "Across all tracked branches",
+    icon: BookCopy,
+  },
+  {
+    label: "Limited stock",
+    value: "18",
+    supportingText: "Need close monitoring this week",
+    icon: PackageOpen,
+  },
+  {
+    label: "Paid titles",
+    value: "34",
+    supportingText: "Require onsite cash settlement",
+    icon: CircleDollarSign,
+  },
+  {
+    label: "Active categories",
+    value: "8",
+    supportingText: "Organized with shared shelf codes",
+    icon: FolderKanban,
+  },
+];
+
+export const adminBooksCategories: ReadonlyArray<AdminBooksCategory> = [
+  "All",
+  "Fiction",
+  "Science",
+  "History",
+  "Philosophy",
+  "Technology",
+  "Art & Design",
+  "Business",
+  "Travel",
+];
+
+export const adminBooksStatusOptions: ReadonlyArray<{
+  label: string;
+  value: AdminBooksStatusFilter;
+}> = [
+  { label: "All states", value: "all" },
+  { label: "Healthy", value: "healthy" },
+  { label: "Limited", value: "limited" },
+  { label: "Archived", value: "archived" },
+];
+
+export const adminBooksSortOptions: ReadonlyArray<{
+  label: string;
+  value: AdminBooksSortValue;
+}> = [
+  { label: "Recently updated", value: "updated" },
+  { label: "Title", value: "title" },
+  { label: "Author", value: "author" },
+  { label: "Availability", value: "availability" },
+  { label: "Fee", value: "fee" },
+];
+
+export const adminBooksCatalog: ReadonlyArray<AdminBookRecord> = [
+  {
+    id: "1984",
+    title: "1984",
+    author: "George Orwell",
+    category: "Fiction",
+    branch: "Downtown",
+    shelfCode: "FIC-19",
+    totalCopies: 6,
+    availableCopies: 4,
+    feeCents: 250,
+    lastUpdated: "Updated 12 minutes ago",
+    coverTone: "brand",
+    coverLabel: "1984",
+    availabilityTone: "available",
+    workflowLabel: "Healthy",
+    workflowTone: "success",
+    statusFilter: "healthy",
+  },
+  {
+    id: "brief-history-time",
+    title: "A Brief History of Time",
+    author: "Stephen Hawking",
+    category: "Science",
+    branch: "Hamra",
+    shelfCode: "SCI-08",
+    totalCopies: 3,
+    availableCopies: 1,
+    feeCents: 350,
+    lastUpdated: "Updated 1 hour ago",
+    coverTone: "ocean",
+    coverLabel: "Time",
+    availabilityTone: "limited",
+    workflowLabel: "Limited",
+    workflowTone: "warning",
+    statusFilter: "limited",
+  },
+  {
+    id: "clean-code",
+    title: "Clean Code",
+    author: "Robert C. Martin",
+    category: "Technology",
+    branch: "Downtown",
+    shelfCode: "TEC-14",
+    totalCopies: 3,
+    availableCopies: 1,
+    feeCents: 0,
+    lastUpdated: "Updated 35 minutes ago",
+    coverTone: "stone",
+    coverLabel: "Code",
+    availabilityTone: "limited",
+    workflowLabel: "Limited",
+    workflowTone: "warning",
+    statusFilter: "limited",
+  },
+  {
+    id: "into-the-wild",
+    title: "Into the Wild",
+    author: "Jon Krakauer",
+    category: "Travel",
+    branch: "Byblos",
+    shelfCode: "TRA-02",
+    totalCopies: 4,
+    availableCopies: 4,
+    feeCents: 150,
+    lastUpdated: "Updated this morning",
+    coverTone: "forest",
+    coverLabel: "Wild",
+    availabilityTone: "available",
+    workflowLabel: "Healthy",
+    workflowTone: "success",
+    statusFilter: "healthy",
+  },
+  {
+    id: "meditations",
+    title: "Meditations",
+    author: "Marcus Aurelius",
+    category: "Philosophy",
+    branch: "Downtown",
+    shelfCode: "PHI-03",
+    totalCopies: 2,
+    availableCopies: 0,
+    feeCents: 0,
+    lastUpdated: "Updated 7 minutes ago",
+    coverTone: "amber",
+    coverLabel: "Mind",
+    availabilityTone: "unavailable",
+    workflowLabel: "Archived",
+    workflowTone: "danger",
+    statusFilter: "archived",
+  },
+  {
+    id: "sapiens",
+    title: "Sapiens",
+    author: "Yuval Noah Harari",
+    category: "History",
+    branch: "Hamra",
+    shelfCode: "HIS-21",
+    totalCopies: 5,
+    availableCopies: 2,
+    feeCents: 200,
+    lastUpdated: "Updated yesterday",
+    coverTone: "rose",
+    coverLabel: "Past",
+    availabilityTone: "limited",
+    workflowLabel: "Healthy",
+    workflowTone: "info",
+    statusFilter: "healthy",
+  },
+];

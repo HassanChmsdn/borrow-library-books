@@ -1,9 +1,9 @@
-import { AdminOverviewModule } from "@/modules/admin-overview";
+import { AdminDashboardModule } from "@/modules/admin-dashboard";
 
 export const metadata = {
-  title: "Admin Overview",
+  title: "Admin Dashboard",
 };
 
 export default function AdminShellPreviewPage() {
-  return <AdminOverviewModule />;
+  return <AdminDashboardModule />;
 }

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -197,6 +198,8 @@ function AdminShell({
   ...props
 }: AdminShellProps) {
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
+  const pathname = usePathname();
+  const activePath = currentPath ?? pathname;
 
   return (
     <div className={cn("bg-background min-h-screen", className)} {...props}>
@@ -209,7 +212,7 @@ function AdminShell({
           <div className="flex-1 overflow-y-auto px-4 py-6">
             <AdminNavigation
               navigationSections={navigationSections}
-              currentPath={currentPath}
+              currentPath={activePath}
             />
           </div>
 
@@ -257,7 +260,7 @@ function AdminShell({
           <div className="flex-1 overflow-y-auto px-4 py-6">
             <AdminNavigation
               navigationSections={navigationSections}
-              currentPath={currentPath}
+              currentPath={activePath}
               onNavigate={() => setMobileNavOpen(false)}
             />
           </div>

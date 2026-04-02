@@ -1,11 +1,17 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { BookCopy, PackageOpen, ScrollText, Users } from "lucide-react";
+import {
+  BookCopy,
+  FolderKanban,
+  LayoutDashboard,
+  PackageOpen,
+  Rows3,
+  Users,
+} from "lucide-react";
 
 import {
   AdminShell,
   AdminTopHeader,
-  PageActionBar,
   ShellBrand,
 } from "@/components/layout";
 import { Button } from "@/components/ui/button";
@@ -16,32 +22,44 @@ const adminNavigationSections = [
     items: [
       {
         href: "/admin",
-        label: "Overview",
-        description: "Library operations summary and daily system health.",
-        icon: <ScrollText aria-hidden="true" />,
+        label: "Dashboard",
+        description: "Daily operations summary, alerts, and branch pulse.",
+        icon: <LayoutDashboard aria-hidden="true" />,
         matchStrategy: "exact" as const,
       },
       {
-        href: "/admin#borrow-requests",
-        label: "Borrow Requests",
-        description: "Review holds, renewals, and pending pickup reminders.",
+        href: "/admin/borrowings",
+        label: "Borrowings",
+        description: "Review holds, renewals, due-soon items, and returns.",
         icon: <BookCopy aria-hidden="true" />,
       },
       {
-        href: "/admin#inventory",
+        href: "/admin/books",
+        label: "Books",
+        description: "Manage catalog records, shelf details, and fees.",
+        icon: <Rows3 aria-hidden="true" />,
+      },
+      {
+        href: "/admin/inventory",
         label: "Inventory",
-        description: "Track collection health and low-stock signals.",
+        description: "Track stock health, branch balances, and restock plans.",
         icon: <PackageOpen aria-hidden="true" />,
       },
     ],
   },
   {
-    title: "Operations",
+    title: "Organization",
     items: [
       {
-        href: "/admin#members",
-        label: "Members",
-        description: "Monitor engagement patterns across branches and plans.",
+        href: "/admin/categories",
+        label: "Categories",
+        description: "Shape collection mix, shelves, and demand by category.",
+        icon: <FolderKanban aria-hidden="true" />,
+      },
+      {
+        href: "/admin/users",
+        label: "Users",
+        description: "Monitor members, balances, and engagement activity.",
         icon: <Users aria-hidden="true" />,
       },
     ],
@@ -64,37 +82,18 @@ export default function AdminSectionLayout({
         />
       }
       navigationSections={adminNavigationSections}
-      currentPath="/admin"
       topHeader={
         <AdminTopHeader
-          eyebrow="Admin Shell"
-          title="Library Operations"
-          description="Shared navigation, sticky header, and content framing now host static admin modules that can be replaced with real data later."
+          eyebrow="Library Admin"
+          title="Operations Workspace"
+          description="A shared admin frame for dashboard, catalog, borrowing, inventory, category, and member management modules built on the existing token and shell system."
           actions={
             <>
               <Button asChild size="sm" variant="outline">
                 <Link href="/">Reader Experience</Link>
               </Button>
-              <Button size="sm" type="button" variant="secondary">
-                Review today
-              </Button>
-            </>
-          }
-        />
-      }
-      pageActionBar={
-        <PageActionBar
-          id="action-surface"
-          eyebrow="Daily Actions"
-          title="Operations action bar"
-          description="Use this surface for cross-page controls, status context, and task actions once admin workflows are implemented."
-          actions={
-            <>
-              <Button size="sm" type="button">
-                Add book
-              </Button>
-              <Button size="sm" type="button" variant="outline">
-                Export report
+              <Button asChild size="sm" variant="secondary">
+                <Link href="/admin/books">Catalog queue</Link>
               </Button>
             </>
           }
@@ -106,13 +105,15 @@ export default function AdminSectionLayout({
             Shift lead
           </p>
           <p className="text-body-sm text-text-secondary mt-1">
-            Samir Chahine is covering catalog operations this afternoon.
+            Samir Chahine is covering catalog, circulation, and member
+            operations this afternoon.
           </p>
         </div>
       }
       footerSlot={
         <p className="text-caption text-text-tertiary">
-          Static module scaffold. No admin business logic is mounted yet.
+          Mock-data admin workspace. Backend integration is intentionally
+          deferred.
         </p>
       }
     >
