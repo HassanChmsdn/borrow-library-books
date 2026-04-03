@@ -1,14 +1,14 @@
 "use client";
 
-import { AdminPageHeader } from "@/components/admin";
+import {
+  AdminDataTable,
+  AdminPageHeader,
+} from "@/components/admin";
 import { LoadingSkeleton } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
 
-import { CategoriesGrid, CategoryFormDialog } from "./components";
-import {
-  adminCategoryIconOptions,
-  getAdminCategoryDefaultValues,
-} from "./mock-data";
+import { CategoriesTable, CategoriesToolbar, CategoryFormDialog } from "./components";
+import { getAdminCategoryDefaultValues } from "./mock-data";
 import { useAdminCategoriesModuleState } from "./hooks";
 import type { AdminCategoriesModuleProps } from "./types";
 
@@ -24,11 +24,15 @@ function AdminCategoriesModule({
     deleteCategory,
     dialogState,
     filteredRecords,
+    hasNoResults,
     isSubmitting,
     openCreateDialog,
     openEditDialog,
     resetDialog,
+    searchValue,
+    setSearchValue,
     submitCategory,
+    records,
   } = useAdminCategoriesModuleState({
     initialRecords,
     onCreateCategory,
@@ -52,21 +56,47 @@ function AdminCategoriesModule({
             Add category
           </Button>
         }
+        controls={
+          <CategoriesToolbar
+            searchValue={searchValue}
+            onSearchValueChange={setSearchValue}
+            totalCount={records.length}
+            visibleCount={filteredRecords.length}
+          />
+        }
       />
 
-      <CategoriesGrid
-        categories={filteredRecords}
-        onAddCategory={openCreateDialog}
-        onDeleteCategory={deleteCategory}
-        onEditCategory={openEditDialog}
-        searchQuery={searchQuery}
-      />
+      <AdminDataTable
+        title="Category records"
+        description="Manage browse labels and optional descriptions in the same responsive table pattern used across the admin workspace."
+        actions={
+          hasNoResults ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => setSearchValue("")}
+            >
+              Clear search
+            </Button>
+          ) : null
+        }
+      >
+        <CategoriesTable
+          categories={filteredRecords}
+          hasActiveFilters={searchValue.trim().length > 0}
+          onAddCategory={openCreateDialog}
+          onClearFilters={() => setSearchValue("")}
+          onDeleteCategory={deleteCategory}
+          onEditCategory={openEditDialog}
+          totalRecords={records.length}
+        />
+      </AdminDataTable>
 
       {dialogState ? (
         <CategoryFormDialog
           open
           mode={dialogState.mode}
-          iconOptions={adminCategoryIconOptions}
           initialValues={getAdminCategoryDefaultValues(dialogState.record)}
           isSubmitting={isSubmitting}
           onOpenChange={(open) => {
@@ -89,11 +119,8 @@ function AdminCategoriesLoadingState() {
         title="Category management"
         description="Loading category management surfaces."
       />
-      <LoadingSkeleton
-        count={6}
-        variant="card"
-        className="sm:grid-cols-2 2xl:grid-cols-3"
-      />
+      <LoadingSkeleton count={2} variant="card" className="lg:hidden" />
+      <LoadingSkeleton count={1} variant="table" />
     </div>
   );
 }

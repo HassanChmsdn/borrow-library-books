@@ -11,8 +11,5 @@ export type {
   AdminCategoryFormFieldErrors,
   AdminCategoryFormMode,
   AdminCategoryFormValues,
-  AdminCategoryIconKey,
-  AdminCategoryIconOption,
-  AdminCategoryMarkerTone,
   AdminCategoryRecord,
 } from "./types";

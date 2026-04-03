@@ -5,7 +5,6 @@ import * as React from "react";
 import {
   adminCategoryRecords,
   createAdminCategoryId,
-  getAdminCategoryMarkerTone,
 } from "./mock-data";
 import type {
   AdminCategoryDialogState,
@@ -39,6 +38,7 @@ export function useAdminCategoriesModuleState({
 }: UseAdminCategoriesModuleStateOptions) {
   const [records, setRecords] =
     React.useState<ReadonlyArray<AdminCategoryRecord>>(initialRecords);
+  const [searchValue, setSearchValue] = React.useState(searchQuery);
   const [dialogState, setDialogState] =
     React.useState<AdminCategoryDialogState | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -47,7 +47,11 @@ export function useAdminCategoriesModuleState({
     setRecords(initialRecords);
   }, [initialRecords]);
 
-  const normalizedQuery = searchQuery.trim().toLowerCase();
+  React.useEffect(() => {
+    setSearchValue(searchQuery);
+  }, [searchQuery]);
+
+  const normalizedQuery = searchValue.trim().toLowerCase();
   const filteredRecords = normalizedQuery
     ? records.filter((record) => {
         const searchText = `${record.name} ${record.description}`.toLowerCase();
@@ -66,7 +70,6 @@ export function useAdminCategoriesModuleState({
             ? {
                 ...record,
                 ...values,
-                markerTone: getAdminCategoryMarkerTone(values.iconKey),
               }
             : record,
         );
@@ -75,11 +78,9 @@ export function useAdminCategoriesModuleState({
       return [
         {
           id: createAdminCategoryId(values.name),
-          name: values.name,
-          description: values.description,
-          iconKey: values.iconKey,
-          markerTone: getAdminCategoryMarkerTone(values.iconKey),
           bookCount: 0,
+          description: values.description,
+          name: values.name,
         },
         ...current,
       ];
@@ -118,7 +119,8 @@ export function useAdminCategoriesModuleState({
     resetDialog() {
       setDialogState(null);
     },
-    searchQuery,
+    searchValue,
+    setSearchValue,
     submitCategory,
     deleteCategory,
   };

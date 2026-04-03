@@ -12,14 +12,12 @@ import {
   type AdminCategoryFormFieldErrors,
   type AdminCategoryFormMode,
   type AdminCategoryFormValues,
-  type AdminCategoryIconOption,
 } from "../types";
 
 const textareaClassName =
   "rounded-input border-input bg-card text-body text-foreground placeholder:text-placeholder focus-visible:border-border-strong focus-visible:bg-elevated focus-visible:ring-ring min-h-32 w-full border px-4 py-3 shadow-xs outline-none transition-[border-color,box-shadow,background-color] duration-200 focus-visible:ring-4";
 
 interface CategoryFormDialogProps {
-  iconOptions: ReadonlyArray<AdminCategoryIconOption>;
   initialValues: AdminCategoryFormValues;
   isSubmitting: boolean;
   mode: AdminCategoryFormMode;
@@ -80,7 +78,6 @@ function FormField({ children, error, helperText, label }: FormFieldProps) {
 }
 
 function CategoryFormDialog({
-  iconOptions,
   initialValues,
   isSubmitting,
   mode,
@@ -133,7 +130,7 @@ function CategoryFormDialog({
   const title = mode === "create" ? "Add category" : "Edit category";
   const description =
     mode === "create"
-      ? "Create a reusable category that can later be connected to real CRUD APIs without changing the page composition."
+      ? "Create a reusable category record for browse organization, admin filtering, and future CRUD-backed collection workflows."
       : "Update the category details while keeping the same admin card structure and typed data boundaries.";
 
   return createPortal(
@@ -175,62 +172,28 @@ function CategoryFormDialog({
               </p>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <FormField
-                label="Category name"
-                helperText="Use a short, public-friendly label that can also power future admin filters."
-                error={errors.name}
-              >
-                <Input
-                  value={values.name}
-                  aria-invalid={errors.name ? true : undefined}
-                  disabled={isSubmitting}
-                  placeholder="Enter category name"
-                  onChange={(event) =>
-                    setValues((current) => ({
-                      ...current,
-                      name: event.target.value,
-                    }))
-                  }
-                />
-              </FormField>
-
-              <FormField
-                label="Visual marker"
-                helperText="This icon helps staff scan category cards quickly on the management page."
-                error={errors.iconKey}
-              >
-                <select
-                  value={values.iconKey}
-                  aria-invalid={errors.iconKey ? true : undefined}
-                  className={cn(
-                    "rounded-input border-input bg-card text-body text-foreground focus-visible:border-border-strong focus-visible:bg-elevated focus-visible:ring-ring h-11 w-full appearance-none border px-4 shadow-xs outline-none focus-visible:ring-4",
-                    errors.iconKey ? "border-danger" : undefined,
-                  )}
-                  disabled={isSubmitting}
-                  onChange={(event) =>
-                    setValues((current) => ({
-                      ...current,
-                      iconKey: event.target
-                        .value as AdminCategoryFormValues["iconKey"],
-                    }))
-                  }
-                >
-                  {iconOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </FormField>
-            </div>
+            <FormField
+              label="Category name"
+              helperText="Use a short, public-facing label that also works cleanly in browse filters and admin tables."
+              error={errors.name}
+            >
+              <Input
+                value={values.name}
+                aria-invalid={errors.name ? true : undefined}
+                disabled={isSubmitting}
+                placeholder="Enter category name"
+                onChange={(event) =>
+                  setValues((current) => ({
+                    ...current,
+                    name: event.target.value,
+                  }))
+                }
+              />
+            </FormField>
 
             <FormField
               label="Short description"
-              helperText={
-                iconOptions.find((option) => option.value === values.iconKey)
-                  ?.helperText
-              }
+              helperText="Optional. Add a short explanation for how this category is used across browse and admin management views."
               error={errors.description}
             >
               <textarea
