@@ -82,7 +82,6 @@ export interface AdminBookDurationOption {
 
 export interface AdminBookInventorySummary {
   availableCopies: number;
-  branchLabel: string;
   borrowedCopies: number;
   lastAuditLabel: string;
   reservedCopies: number;

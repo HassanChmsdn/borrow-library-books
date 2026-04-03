@@ -29,7 +29,6 @@ function InventoryTable({
           <AdminTableRow>
             <AdminTableHead>Copy code</AdminTableHead>
             <AdminTableHead>Book</AdminTableHead>
-            <AdminTableHead>Location</AdminTableHead>
             <AdminTableHead>Condition</AdminTableHead>
             <AdminTableHead>Status</AdminTableHead>
             <AdminTableHead className="text-right">Actions</AdminTableHead>
@@ -56,18 +55,6 @@ function InventoryTable({
                   <p className="text-body-sm text-text-secondary">
                     {record.bookAuthor}
                   </p>
-                </div>
-              </AdminTableCell>
-              <AdminTableCell>
-                <div className="space-y-1">
-                  <p className="text-body-sm text-foreground font-medium">
-                    {record.location}
-                  </p>
-                  {record.locationNote ? (
-                    <p className="text-body-sm text-text-secondary">
-                      {record.locationNote}
-                    </p>
-                  ) : null}
                 </div>
               </AdminTableCell>
               <AdminTableCell>

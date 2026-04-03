@@ -29,32 +29,17 @@ export interface AdminInventoryRecord {
   bookTitle: string;
   condition: AdminInventoryCondition;
   copyCode: string;
-  location: string;
-  locationNote?: string;
   status: AdminInventoryStatus;
   updatedAtLabel: string;
 }
 
 export const adminInventoryFormSchema = z.object({
-  bookAuthor: z
-    .string()
-    .trim()
-    .min(2, "Author name must be at least 2 characters."),
-  bookId: z.string().trim().optional(),
-  bookTitle: z
-    .string()
-    .trim()
-    .min(2, "Book title must be at least 2 characters."),
+  bookId: z.string().trim().min(1, "Select an existing book title."),
   condition: z.enum(adminInventoryConditionValues),
   copyCode: z
     .string()
     .trim()
     .min(3, "Copy code must be at least 3 characters."),
-  location: z
-    .string()
-    .trim()
-    .min(3, "Location must be at least 3 characters."),
-  locationNote: z.string().trim().max(80, "Location note is too long."),
   status: z.enum(adminInventoryStatusValues),
 });
 

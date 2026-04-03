@@ -1,4 +1,5 @@
 import {
+  adminSharedBooks,
   adminSharedInventoryCopies,
   formatAdminRelativeAuditLabel,
   getAdminSharedBook,
@@ -59,6 +60,19 @@ export const adminInventoryStatusOptions: ReadonlyArray<{
   { label: "Maintenance", value: "maintenance" },
 ];
 
+export const adminInventoryBookOptions = [
+  {
+    description: "Choose an existing catalog record.",
+    label: "Select a book",
+    value: "",
+  },
+  ...adminSharedBooks.map((book) => ({
+    description: `${book.author} · ${book.shelfCode}`,
+    label: book.title,
+    value: book.id,
+  })),
+] as const;
+
 export const adminInventoryRecords: ReadonlyArray<AdminInventoryRecord> =
   adminSharedInventoryCopies.map((copy) => {
     const book = getAdminSharedBook(copy.bookId);
@@ -69,8 +83,6 @@ export const adminInventoryRecords: ReadonlyArray<AdminInventoryRecord> =
       bookTitle: book?.title ?? "Unknown book",
       bookAuthor: book?.author ?? "Unknown author",
       copyCode: copy.copyCode,
-      location: `${copy.branch} · ${copy.shelfLabel}`,
-      locationNote: copy.locationNote,
       condition: copy.condition,
       status: copy.status,
       updatedAtLabel: formatAdminRelativeAuditLabel(copy.updatedOn),
@@ -81,13 +93,9 @@ export function createAdminInventoryFormValues(
   record?: AdminInventoryRecord,
 ): AdminInventoryFormValues {
   return {
-    bookAuthor: record?.bookAuthor ?? "",
     bookId: record?.bookId ?? "",
-    bookTitle: record?.bookTitle ?? "",
     condition: record?.condition ?? "good",
     copyCode: record?.copyCode ?? "",
-    location: record?.location ?? "",
-    locationNote: record?.locationNote ?? "",
     status: record?.status ?? "available",
   };
 }

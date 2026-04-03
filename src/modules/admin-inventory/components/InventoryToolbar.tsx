@@ -28,7 +28,7 @@ function InventoryToolbar({
         value={searchValue}
         onChange={(event) => onSearchChange(event.target.value)}
         label="Search inventory copies"
-        placeholder="Search copy code, title, author, or shelf..."
+        placeholder="Search copy code, title, or author..."
       />
       <AdminFilterSelect
         label="Status"

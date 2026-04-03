@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 
 import {
   adminInventoryConditionLabels,
+  adminInventoryBookOptions,
   adminInventoryStatusLabels,
 } from "../mock-data";
 import { adminInventoryFormSchema } from "../types";
@@ -40,6 +41,11 @@ function InventoryForm({
   const [mounted, setMounted] = React.useState(false);
   const [values, setValues] = React.useState(initialValues);
   const [errors, setErrors] = React.useState<AdminInventoryFormFieldErrors>({});
+
+  const selectedBook = React.useMemo(
+    () => adminInventoryBookOptions.find((option) => option.value === values.bookId),
+    [values.bookId],
+  );
 
   React.useEffect(() => {
     setMounted(true);
@@ -169,48 +175,22 @@ function InventoryForm({
               </label>
 
               <label className={fieldClassName}>
-                <span className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-                  Book title
-                </span>
-                <Input
-                  value={values.bookTitle}
-                  aria-invalid={Boolean(errors.bookTitle)}
-                  onChange={(event) => updateField("bookTitle", event.target.value)}
-                  placeholder="Enter the book title"
+                <AdminFilterSelect
+                  label="Book title"
+                  options={adminInventoryBookOptions}
+                  value={values.bookId}
+                  onValueChange={(value) => updateField("bookId", value)}
+                  className={cn(errors.bookId ? "aria-invalid:border-destructive" : undefined)}
                 />
-                <span className={cn(helperClassName, errors.bookTitle && "hidden")}>
-                  Later this can map to a real book record selector.
+                <span className={cn(helperClassName, errors.bookId && "hidden")}>
+                  Select an existing catalog record so this copy stays linked to the canonical book entry.
                 </span>
-                {errors.bookTitle ? <span className={errorClassName}>{errors.bookTitle}</span> : null}
-              </label>
-
-              <label className={fieldClassName}>
-                <span className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-                  Author
-                </span>
-                <Input
-                  value={values.bookAuthor}
-                  aria-invalid={Boolean(errors.bookAuthor)}
-                  onChange={(event) => updateField("bookAuthor", event.target.value)}
-                  placeholder="Enter the author name"
-                />
-                {errors.bookAuthor ? <span className={errorClassName}>{errors.bookAuthor}</span> : null}
-              </label>
-
-              <label className={fieldClassName}>
-                <span className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-                  Location
-                </span>
-                <Input
-                  value={values.location}
-                  aria-invalid={Boolean(errors.location)}
-                  onChange={(event) => updateField("location", event.target.value)}
-                  placeholder="Downtown · Shelf F3"
-                />
-                <span className={cn(helperClassName, errors.location && "hidden")}>
-                  Use the branch and shelf path staff will scan fastest.
-                </span>
-                {errors.location ? <span className={errorClassName}>{errors.location}</span> : null}
+                {selectedBook ? (
+                  <span className={cn(helperClassName, errors.bookId && "hidden")}>
+                    {selectedBook.description}
+                  </span>
+                ) : null}
+                {errors.bookId ? <span className={errorClassName}>{errors.bookId}</span> : null}
               </label>
 
               <div className={fieldClassName}>
@@ -251,30 +231,6 @@ function InventoryForm({
                 {errors.status ? <span className={errorClassName}>{errors.status}</span> : null}
               </div>
             </div>
-
-            <label className={fieldClassName}>
-              <span className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-                Location note
-              </span>
-              <textarea
-                value={values.locationNote}
-                aria-invalid={Boolean(errors.locationNote)}
-                onChange={(event) => updateField("locationNote", event.target.value)}
-                placeholder="Optional note for audits, displays, or special handling"
-                className={cn(
-                  "rounded-input border-input bg-card text-body text-foreground placeholder:text-placeholder focus-visible:border-border-strong focus-visible:bg-elevated focus-visible:ring-ring min-h-28 w-full resize-y border px-4 py-3 shadow-xs outline-none focus-visible:ring-4",
-                  errors.locationNote
-                    ? "border-destructive bg-danger-surface/40 focus-visible:ring-destructive/20"
-                    : null,
-                )}
-              />
-              <span className={cn(helperClassName, errors.locationNote && "hidden")}>
-                Optional staff-only context for the next stock review.
-              </span>
-              {errors.locationNote ? (
-                <span className={errorClassName}>{errors.locationNote}</span>
-              ) : null}
-            </label>
           </div>
 
           <div className="flex flex-col-reverse gap-2 border-t border-black/5 p-5 sm:flex-row sm:justify-end sm:p-6">

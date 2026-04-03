@@ -57,7 +57,7 @@ function AdminInventoryModule({
         <AdminPageHeader
           eyebrow="Copies"
           title="Inventory management"
-          description="Manage physical copies, shelf placement, and maintenance visibility in a dense but readable operations workspace."
+          description="Manage physical copies, copy condition, and circulation readiness in a dense but readable operations workspace."
           controls={
             <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_15rem_auto] lg:items-end">
               <InventoryToolbar
@@ -89,7 +89,7 @@ function AdminInventoryModule({
           {isEmpty ? (
             <AdminEmptyState
               title="No inventory copies yet"
-              description="Add the first physical copy to start tracking shelf placement, condition, and circulation readiness."
+              description="Add the first physical copy to start tracking copy condition, status, and circulation readiness."
               action={
                 <Button type="button" size="sm" onClick={openCreateForm}>
                   <Plus aria-hidden="true" className="size-4" />

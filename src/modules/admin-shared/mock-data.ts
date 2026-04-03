@@ -1256,13 +1256,11 @@ export function getAdminSharedBookCountByCategory(categoryId: AdminSharedCategor
 export function getAdminSharedBookInventorySummary(bookId: string) {
   const copies = getAdminSharedInventoryCopiesForBook(bookId);
   const borrowings = getAdminSharedBorrowingsForBook(bookId);
-  const primaryCopy = copies[0];
 
   return {
     availableCopies: copies.filter((copy) => copy.status === "available").length,
     borrowedCopies: copies.filter((copy) => copy.status === "borrowed").length,
-    branchLabel: primaryCopy ? `${primaryCopy.branch} branch` : "No branch assigned",
-    lastAuditLabel: primaryCopy
+    lastAuditLabel: copies.length > 0
       ? formatAdminRelativeAuditLabel(
           copies
             .slice()

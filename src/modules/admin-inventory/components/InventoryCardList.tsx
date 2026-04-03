@@ -39,26 +39,11 @@ function InventoryCardList({
             </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1">
-              <p className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-                Location
-              </p>
-              <p className="text-body-sm text-foreground font-medium">
-                {record.location}
-              </p>
-              {record.locationNote ? (
-                <p className="text-body-sm text-text-secondary">
-                  {record.locationNote}
-                </p>
-              ) : null}
-            </div>
-            <div className="space-y-1">
-              <p className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-                Condition
-              </p>
-              <InventoryConditionBadge condition={record.condition} />
-            </div>
+          <div className="space-y-1">
+            <p className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
+              Condition
+            </p>
+            <InventoryConditionBadge condition={record.condition} />
           </div>
 
           <AdminRowActions

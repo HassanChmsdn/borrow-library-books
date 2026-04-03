@@ -40,10 +40,7 @@ export function useAdminInventoryModuleState(
         ? true
         : record.copyCode.toLowerCase().includes(normalizedSearchValue) ||
           record.bookTitle.toLowerCase().includes(normalizedSearchValue) ||
-          record.bookAuthor.toLowerCase().includes(normalizedSearchValue) ||
-          record.location.toLowerCase().includes(normalizedSearchValue) ||
-          record.locationNote?.toLowerCase().includes(normalizedSearchValue) ||
-          false;
+          record.bookAuthor.toLowerCase().includes(normalizedSearchValue);
 
     return matchesStatus && matchesSearch;
   });

@@ -260,10 +260,6 @@ function BookDetailsForm({
               columns={1}
               items={[
                 {
-                  label: "Branch",
-                  value: book.inventorySummary.branchLabel,
-                },
-                {
                   label: "Shelf code",
                   value: book.inventorySummary.shelfCode,
                 },
