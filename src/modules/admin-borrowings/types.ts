@@ -1,32 +1,61 @@
-import type { LucideIcon } from "lucide-react";
+import type { BookCoverTone } from "@/modules/catalog/all-books-data";
 
-import type { BorrowStatusBadgeTone } from "@/components/library";
+import type { AdminStatusBadgeTone } from "@/components/admin";
 
-export type AdminBorrowingsTab = "active" | "pending" | "returned" | "overdue";
+export const adminBorrowingTabValues = [
+  "pending",
+  "active",
+  "overdue",
+  "returned",
+] as const;
 
-export type AdminBorrowingsPaymentTone = BorrowStatusBadgeTone;
+export type AdminBorrowingsTab = (typeof adminBorrowingTabValues)[number];
 
-export interface AdminBorrowingsMetric {
+export interface AdminBorrowingsTabItem {
+  count: number;
   label: string;
-  value: string;
-  supportingText: string;
-  icon: LucideIcon;
+  value: AdminBorrowingsTab;
+}
+
+export interface AdminBorrowingTimeline {
+  primaryLabel: string;
+  primaryValue: string;
+  secondaryLabel?: string;
+  secondaryValue?: string;
 }
 
 export interface AdminBorrowingRecord {
   id: string;
+  bookAuthor: string;
+  bookCoverLabel: string;
+  bookCoverTone: BookCoverTone;
   bookId: string;
   bookTitle: string;
-  bookAuthor: string;
-  memberName: string;
-  memberPlan: string;
+  borrowingStatusLabel: string;
+  borrowingStatusTone: AdminStatusBadgeTone;
   branch: string;
-  dueLabel: string;
-  dueValue: string;
+  durationLabel: string;
   feeCents: number;
-  paymentLabel: string;
-  paymentTone: AdminBorrowingsPaymentTone;
-  statusLabel: string;
-  statusTone: BorrowStatusBadgeTone;
+  isCustomDuration: boolean;
+  memberEmail: string;
+  memberMembership: string;
+  memberName: string;
+  paymentHelperText?: string;
+  paymentStatusLabel: string;
+  paymentStatusTone: AdminStatusBadgeTone;
   tab: AdminBorrowingsTab;
+  timeline: AdminBorrowingTimeline;
+}
+
+export interface AdminBorrowingActionHandlers {
+  onApproveBorrowing?: (record: AdminBorrowingRecord) => void;
+  onMarkReturned?: (record: AdminBorrowingRecord) => void;
+  onRejectBorrowing?: (record: AdminBorrowingRecord) => void;
+  onSendReminder?: (record: AdminBorrowingRecord) => void;
+}
+
+export interface AdminBorrowingsModuleProps
+  extends AdminBorrowingActionHandlers {
+  isLoading?: boolean;
+  records?: ReadonlyArray<AdminBorrowingRecord>;
 }

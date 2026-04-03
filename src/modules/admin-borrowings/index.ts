@@ -2,11 +2,12 @@ export {
   AdminBorrowingsLoadingState,
   AdminBorrowingsModule,
 } from "./admin-borrowings-module";
-export { useAdminBorrowingsModuleState } from "./hooks";
+export { useAdminBorrowingsState } from "./hooks";
 
 export type {
+  AdminBorrowingActionHandlers,
   AdminBorrowingRecord,
-  AdminBorrowingsMetric,
-  AdminBorrowingsPaymentTone,
+  AdminBorrowingsModuleProps,
   AdminBorrowingsTab,
+  AdminBorrowingsTabItem,
 } from "./types";
