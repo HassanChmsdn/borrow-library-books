@@ -121,8 +121,9 @@ export function buildMockSignInHref(options?: {
   redirectTo?: string;
 }) {
   const params = new URLSearchParams();
+  const isAdminRoute = options?.role === "admin";
 
-  if (options?.role) {
+  if (options?.role && !isAdminRoute) {
     params.set("role", options.role);
   }
 
@@ -131,7 +132,9 @@ export function buildMockSignInHref(options?: {
   }
 
   const query = params.toString();
-  return query ? `/auth/sign-in?${query}` : "/auth/sign-in";
+  const basePath = isAdminRoute ? "/auth/admin" : "/auth/sign-in";
+
+  return query ? `${basePath}?${query}` : basePath;
 }
 
 export function buildMockAuthorizeHref(

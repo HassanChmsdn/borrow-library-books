@@ -43,7 +43,7 @@ function PublicUtilitySlot({
           <Link
             href={buildMockSignInHref({ role: "admin", redirectTo: "/admin" })}
           >
-            Admin sign in
+            Admin access
           </Link>
         </Button>
       </>
