@@ -1,83 +1,129 @@
 "use client";
 
+import { Plus } from "lucide-react";
+
 import {
   AdminDataTable,
-  AdminFilterSelect,
+  AdminEmptyState,
   AdminPageHeader,
 } from "@/components/admin";
 import { LoadingSkeleton } from "@/components/feedback";
+import { Button } from "@/components/ui/button";
 
 import {
-  AdminInventoryAlerts,
-  AdminInventoryBranchGrid,
-  AdminInventoryTable,
+  InventoryCardList,
+  InventoryForm,
+  InventoryTable,
+  InventoryToolbar,
 } from "./components";
 import { useAdminInventoryModuleState } from "./hooks";
 
-function AdminInventoryModule() {
+import type { AdminInventoryModuleProps } from "./types";
+
+function AdminInventoryModule({
+  isLoading = false,
+  onSaveCopy,
+  records,
+}: Readonly<AdminInventoryModuleProps>) {
   const {
-    activeBranch,
-    alerts,
-    branches,
-    branchCards,
-    records,
-    setActiveBranch,
-  } = useAdminInventoryModuleState();
+    clearFilters,
+    filteredRecords,
+    formMode,
+    hasActiveFilters,
+    inventoryFormInitialValues,
+    isFormOpen,
+    openCreateForm,
+    openEditForm,
+    recordsCount,
+    saveCopy,
+    searchValue,
+    setIsFormOpen,
+    setSearchValue,
+    setStatusFilter,
+    statusFilter,
+    statusOptions,
+  } = useAdminInventoryModuleState(records, { onSaveCopy });
+
+  if (isLoading) {
+    return <AdminInventoryLoadingState />;
+  }
+
+  const isEmpty = recordsCount === 0;
+  const isNoResults = recordsCount > 0 && filteredRecords.length === 0;
 
   return (
-    <div className="gap-section flex flex-col">
-      <AdminPageHeader
-        eyebrow="Stock"
-        title="Inventory management"
-        description="Track shelf health, low-stock titles, and branch readiness using the same table, card, and badge system as the rest of the admin workspace."
-        controls={
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_14rem] lg:items-end">
-            <div className="space-y-1">
-              <p className="text-title-sm text-foreground font-semibold">
-                Branch filter
-              </p>
-              <p className="text-body-sm text-text-secondary">
-                Narrow the inventory view without changing the visual language
-                or the future data boundary.
-              </p>
+    <>
+      <div className="gap-section flex flex-col">
+        <AdminPageHeader
+          eyebrow="Copies"
+          title="Inventory management"
+          description="Manage physical copies, shelf placement, and maintenance visibility in a dense but readable operations workspace."
+          controls={
+            <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_15rem_auto] lg:items-end">
+              <InventoryToolbar
+                searchValue={searchValue}
+                onSearchChange={setSearchValue}
+                statusValue={statusFilter}
+                statusOptions={statusOptions}
+                onStatusChange={setStatusFilter}
+              />
+              <Button type="button" size="lg" onClick={openCreateForm}>
+                <Plus aria-hidden="true" className="size-4" />
+                Add copy
+              </Button>
             </div>
-            <AdminFilterSelect
-              label="Branch"
-              options={branches.map((branch) => ({
-                label: branch,
-                value: branch,
-              }))}
-              value={activeBranch}
-              onValueChange={setActiveBranch}
+          }
+        />
+
+        <AdminDataTable
+          title="Physical copy roster"
+          description="Desktop uses a dense copy table, while mobile falls back to stacked cards that preserve the same hierarchy for status and condition."
+          actions={
+            hasActiveFilters ? (
+              <Button type="button" size="sm" variant="ghost" onClick={clearFilters}>
+                Reset filters
+              </Button>
+            ) : null
+          }
+        >
+          {isEmpty ? (
+            <AdminEmptyState
+              title="No inventory copies yet"
+              description="Add the first physical copy to start tracking shelf placement, condition, and circulation readiness."
+              action={
+                <Button type="button" size="sm" onClick={openCreateForm}>
+                  <Plus aria-hidden="true" className="size-4" />
+                  Add first copy
+                </Button>
+              }
             />
-          </div>
-        }
-      ></AdminPageHeader>
-
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(18rem,0.85fr)]">
-        <section className="space-y-4">
-          <div className="space-y-1">
-            <h2 className="text-title-sm text-foreground font-semibold">
-              Branch health
-            </h2>
-            <p className="text-body-sm text-text-secondary">
-              Branch summary cards reflect the Figma hierarchy while keeping the
-              implementation token-driven and reusable.
-            </p>
-          </div>
-          <AdminInventoryBranchGrid items={branchCards} />
-        </section>
-
-        <AdminInventoryAlerts alerts={alerts} />
+          ) : isNoResults ? (
+            <AdminEmptyState
+              title="No copies match these filters"
+              description="Try another copy code, title, author, or status filter to find the physical record you need."
+              action={
+                <Button type="button" size="sm" variant="outline" onClick={clearFilters}>
+                  Clear search and status
+                </Button>
+              }
+            />
+          ) : (
+            <>
+              <InventoryCardList records={filteredRecords} onEditCopy={openEditForm} />
+              <InventoryTable records={filteredRecords} onEditCopy={openEditForm} />
+            </>
+          )}
+        </AdminDataTable>
       </div>
 
-      <AdminDataTable
-        title="Restock table"
-        description="Desktop-optimized for dense review while remaining readable on narrower screens through the shared table shell."
-      >
-        <AdminInventoryTable records={records} />
-      </AdminDataTable>
-    </div>
+      <InventoryForm
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        mode={formMode}
+        initialValues={inventoryFormInitialValues}
+        onSubmit={saveCopy}
+      />
+    </>
   );
 }
 
@@ -85,12 +131,12 @@ function AdminInventoryLoadingState() {
   return (
     <div className="gap-section flex flex-col">
       <AdminPageHeader
-        eyebrow="Stock"
+        eyebrow="Copies"
         title="Inventory management"
-        description="Loading inventory surfaces."
+        description="Loading inventory management surfaces."
       />
-      <LoadingSkeleton count={4} variant="card" className="xl:grid-cols-4" />
-      <LoadingSkeleton count={2} variant="table" className="xl:grid-cols-2" />
+      <LoadingSkeleton count={2} variant="card" className="lg:hidden" />
+      <LoadingSkeleton count={1} variant="table" />
     </div>
   );
 }
