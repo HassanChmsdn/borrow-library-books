@@ -95,7 +95,7 @@ function AdminContentWrapper({
     <div
       data-slot="admin-content-wrapper"
       className={cn(
-        "px-gutter mx-auto flex w-full max-w-(--layout-admin-content-max-width) flex-1 flex-col gap-6 py-6 sm:gap-8 sm:py-8 lg:py-10",
+        "px-gutter mx-auto flex min-h-full w-full max-w-(--layout-admin-content-max-width) flex-col gap-6 py-6 sm:gap-8 sm:py-8 lg:py-10",
         className,
       )}
       {...props}
@@ -202,9 +202,12 @@ function AdminShell({
   const activePath = currentPath ?? pathname;
 
   return (
-    <div className={cn("bg-background min-h-screen", className)} {...props}>
-      <div className="lg:grid lg:min-h-screen lg:grid-cols-[var(--layout-admin-sidebar-width)_minmax(0,1fr)]">
-        <aside className="border-border-subtle bg-card hidden border-r lg:flex lg:h-screen lg:flex-col lg:overflow-hidden">
+    <div
+      className={cn("bg-background h-dvh min-h-screen overflow-hidden", className)}
+      {...props}
+    >
+      <div className="h-full lg:grid lg:grid-cols-[var(--layout-admin-sidebar-width)_minmax(0,1fr)]">
+        <aside className="border-border-subtle bg-card hidden border-r lg:flex lg:h-full lg:flex-col lg:overflow-hidden">
           <div className="border-border-subtle flex min-h-(--layout-admin-header-height) items-center border-b px-5">
             <div className="min-w-0">{brand}</div>
           </div>
@@ -274,7 +277,7 @@ function AdminShell({
           {footerSlot ? <div className="px-4 pb-4">{footerSlot}</div> : null}
         </aside>
 
-        <div className="flex min-h-screen min-w-0 flex-col">
+        <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
           <header className="border-border-subtle bg-background/95 supports-backdrop-filter:bg-background/80 sticky top-0 z-30 border-b backdrop-blur">
             <div className="px-gutter mx-auto flex min-h-(--layout-admin-header-height) w-full max-w-(--layout-admin-content-max-width) items-center gap-3">
               <Button
@@ -294,7 +297,7 @@ function AdminShell({
             </div>
           </header>
 
-          <main className="flex-1">
+          <main className="flex min-h-0 flex-1 overflow-y-auto overscroll-contain">
             <AdminContentWrapper>
               {pageActionBar}
               <div className={cn("min-w-0 flex-1", contentClassName)}>
