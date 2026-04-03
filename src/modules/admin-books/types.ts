@@ -1,5 +1,3 @@
-import type { LucideIcon } from "lucide-react";
-
 import type { BookCoverTone } from "@/modules/catalog/all-books-data";
 
 import type {
@@ -27,28 +25,26 @@ export type AdminBooksSortValue =
   | "availability"
   | "fee";
 
-export interface AdminBooksMetric {
-  label: string;
-  value: string;
-  supportingText: string;
-  icon: LucideIcon;
-}
-
 export interface AdminBookRecord {
   id: string;
   title: string;
   author: string;
   category: Exclude<AdminBooksCategory, "All">;
-  branch: string;
   shelfCode: string;
   totalCopies: number;
   availableCopies: number;
   feeCents: number;
-  lastUpdated: string;
   coverTone: BookCoverTone;
   coverLabel: string;
   availabilityTone: AvailabilityBadgeTone;
-  workflowLabel: string;
-  workflowTone: BorrowStatusBadgeTone;
-  statusFilter: Exclude<AdminBooksStatusFilter, "all">;
+  statusLabel: string;
+  statusTone: BorrowStatusBadgeTone;
+}
+
+export interface AdminBooksModuleProps {
+  isLoading?: boolean;
+  onAddBook?: () => void;
+  onDeleteBook?: (book: AdminBookRecord) => void;
+  onEditBook?: (book: AdminBookRecord) => void;
+  records?: ReadonlyArray<AdminBookRecord>;
 }
