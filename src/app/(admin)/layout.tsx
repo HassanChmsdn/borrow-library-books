@@ -102,9 +102,15 @@ function AdminFooter({
         Mock-data admin workspace. Backend integration is intentionally deferred.
       </p>
 
-      <Button asChild className="mt-3 w-full" size="sm" variant="outline">
-        <Link href={buildMockSignOutHref("/books")}>Sign out</Link>
-      </Button>
+      <div className="mt-3 grid gap-2">
+        <Button asChild size="sm" variant="outline">
+          <Link href="/admin/profile">View profile</Link>
+        </Button>
+
+        <Button asChild className="w-full" size="sm" variant="secondary">
+          <Link href={buildMockSignOutHref("/books")}>Sign out</Link>
+        </Button>
+      </div>
     </div>
   );
 }
