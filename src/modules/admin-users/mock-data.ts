@@ -1,6 +1,7 @@
 import type { AdminFilterOption } from "@/components/admin";
 
 import type {
+  AdminUserProfileRecord,
   AdminUserRecord,
   AdminUsersRoleFilter,
 } from "./types";
@@ -13,7 +14,7 @@ export const adminUsersRoleOptions: ReadonlyArray<
   { label: "Admins", value: "admin" },
 ];
 
-export const adminUserRecords: ReadonlyArray<AdminUserRecord> = [
+export const adminUserProfileRecords: ReadonlyArray<AdminUserProfileRecord> = [
   {
     id: "sara-chehab",
     fullName: "Sara Chehab",
@@ -23,7 +24,64 @@ export const adminUserRecords: ReadonlyArray<AdminUserRecord> = [
     joinedDateLabel: "Joined 14 Jan 2026",
     borrowingSummaryLabel: "2 active, 1 pending",
     borrowingSummaryMeta: "One title due in 2 days",
+    profileSummaryNote:
+      "Frequent circulation user with one custom-duration research loan approved this month.",
+    totalBorrowingsCount: 8,
+    activeBorrowingsCount: 2,
+    overdueCount: 0,
     profileHref: "/admin/users/sara-chehab",
+    currentBorrowings: [
+      {
+        id: "sara-1984",
+        bookTitle: "1984",
+        bookAuthor: "George Orwell",
+        durationLabel: "14 days",
+        startedDateLabel: "Started 02 Apr 2026",
+        dueDateLabel: "Due 16 Apr 2026",
+        feeLabel: "Free",
+        paymentStatus: "not-required",
+        status: "active",
+        note: "Collected from Downtown circulation desk.",
+      },
+      {
+        id: "sara-clean-code",
+        bookTitle: "Clean Code",
+        bookAuthor: "Robert C. Martin",
+        durationLabel: "21 days",
+        startedDateLabel: "Started 30 Mar 2026",
+        dueDateLabel: "Due 20 Apr 2026",
+        feeLabel: "$2.50 cash",
+        paymentStatus: "cash-due",
+        status: "active",
+        customDurationRequested: true,
+        note: "Custom duration approved for final-year project work.",
+      },
+    ],
+    borrowingHistory: [
+      {
+        id: "sara-brief-history",
+        bookTitle: "A Brief History of Time",
+        bookAuthor: "Stephen Hawking",
+        durationLabel: "14 days",
+        startedDateLabel: "Started 06 Mar 2026",
+        completedDateLabel: "Returned 20 Mar 2026",
+        feeLabel: "$3.50 cash",
+        paymentStatus: "cash-settled",
+        status: "returned",
+        note: "Cash fee settled onsite at pickup.",
+      },
+      {
+        id: "sara-into-the-wild",
+        bookTitle: "Into the Wild",
+        bookAuthor: "Jon Krakauer",
+        durationLabel: "14 days",
+        startedDateLabel: "Started 10 Feb 2026",
+        completedDateLabel: "Returned 24 Feb 2026",
+        feeLabel: "Free",
+        paymentStatus: "not-required",
+        status: "returned",
+      },
+    ],
   },
   {
     id: "lina-saad",
@@ -34,7 +92,50 @@ export const adminUserRecords: ReadonlyArray<AdminUserRecord> = [
     joinedDateLabel: "Joined 02 Nov 2025",
     borrowingSummaryLabel: "1 overdue case",
     borrowingSummaryMeta: "Cash settlement due onsite",
+    profileSummaryNote:
+      "Account currently suspended pending overdue recovery and onsite fee settlement.",
+    totalBorrowingsCount: 5,
+    activeBorrowingsCount: 1,
+    overdueCount: 1,
     profileHref: "/admin/users/lina-saad",
+    currentBorrowings: [
+      {
+        id: "lina-lean-startup",
+        bookTitle: "The Lean Startup",
+        bookAuthor: "Eric Ries",
+        durationLabel: "14 days",
+        startedDateLabel: "Started 12 Mar 2026",
+        dueDateLabel: "Due 26 Mar 2026",
+        feeLabel: "$2.00 cash",
+        paymentStatus: "cash-due",
+        status: "overdue",
+        note: "Follow-up initiated after missed return window.",
+      },
+    ],
+    borrowingHistory: [
+      {
+        id: "lina-sapiens",
+        bookTitle: "Sapiens",
+        bookAuthor: "Yuval Noah Harari",
+        durationLabel: "14 days",
+        startedDateLabel: "Started 02 Feb 2026",
+        completedDateLabel: "Returned 18 Feb 2026",
+        feeLabel: "$2.50 cash",
+        paymentStatus: "cash-settled",
+        status: "returned",
+      },
+      {
+        id: "lina-art-of-war",
+        bookTitle: "The Art of War",
+        bookAuthor: "Sun Tzu",
+        durationLabel: "7 days",
+        startedDateLabel: "Started 08 Jan 2026",
+        completedDateLabel: "Returned 15 Jan 2026",
+        feeLabel: "Free",
+        paymentStatus: "not-required",
+        status: "returned",
+      },
+    ],
   },
   {
     id: "jad-khoury",
@@ -45,7 +146,27 @@ export const adminUserRecords: ReadonlyArray<AdminUserRecord> = [
     joinedDateLabel: "Joined 23 Sep 2024",
     borrowingSummaryLabel: "No personal loans",
     borrowingSummaryMeta: "Catalog manager account",
+    profileSummaryNote:
+      "Staff account used for catalog operations, approvals, and copy maintenance follow-up.",
+    totalBorrowingsCount: 1,
+    activeBorrowingsCount: 0,
+    overdueCount: 0,
     profileHref: "/admin/users/jad-khoury",
+    currentBorrowings: [],
+    borrowingHistory: [
+      {
+        id: "jad-design-everyday-things",
+        bookTitle: "The Design of Everyday Things",
+        bookAuthor: "Don Norman",
+        durationLabel: "7 days",
+        startedDateLabel: "Started 03 Dec 2025",
+        completedDateLabel: "Returned 10 Dec 2025",
+        feeLabel: "Free",
+        paymentStatus: "not-required",
+        status: "returned",
+        note: "Internal staff loan for display planning.",
+      },
+    ],
   },
   {
     id: "maya-sayegh",
@@ -56,7 +177,74 @@ export const adminUserRecords: ReadonlyArray<AdminUserRecord> = [
     joinedDateLabel: "Joined 19 Feb 2026",
     borrowingSummaryLabel: "3 active loans",
     borrowingSummaryMeta: "One custom-duration borrowing",
+    profileSummaryNote:
+      "High-activity reader account with multiple simultaneous loans and one approved extended loan.",
+    totalBorrowingsCount: 11,
+    activeBorrowingsCount: 3,
+    overdueCount: 0,
     profileHref: "/admin/users/maya-sayegh",
+    currentBorrowings: [
+      {
+        id: "maya-dune",
+        bookTitle: "Dune",
+        bookAuthor: "Frank Herbert",
+        durationLabel: "21 days",
+        startedDateLabel: "Started 28 Mar 2026",
+        dueDateLabel: "Due 18 Apr 2026",
+        feeLabel: "$3.00 cash",
+        paymentStatus: "cash-due",
+        status: "active",
+        customDurationRequested: true,
+        note: "Extended duration approved for book-club facilitation.",
+      },
+      {
+        id: "maya-invisible-cities",
+        bookTitle: "Invisible Cities",
+        bookAuthor: "Italo Calvino",
+        durationLabel: "14 days",
+        startedDateLabel: "Started 01 Apr 2026",
+        dueDateLabel: "Due 15 Apr 2026",
+        feeLabel: "Free",
+        paymentStatus: "not-required",
+        status: "active",
+      },
+      {
+        id: "maya-thinking-fast",
+        bookTitle: "Thinking, Fast and Slow",
+        bookAuthor: "Daniel Kahneman",
+        durationLabel: "14 days",
+        startedDateLabel: "Started 04 Apr 2026",
+        dueDateLabel: "Due 18 Apr 2026",
+        feeLabel: "$2.00 cash",
+        paymentStatus: "cash-due",
+        status: "pending",
+        note: "Pickup is approved; cash fee will be settled onsite.",
+      },
+    ],
+    borrowingHistory: [
+      {
+        id: "maya-beloved",
+        bookTitle: "Beloved",
+        bookAuthor: "Toni Morrison",
+        durationLabel: "14 days",
+        startedDateLabel: "Started 05 Mar 2026",
+        completedDateLabel: "Returned 19 Mar 2026",
+        feeLabel: "Free",
+        paymentStatus: "not-required",
+        status: "returned",
+      },
+      {
+        id: "maya-atomic-habits",
+        bookTitle: "Atomic Habits",
+        bookAuthor: "James Clear",
+        durationLabel: "14 days",
+        startedDateLabel: "Started 08 Feb 2026",
+        completedDateLabel: "Returned 22 Feb 2026",
+        feeLabel: "$2.50 cash",
+        paymentStatus: "cash-settled",
+        status: "returned",
+      },
+    ],
   },
   {
     id: "omar-haddad",
@@ -67,7 +255,14 @@ export const adminUserRecords: ReadonlyArray<AdminUserRecord> = [
     joinedDateLabel: "Joined 09 Jun 2024",
     borrowingSummaryLabel: "No personal loans",
     borrowingSummaryMeta: "Borrowings operations lead",
+    profileSummaryNote:
+      "Operations lead account with access to borrowings approvals, overdue review, and member follow-up workflows.",
+    totalBorrowingsCount: 0,
+    activeBorrowingsCount: 0,
+    overdueCount: 0,
     profileHref: "/admin/users/omar-haddad",
+    currentBorrowings: [],
+    borrowingHistory: [],
   },
   {
     id: "rana-azar",
@@ -78,10 +273,38 @@ export const adminUserRecords: ReadonlyArray<AdminUserRecord> = [
     joinedDateLabel: "Joined 28 Mar 2026",
     borrowingSummaryLabel: "New account",
     borrowingSummaryMeta: "No borrowing activity yet",
+    profileSummaryNote:
+      "New member account awaiting its first successful borrowing after onboarding.",
+    totalBorrowingsCount: 0,
+    activeBorrowingsCount: 0,
+    overdueCount: 0,
     profileHref: "/admin/users/rana-azar",
+    currentBorrowings: [],
+    borrowingHistory: [],
   },
 ];
 
+function createAdminUserRecord(record: AdminUserProfileRecord): AdminUserRecord {
+  return {
+    borrowingSummaryLabel: record.borrowingSummaryLabel,
+    borrowingSummaryMeta: record.borrowingSummaryMeta,
+    email: record.email,
+    fullName: record.fullName,
+    id: record.id,
+    joinedDateLabel: record.joinedDateLabel,
+    profileHref: record.profileHref,
+    role: record.role,
+    status: record.status,
+  };
+}
+
+export const adminUserRecords: ReadonlyArray<AdminUserRecord> =
+  adminUserProfileRecords.map(createAdminUserRecord);
+
 export function getAdminUserRecordById(userId: string) {
   return adminUserRecords.find((record) => record.id === userId);
+}
+
+export function getAdminUserProfileRecordById(userId: string) {
+  return adminUserProfileRecords.find((record) => record.id === userId);
 }

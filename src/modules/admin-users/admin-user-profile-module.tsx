@@ -1,0 +1,149 @@
+"use client";
+
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+
+import {
+  AdminEmptyState,
+  AdminPageHeader,
+} from "@/components/admin";
+import { LoadingSkeleton } from "@/components/feedback";
+import { Button } from "@/components/ui/button";
+
+import { useAdminUserProfileState } from "./hooks";
+import type { AdminUserProfileModuleProps } from "./types";
+import {
+  UserAccountActions,
+  UserBorrowingHistory,
+  UserProfileSummary,
+  UserRoleBadge,
+  UserStatusBadge,
+} from "./components";
+
+function AdminUserProfileModule({
+  initialUser,
+  isLoading = false,
+}: Readonly<AdminUserProfileModuleProps>) {
+  const {
+    isMutating,
+    lastActionMessage,
+    reactivateUser,
+    suspendUser,
+    toggleRole,
+    user,
+  } = useAdminUserProfileState(initialUser);
+
+  if (isLoading) {
+    return <AdminUserProfileLoadingState />;
+  }
+
+  if (!user) {
+    return <AdminUserProfileEmptyState />;
+  }
+
+  return (
+    <div className="gap-section flex flex-col">
+      <AdminPageHeader
+        eyebrow="Members"
+        title={user.fullName}
+        description="Review account posture, live circulation exposure, and staff actions from one member management screen built for future server integration."
+        actions={
+          <Button asChild size="sm" variant="outline">
+            <Link href="/admin/users">
+              <ArrowLeft className="size-4" />
+              Back to users
+            </Link>
+          </Button>
+        }
+        controls={
+          <div className="flex flex-wrap items-center gap-2">
+            <UserRoleBadge role={user.role} />
+            <UserStatusBadge status={user.status} />
+          </div>
+        }
+      />
+
+      <section className="grid gap-5 xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] xl:items-start">
+        <div className="grid gap-5">
+          <UserProfileSummary user={user} />
+          <UserAccountActions
+            isMutating={isMutating}
+            lastActionMessage={lastActionMessage}
+            onChangeRole={toggleRole}
+            onReactivateUser={reactivateUser}
+            onSuspendUser={suspendUser}
+            role={user.role}
+            status={user.status}
+          />
+        </div>
+
+        <div className="grid gap-5">
+          <UserBorrowingHistory
+            title="Current borrowings"
+            description="Live circulation items currently attached to this account, including overdue exposure and onsite cash reminders where relevant."
+            records={user.currentBorrowings}
+            emptyTitle="No current borrowings"
+            emptyDescription="This member does not currently hold any active or pending circulation items."
+          />
+
+          <UserBorrowingHistory
+            title="Borrowing history"
+            description="Recent completed borrowing records to support staff review and future profile management actions."
+            records={user.borrowingHistory}
+            emptyTitle="No borrowing history"
+            emptyDescription="History entries will appear here once this account completes or settles previous borrowing activity."
+          />
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function AdminUserProfileEmptyState() {
+  return (
+    <div className="gap-section flex flex-col">
+      <AdminPageHeader
+        eyebrow="Members"
+        title="User profile"
+        description="The selected member could not be found in the current mock admin roster."
+      />
+
+      <AdminEmptyState
+        title="User not found"
+        description="Return to the users management page and choose another record. This fallback is local so the route can be safely refined before backend wiring exists."
+        action={
+          <Button asChild>
+            <Link href="/admin/users">Back to users</Link>
+          </Button>
+        }
+      />
+    </div>
+  );
+}
+
+function AdminUserProfileLoadingState() {
+  return (
+    <div className="gap-section flex flex-col">
+      <AdminPageHeader
+        eyebrow="Members"
+        title="User profile"
+        description="Preparing the account summary, circulation history, and admin action panels."
+      />
+
+      <section className="grid gap-5 xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
+        <div className="grid gap-5">
+          <LoadingSkeleton count={2} variant="card" />
+        </div>
+        <div className="grid gap-5">
+          <LoadingSkeleton count={2} variant="card" />
+        </div>
+      </section>
+    </div>
+  );
+}
+
+export {
+  AdminUserProfileEmptyState,
+  AdminUserProfileLoadingState,
+  AdminUserProfileModule,
+};
