@@ -7,11 +7,13 @@ import type {
 
 interface BorrowingActionsProps extends AdminBorrowingActionHandlers {
   align?: "end" | "start";
+  density?: "card" | "table";
   record: AdminBorrowingRecord;
 }
 
 function BorrowingActions({
   align = "start",
+  density = "card",
   onApproveBorrowing,
   onMarkReturned,
   onRejectBorrowing,
@@ -95,7 +97,15 @@ function BorrowingActions({
               },
             ];
 
-  return <AdminRowActions actions={actions} align={align} />;
+    return (
+      <AdminRowActions
+        actions={actions}
+        align={align}
+        orientation={density === "table" ? "column" : "row"}
+        size="xs"
+        stretch={density === "table"}
+      />
+    );
 }
 
 export { BorrowingActions, type BorrowingActionsProps };

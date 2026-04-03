@@ -34,20 +34,36 @@ interface AdminRowActionsProps {
   actions: ReadonlyArray<AdminRowAction>;
   align?: "end" | "start";
   className?: string;
+  orientation?: "column" | "row";
   size?: "sm" | "xs";
+  stretch?: boolean;
 }
 
 function AdminRowActions({
   actions,
   align = "start",
   className,
+  orientation = "row",
   size = "xs",
+  stretch = false,
 }: AdminRowActionsProps) {
+  const buttonClassName = cn(
+    stretch ? "w-full justify-center" : undefined,
+    orientation === "column" ? "min-w-[5.75rem]" : undefined,
+  );
+
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center gap-2",
-        align === "end" ? "justify-end" : undefined,
+        "flex items-center gap-2",
+        orientation === "column" ? "flex-col" : "flex-wrap",
+        align === "end"
+          ? orientation === "column"
+            ? "items-end"
+            : "justify-end"
+          : orientation === "column"
+            ? "items-start"
+            : undefined,
         className,
       )}
     >
@@ -66,7 +82,12 @@ function AdminRowActions({
             <ConfirmActionDialog
               key={key}
               trigger={
-                <Button type="button" size={size} variant={variant}>
+                <Button
+                  type="button"
+                  size={size}
+                  variant={variant}
+                  className={buttonClassName}
+                >
                   {content}
                 </Button>
               }
@@ -88,6 +109,7 @@ function AdminRowActions({
               type="button"
               size={size}
               variant={variant}
+              className={buttonClassName}
             >
               <Link href={action.href}>{content}</Link>
             </Button>
@@ -100,6 +122,7 @@ function AdminRowActions({
             type="button"
             size={size}
             variant={variant}
+            className={buttonClassName}
             disabled={action.disabled}
             onClick={action.onAction}
           >

@@ -36,17 +36,15 @@ function BorrowingsTable({
 }: Readonly<BorrowingsTableProps>) {
   return (
     <div className="hidden lg:block">
-      <AdminTable>
+      <AdminTable className="min-w-0 table-fixed">
         <AdminTableHeader>
           <AdminTableRow>
-            <AdminTableHead>Book</AdminTableHead>
-            <AdminTableHead>User</AdminTableHead>
-            <AdminTableHead>Duration</AdminTableHead>
-            <AdminTableHead>Dates</AdminTableHead>
-            <AdminTableHead>Fee</AdminTableHead>
-            <AdminTableHead>Payment</AdminTableHead>
-            <AdminTableHead>Status</AdminTableHead>
-            <AdminTableHead className="text-right">Actions</AdminTableHead>
+            <AdminTableHead className="w-[23%]">Book</AdminTableHead>
+            <AdminTableHead className="w-[18%]">User</AdminTableHead>
+            <AdminTableHead className="w-[19%]">Duration and dates</AdminTableHead>
+            <AdminTableHead className="w-[18%]">Fee and payment</AdminTableHead>
+            <AdminTableHead className="w-[10%] whitespace-nowrap">Status</AdminTableHead>
+            <AdminTableHead className="w-[12%] whitespace-nowrap text-right">Actions</AdminTableHead>
           </AdminTableRow>
         </AdminTableHeader>
         <AdminTableBody>
@@ -56,34 +54,42 @@ function BorrowingsTable({
                 <div className="flex items-start gap-3">
                   <BookCoverArt
                     author={record.bookAuthor}
-                    className="w-14 shrink-0"
+                    className="w-11 shrink-0 rounded-xl"
                     coverLabel={record.bookCoverLabel}
                     title={record.bookTitle}
                     tone={record.bookCoverTone}
                   />
-                  <div className="min-w-0 space-y-1.5">
-                    <p className="text-body text-foreground font-medium text-balance">
+                  <div className="min-w-0 space-y-1">
+                    <p
+                      className="text-body-sm text-foreground truncate font-medium"
+                      title={record.bookTitle}
+                    >
                       {record.bookTitle}
                     </p>
-                    <p className="text-body-sm text-text-secondary">
+                    <p
+                      className="text-body-sm text-text-secondary truncate"
+                      title={record.bookAuthor}
+                    >
                       {record.bookAuthor}
-                    </p>
-                    <p className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-                      {record.branch}
                     </p>
                   </div>
                 </div>
               </AdminTableCell>
               <AdminTableCell>
                 <AdminUserAvatar
+                  className="gap-2.5"
                   meta={record.memberMembership}
                   name={record.memberName}
                   size="sm"
-                  subtitle={record.memberEmail}
+                  subtitle={
+                    <span className="block truncate" title={record.memberEmail}>
+                      {record.memberEmail}
+                    </span>
+                  }
                 />
               </AdminTableCell>
               <AdminTableCell>
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <p className="text-body-sm text-foreground font-medium">
                     {record.durationLabel}
                   </p>
@@ -92,35 +98,42 @@ function BorrowingsTable({
                       Custom duration
                     </p>
                   ) : null}
-                </div>
-              </AdminTableCell>
-              <AdminTableCell>
-                <div className="space-y-1">
-                  <p className="text-body-sm text-foreground font-medium">
-                    {record.timeline.primaryLabel}: {record.timeline.primaryValue}
-                  </p>
+                  <div className="space-y-0.5">
+                    <p className="text-caption text-text-secondary">
+                      <span className="font-medium uppercase tracking-[0.14em]">
+                        {record.timeline.primaryLabel}
+                      </span>{" "}
+                      {record.timeline.primaryValue}
+                    </p>
                   {record.timeline.secondaryLabel && record.timeline.secondaryValue ? (
-                    <p className="text-body-sm text-text-secondary">
-                      {record.timeline.secondaryLabel}: {record.timeline.secondaryValue}
+                    <p className="text-caption text-text-tertiary">
+                      <span className="font-medium uppercase tracking-[0.14em]">
+                        {record.timeline.secondaryLabel}
+                      </span>{" "}
+                      {record.timeline.secondaryValue}
                     </p>
                   ) : null}
+                  </div>
                 </div>
               </AdminTableCell>
               <AdminTableCell>
-                <FeeBadge
-                  label={formatBookFeeLabel(record.feeCents)}
-                  tone={getBookFeeTone(record.feeCents)}
-                />
-              </AdminTableCell>
-              <AdminTableCell>
-                <PaymentStatusBadge
-                  helperText={record.paymentHelperText}
-                  label={record.paymentStatusLabel}
-                  tone={record.paymentStatusTone}
-                />
+                <div className="space-y-1.5">
+                  <FeeBadge
+                    className="max-w-full"
+                    label={formatBookFeeLabel(record.feeCents)}
+                    tone={getBookFeeTone(record.feeCents)}
+                  />
+                  <PaymentStatusBadge
+                    compact
+                    helperText={record.paymentHelperText}
+                    label={record.paymentStatusLabel}
+                    tone={record.paymentStatusTone}
+                  />
+                </div>
               </AdminTableCell>
               <AdminTableCell>
                 <BorrowingStatusBadge
+                  density="compact"
                   label={record.borrowingStatusLabel}
                   tone={record.borrowingStatusTone}
                 />
@@ -128,6 +141,7 @@ function BorrowingsTable({
               <AdminTableCell className="text-right">
                 <BorrowingActions
                   align="end"
+                  density="table"
                   onApproveBorrowing={onApproveBorrowing}
                   onMarkReturned={onMarkReturned}
                   onRejectBorrowing={onRejectBorrowing}
