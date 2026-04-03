@@ -1,6 +1,7 @@
 export { AdminDataTable } from "./admin-data-table";
 export { AdminDetailSection } from "./admin-detail-section";
 export { AdminEmptyState } from "./admin-empty-state";
+export { AdminErrorState } from "./admin-error-state";
 export { AdminFilterSelect } from "./admin-filter-select";
 export { AdminMetricStrip } from "./admin-metric-strip";
 export { AdminPageHeader } from "./admin-page-header";
@@ -30,6 +31,7 @@ export type {
   AdminDetailSectionProps,
 } from "./admin-detail-section";
 export type { AdminEmptyStateProps } from "./admin-empty-state";
+export type { AdminErrorStateProps } from "./admin-error-state";
 export type {
   AdminFilterOption,
   AdminFilterSelectProps,

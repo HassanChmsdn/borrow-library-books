@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { AdminPageHeader } from "@/components/admin";
+import { AdminEmptyState, AdminPageHeader } from "@/components/admin";
 import { LoadingSkeleton } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
 
@@ -16,6 +16,18 @@ import { getAdminDashboardModuleData } from "./hooks";
 function AdminDashboardModule() {
   const { activity, metrics, notices, quickActions, trendPoints, trendSummary } =
     getAdminDashboardModuleData();
+
+  const hasDashboardContent =
+    activity.length > 0 ||
+    metrics.length > 0 ||
+    notices.length > 0 ||
+    quickActions.length > 0 ||
+    trendPoints.length > 0 ||
+    trendSummary.length > 0;
+
+  if (!hasDashboardContent) {
+    return <AdminDashboardEmptyState />;
+  }
 
   return (
     <div className="gap-section flex flex-col">
@@ -51,6 +63,28 @@ function AdminDashboardModule() {
           <AdminDashboardQuickActionsSection actions={quickActions} />
         </div>
       </div>
+    </div>
+  );
+}
+
+function AdminDashboardEmptyState() {
+  return (
+    <div className="gap-section flex flex-col">
+      <AdminPageHeader
+        eyebrow="Dashboard"
+        title="Library operations dashboard"
+        description="The dashboard is ready, but there is no operational mock data to summarize yet. Reconnect the derived dataset or seed new records to repopulate this overview."
+      />
+
+      <AdminEmptyState
+        title="No dashboard data available"
+        description="KPI cards, notices, trends, and recent activity will appear here once the admin data source contains operational records again."
+        action={
+          <Button asChild size="sm" variant="outline">
+            <Link href="/admin/books">Open books management</Link>
+          </Button>
+        }
+      />
     </div>
   );
 }
