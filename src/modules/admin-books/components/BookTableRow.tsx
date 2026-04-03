@@ -96,11 +96,17 @@ function BookTableRow({
         <AdminRowActions
           align="end"
           actions={[
-            {
-              label: "Edit",
-              variant: "ghost",
-              onAction: onEditBook ? () => onEditBook(book) : undefined,
-            },
+            onEditBook
+              ? {
+                  label: "Edit",
+                  variant: "ghost",
+                  onAction: () => onEditBook(book),
+                }
+              : {
+                  label: "Edit",
+                  variant: "ghost",
+                  href: `/admin/books/${book.id}`,
+                },
             {
               label: "Delete",
               variant: "ghost",

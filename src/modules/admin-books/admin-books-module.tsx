@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import {
   AdminDataTable,
   AdminPageHeader,
@@ -44,9 +46,15 @@ function AdminBooksModule({
         title="Book management"
         description="Manage titles, copy availability, and borrowing fees in a dense but readable catalog workspace prepared for future backend workflows."
         actions={
-          <Button size="sm" type="button" onClick={onAddBook}>
-            Add book
-          </Button>
+          onAddBook ? (
+            <Button size="sm" type="button" onClick={onAddBook}>
+              Add book
+            </Button>
+          ) : (
+            <Button asChild size="sm">
+              <Link href="/admin/books/new">Add book</Link>
+            </Button>
+          )
         }
         controls={
           <BooksToolbar
