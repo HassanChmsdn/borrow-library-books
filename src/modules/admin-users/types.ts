@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 export type AdminUserRole = "user" | "admin";
 
 export type AdminUserStatus = "active" | "suspended";
@@ -22,7 +24,7 @@ export interface AdminUserRecord {
   fullName: string;
   id: string;
   joinedDateLabel: string;
-  profileHref: string;
+  profileHref?: string;
   role: AdminUserRole;
   status: AdminUserStatus;
 }
@@ -61,3 +63,34 @@ export interface AdminUserProfileModuleProps {
   initialUser?: AdminUserProfileRecord;
   isLoading?: boolean;
 }
+
+export const adminUserFormRoleValues = ["user", "admin"] as const;
+export const adminUserFormStatusValues = ["active", "suspended"] as const;
+
+export const adminUserFormSchema = z.object({
+  accountStatus: z.enum(adminUserFormStatusValues),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required.")
+    .email("Enter a valid email address."),
+  fullName: z
+    .string()
+    .trim()
+    .min(2, "Full name must be at least 2 characters.")
+    .max(80, "Full name must stay within 80 characters."),
+  onboardingNote: z
+    .string()
+    .trim()
+    .max(180, "Onboarding note must stay within 180 characters."),
+  role: z.enum(adminUserFormRoleValues),
+  temporaryPassword: z
+    .string()
+    .trim()
+    .max(64, "Temporary password must stay within 64 characters."),
+});
+
+export type AdminUserFormValues = z.infer<typeof adminUserFormSchema>;
+export type AdminUserFormFieldErrors = Partial<
+  Record<keyof AdminUserFormValues, string>
+>;

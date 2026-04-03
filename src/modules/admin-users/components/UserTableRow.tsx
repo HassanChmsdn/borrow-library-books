@@ -15,6 +15,22 @@ interface UserTableRowProps {
 }
 
 function UserTableRow({ user }: Readonly<UserTableRowProps>) {
+  const actions = user.profileHref
+    ? [
+        {
+          label: "Open profile",
+          href: user.profileHref,
+          variant: "ghost" as const,
+        },
+      ]
+    : [
+        {
+          label: "Profile pending",
+          disabled: true,
+          variant: "ghost" as const,
+        },
+      ];
+
   return (
     <AdminTableRow>
       <AdminTableCell>
@@ -44,16 +60,7 @@ function UserTableRow({ user }: Readonly<UserTableRowProps>) {
         </div>
       </AdminTableCell>
       <AdminTableCell className="text-right">
-        <AdminRowActions
-          align="end"
-          actions={[
-            {
-              label: "Open profile",
-              href: user.profileHref,
-              variant: "ghost",
-            },
-          ]}
-        />
+        <AdminRowActions align="end" actions={actions} />
       </AdminTableCell>
     </AdminTableRow>
   );

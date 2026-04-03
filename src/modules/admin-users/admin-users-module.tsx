@@ -1,5 +1,7 @@
 "use client";
 
+import { Plus } from "lucide-react";
+
 import {
   AdminDataTable,
   AdminEmptyState,
@@ -9,12 +11,13 @@ import { LoadingSkeleton } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
 
 import {
+  UserFormDialog,
   UsersCardList,
   UsersTable,
   UsersToolbar,
 } from "./components";
 import { useAdminUsersModuleState } from "./hooks";
-import { adminUserRecords } from "./mock-data";
+import { adminUserFormDefaults, adminUserRecords } from "./mock-data";
 
 import type { AdminUsersModuleProps } from "./types";
 
@@ -24,14 +27,20 @@ function AdminUsersModule({
 }: Readonly<AdminUsersModuleProps>) {
   const {
     clearFilters,
+    createFeedback,
+    dismissCreateFeedback,
     filteredRecords,
     hasActiveFilters,
+    isCreateDialogOpen,
+    isCreatingUser,
     recordsCount,
     roleFilter,
     roleOptions,
     searchValue,
+    setCreateDialogOpen,
     setRoleFilter,
     setSearchValue,
+    submitCreateUser,
   } = useAdminUsersModuleState(records);
 
   if (isLoading) {
@@ -40,6 +49,8 @@ function AdminUsersModule({
 
   const isEmpty = recordsCount === 0;
   const isNoResults = recordsCount > 0 && filteredRecords.length === 0;
+  const submissionError =
+    createFeedback?.tone === "danger" ? createFeedback.message : null;
 
   return (
     <div className="gap-section flex flex-col">
@@ -54,9 +65,37 @@ function AdminUsersModule({
             roleValue={roleFilter}
             roleOptions={roleOptions}
             onRoleChange={setRoleFilter}
+            action={
+              <Button
+                type="button"
+                onClick={() => {
+                  dismissCreateFeedback();
+                  setCreateDialogOpen(true);
+                }}
+              >
+                <Plus aria-hidden="true" className="size-4" />
+                Add user
+              </Button>
+            }
           />
         }
       />
+
+      {createFeedback?.tone === "success" ? (
+        <div className="rounded-card border border-success/20 bg-success/5 flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1">
+            <p className="text-body-sm text-foreground font-medium">
+              Mocked user created
+            </p>
+            <p className="text-body-sm text-text-secondary">
+              {createFeedback.message}
+            </p>
+          </div>
+          <Button type="button" size="sm" variant="ghost" onClick={dismissCreateFeedback}>
+            Dismiss
+          </Button>
+        </div>
+      ) : null}
 
       <AdminDataTable
         title="Library members"
@@ -91,6 +130,20 @@ function AdminUsersModule({
           </>
         )}
       </AdminDataTable>
+
+      <UserFormDialog
+        initialValues={adminUserFormDefaults}
+        isSubmitting={isCreatingUser}
+        onOpenChange={(open) => {
+          setCreateDialogOpen(open);
+          if (!open && submissionError) {
+            dismissCreateFeedback();
+          }
+        }}
+        onSubmit={submitCreateUser}
+        open={isCreateDialogOpen}
+        submissionError={submissionError}
+      />
     </div>
   );
 }

@@ -2,30 +2,47 @@
 
 import {
   startTransition,
+  useEffect,
   useDeferredValue,
   useState,
 } from "react";
 
 import {
+  createMockAdminUserRecord,
   adminUserRecords,
   adminUsersRoleOptions,
 } from "./mock-data";
 import type {
+  AdminUserFormValues,
   AdminUserProfileRecord,
   AdminUserRecord,
   AdminUsersRoleFilter,
 } from "./types";
 
+interface AdminUsersFeedbackState {
+  message: string;
+  tone: "danger" | "success";
+}
+
 export function useAdminUsersModuleState(
   inputRecords: ReadonlyArray<AdminUserRecord> = adminUserRecords,
 ) {
+  const [records, setRecords] = useState(inputRecords);
+  const [createFeedback, setCreateFeedback] =
+    useState<AdminUsersFeedbackState | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [roleFilter, setRoleFilter] = useState<AdminUsersRoleFilter>("all");
   const [searchValue, setSearchValue] = useState("");
+
+  useEffect(() => {
+    setRecords(inputRecords);
+  }, [inputRecords]);
 
   const deferredSearchValue = useDeferredValue(searchValue);
   const normalizedSearchValue = deferredSearchValue.trim().toLowerCase();
 
-  const filteredRecords = inputRecords.filter((record) => {
+  const filteredRecords = records.filter((record) => {
     const matchesFilter = roleFilter === "all" || record.role === roleFilter;
     const matchesSearch =
       normalizedSearchValue.length === 0 ||
@@ -41,16 +58,60 @@ export function useAdminUsersModuleState(
     setSearchValue("");
   }
 
+  function dismissCreateFeedback() {
+    setCreateFeedback(null);
+  }
+
+  async function submitCreateUser(values: AdminUserFormValues) {
+    setIsCreatingUser(true);
+    setCreateFeedback(null);
+
+    await new Promise((resolve) => window.setTimeout(resolve, 350));
+
+    const normalizedEmail = values.email.trim().toLowerCase();
+    const duplicateRecord = records.find(
+      (record) => record.email.toLowerCase() === normalizedEmail,
+    );
+
+    if (duplicateRecord) {
+      setCreateFeedback({
+        message:
+          "A user with that email already exists in the mocked roster. Change the email to simulate a new account.",
+        tone: "danger",
+      });
+      setIsCreatingUser(false);
+      return false;
+    }
+
+    const nextRecord = createMockAdminUserRecord(values);
+
+    setRecords((current) => [nextRecord, ...current]);
+    setCreateFeedback({
+      message:
+        "User created locally. This mocked flow is ready to be replaced by a future Auth0 and MongoDB-backed create-user mutation.",
+      tone: "success",
+    });
+    setIsCreateDialogOpen(false);
+    setIsCreatingUser(false);
+    return true;
+  }
+
   return {
     clearFilters,
+    createFeedback,
+    dismissCreateFeedback,
     filteredRecords,
     hasActiveFilters: roleFilter !== "all" || searchValue.trim().length > 0,
-    recordsCount: inputRecords.length,
+    isCreateDialogOpen,
+    isCreatingUser,
+    recordsCount: records.length,
     roleFilter,
     roleOptions: adminUsersRoleOptions,
     searchValue,
+    setCreateDialogOpen: setIsCreateDialogOpen,
     setRoleFilter,
     setSearchValue,
+    submitCreateUser,
   };
 }
 

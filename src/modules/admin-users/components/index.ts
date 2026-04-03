@@ -1,5 +1,6 @@
 export { UserAccountActions } from "./UserAccountActions";
 export { UserBorrowingHistory } from "./UserBorrowingHistory";
+export { UserFormDialog } from "./UserFormDialog";
 export { UserProfileSummary } from "./UserProfileSummary";
 export { UserRoleBadge } from "./UserRoleBadge";
 export { UserStatusBadge } from "./UserStatusBadge";
@@ -10,6 +11,7 @@ export { UsersToolbar } from "./UsersToolbar";
 
 export type { UserAccountActionsProps } from "./UserAccountActions";
 export type { UserBorrowingHistoryProps } from "./UserBorrowingHistory";
+export type { UserFormDialogProps } from "./UserFormDialog";
 export type { UserProfileSummaryProps } from "./UserProfileSummary";
 export type { UserRoleBadgeProps } from "./UserRoleBadge";
 export type { UserStatusBadgeProps } from "./UserStatusBadge";

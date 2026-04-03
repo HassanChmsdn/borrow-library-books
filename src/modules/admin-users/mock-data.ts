@@ -2,10 +2,12 @@ import { adminSharedBorrowings, adminSharedUsers, formatAdminJoinedDate, formatA
 import type { AdminFilterOption } from "@/components/admin";
 
 import type {
+  AdminUserFormValues,
   AdminUserBorrowingRecord,
   AdminUserPaymentStatus,
   AdminUserProfileRecord,
   AdminUserRecord,
+  AdminUserStatus,
   AdminUsersRoleFilter,
 } from "./types";
 
@@ -121,6 +123,29 @@ export const adminUsersRoleOptions: ReadonlyArray<
   { label: "Admins", value: "admin" },
 ];
 
+export const adminUserRoleFieldOptions: ReadonlyArray<
+  AdminFilterOption<AdminUserFormValues["role"]>
+> = [
+  { label: "User", value: "user" },
+  { label: "Admin", value: "admin" },
+];
+
+export const adminUserStatusFieldOptions: ReadonlyArray<
+  AdminFilterOption<AdminUserStatus>
+> = [
+  { label: "Active", value: "active" },
+  { label: "Suspended", value: "suspended" },
+];
+
+export const adminUserFormDefaults: AdminUserFormValues = {
+  accountStatus: "active",
+  email: "",
+  fullName: "",
+  onboardingNote: "",
+  role: "user",
+  temporaryPassword: "",
+};
+
 export const adminUserProfileRecords: ReadonlyArray<AdminUserProfileRecord> =
   adminSharedUsers.map((user) => {
     const borrowings = adminSharedBorrowings.filter((record) => record.userId === user.id);
@@ -188,4 +213,39 @@ export function getAdminUserRecordById(userId: string) {
 
 export function getAdminUserProfileRecordById(userId: string) {
   return adminUserProfileRecords.find((record) => record.id === userId);
+}
+
+function createUserSlug(input: string) {
+  return input
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48);
+}
+
+export function createMockAdminUserRecord(
+  values: AdminUserFormValues,
+): AdminUserRecord {
+  const normalizedEmail = values.email.trim().toLowerCase();
+  const trimmedName = values.fullName.trim();
+  const createdId = createUserSlug(trimmedName || normalizedEmail) || "new-user";
+  const onboardingNote = values.onboardingNote.trim();
+  const temporaryPassword = values.temporaryPassword.trim();
+
+  return {
+    borrowingSummaryLabel: "New account",
+    borrowingSummaryMeta:
+      onboardingNote.length > 0
+        ? `Onboarding note: ${onboardingNote}`
+        : temporaryPassword.length > 0
+          ? "Temporary password prepared for mocked onboarding"
+          : "No borrowing activity yet",
+    email: normalizedEmail,
+    fullName: trimmedName,
+    id: `${createdId}-${Date.now().toString(36)}`,
+    joinedDateLabel: formatAdminJoinedDate(new Date().toISOString()),
+    role: values.role,
+    status: values.accountStatus,
+  };
 }

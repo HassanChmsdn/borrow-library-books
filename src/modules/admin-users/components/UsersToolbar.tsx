@@ -6,6 +6,7 @@ import { AdminFilterSelect, AdminSearchBar } from "@/components/admin";
 import type { AdminUsersRoleFilter } from "../types";
 
 interface UsersToolbarProps {
+  action?: React.ReactNode;
   onRoleChange: (value: AdminUsersRoleFilter) => void;
   onSearchChange: (value: string) => void;
   roleOptions: ReadonlyArray<{
@@ -17,6 +18,7 @@ interface UsersToolbarProps {
 }
 
 function UsersToolbar({
+  action,
   onRoleChange,
   onSearchChange,
   roleOptions,
@@ -24,7 +26,7 @@ function UsersToolbar({
   searchValue,
 }: Readonly<UsersToolbarProps>) {
   return (
-    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_15rem] lg:items-end">
+    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_15rem_auto] lg:items-end">
       <AdminSearchBar
         value={searchValue}
         onChange={(event) => onSearchChange(event.target.value)}
@@ -38,6 +40,7 @@ function UsersToolbar({
         onValueChange={onRoleChange}
         leadingIcon={<Shield aria-hidden="true" className="size-4" />}
       />
+      {action ? <div className="lg:justify-self-end">{action}</div> : null}
     </div>
   );
 }
