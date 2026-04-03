@@ -1,32 +1,22 @@
-import type { LucideIcon } from "lucide-react";
+export type AdminUserRole = "user" | "admin";
 
-import type { BorrowStatusBadgeTone } from "@/components/library";
+export type AdminUserStatus = "active" | "suspended";
 
-export type AdminUsersFilter =
-  | "all"
-  | "active"
-  | "watchlist"
-  | "cash-due"
-  | "new";
-
-export interface AdminUsersMetric {
-  label: string;
-  value: string;
-  supportingText: string;
-  icon: LucideIcon;
-}
+export type AdminUsersRoleFilter = "all" | AdminUserRole;
 
 export interface AdminUserRecord {
-  id: string;
-  name: string;
+  borrowingSummaryLabel: string;
+  borrowingSummaryMeta: string;
   email: string;
-  branch: string;
-  plan: string;
-  activeLoans: string;
-  balanceLabel: string;
-  paymentLabel: string;
-  paymentTone: BorrowStatusBadgeTone;
-  statusLabel: string;
-  statusTone: BorrowStatusBadgeTone;
-  filter: Exclude<AdminUsersFilter, "all">;
+  fullName: string;
+  id: string;
+  joinedDateLabel: string;
+  profileHref: string;
+  role: AdminUserRole;
+  status: AdminUserStatus;
+}
+
+export interface AdminUsersModuleProps {
+  isLoading?: boolean;
+  records?: ReadonlyArray<AdminUserRecord>;
 }

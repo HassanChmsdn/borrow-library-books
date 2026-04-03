@@ -2,39 +2,46 @@
 
 import { useDeferredValue, useState } from "react";
 
-import {
-  adminUsersFilters,
-  adminUsersMetrics,
-  adminUsersRecords,
-} from "./data";
-import type { AdminUsersFilter } from "./types";
+import { adminUserRecords, adminUsersRoleOptions } from "./mock-data";
+import type {
+  AdminUserRecord,
+  AdminUsersRoleFilter,
+} from "./types";
 
-export function useAdminUsersModuleState() {
-  const [activeFilter, setActiveFilter] = useState<AdminUsersFilter>("all");
+export function useAdminUsersModuleState(
+  inputRecords: ReadonlyArray<AdminUserRecord> = adminUserRecords,
+) {
+  const [roleFilter, setRoleFilter] = useState<AdminUsersRoleFilter>("all");
   const [searchValue, setSearchValue] = useState("");
 
   const deferredSearchValue = useDeferredValue(searchValue);
   const normalizedSearchValue = deferredSearchValue.trim().toLowerCase();
 
-  const records = adminUsersRecords.filter((record) => {
-    const matchesFilter =
-      activeFilter === "all" || record.filter === activeFilter;
+  const filteredRecords = inputRecords.filter((record) => {
+    const matchesFilter = roleFilter === "all" || record.role === roleFilter;
     const matchesSearch =
       normalizedSearchValue.length === 0 ||
-      record.name.toLowerCase().includes(normalizedSearchValue) ||
+      record.fullName.toLowerCase().includes(normalizedSearchValue) ||
       record.email.toLowerCase().includes(normalizedSearchValue) ||
-      record.branch.toLowerCase().includes(normalizedSearchValue);
+      record.borrowingSummaryLabel.toLowerCase().includes(normalizedSearchValue);
 
     return matchesFilter && matchesSearch;
   });
 
+  function clearFilters() {
+    setRoleFilter("all");
+    setSearchValue("");
+  }
+
   return {
-    activeFilter,
-    filters: adminUsersFilters,
-    metrics: adminUsersMetrics,
-    records,
+    clearFilters,
+    filteredRecords,
+    hasActiveFilters: roleFilter !== "all" || searchValue.trim().length > 0,
+    recordsCount: inputRecords.length,
+    roleFilter,
+    roleOptions: adminUsersRoleOptions,
     searchValue,
-    setActiveFilter,
+    setRoleFilter,
     setSearchValue,
   };
 }
