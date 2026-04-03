@@ -13,6 +13,10 @@ export function middleware(request: NextRequest) {
   const authState = createMockAuthState(roleValue);
   const redirectTo = `${pathname}${request.nextUrl.search}`;
 
+  if (pathname === "/admin/auth") {
+    return NextResponse.next();
+  }
+
   if (pathname.startsWith("/admin") && !authState.isAdmin) {
     return NextResponse.redirect(
       new URL(

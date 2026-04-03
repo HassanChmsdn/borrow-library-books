@@ -28,25 +28,16 @@ function PublicUtilitySlot({
 }) {
   if (!session.isAuthenticated) {
     return (
-      <>
-        <Button asChild size="sm" variant="outline">
-          <Link
-            href={buildMockSignInHref({
-              role: "member",
-              redirectTo: "/account/borrowings",
-            })}
-          >
-            Member sign in
-          </Link>
-        </Button>
-        <Button asChild size="sm">
-          <Link
-            href={buildMockSignInHref({ role: "admin", redirectTo: "/admin" })}
-          >
-            Admin access
-          </Link>
-        </Button>
-      </>
+      <Button asChild size="sm" variant="outline">
+        <Link
+          href={buildMockSignInHref({
+            role: "member",
+            redirectTo: "/account/borrowings",
+          })}
+        >
+          Member sign in
+        </Link>
+      </Button>
     );
   }
 

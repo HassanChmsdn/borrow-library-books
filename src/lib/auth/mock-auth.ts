@@ -132,7 +132,7 @@ export function buildMockSignInHref(options?: {
   }
 
   const query = params.toString();
-  const basePath = isAdminRoute ? "/auth/admin" : "/auth/sign-in";
+  const basePath = isAdminRoute ? "/admin/auth" : "/auth/sign-in";
 
   return query ? `${basePath}?${query}` : basePath;
 }
