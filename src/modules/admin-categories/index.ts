@@ -3,10 +3,16 @@ export {
   AdminCategoriesModule,
 } from "./admin-categories-module";
 
-export { getAdminCategoriesModuleData } from "./hooks";
+export { useAdminCategoriesModuleState } from "./hooks";
 
 export type {
-  AdminCategoriesMetric,
-  AdminCategoryPlanningItem,
+  AdminCategoriesModuleProps,
+  AdminCategoryDialogState,
+  AdminCategoryFormFieldErrors,
+  AdminCategoryFormMode,
+  AdminCategoryFormValues,
+  AdminCategoryIconKey,
+  AdminCategoryIconOption,
+  AdminCategoryMarkerTone,
   AdminCategoryRecord,
 } from "./types";

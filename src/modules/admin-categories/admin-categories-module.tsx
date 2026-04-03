@@ -1,47 +1,82 @@
-import { AdminDataTable, AdminPageHeader } from "@/components/admin";
+"use client";
+
+import { AdminPageHeader } from "@/components/admin";
 import { LoadingSkeleton } from "@/components/feedback";
+import { Button } from "@/components/ui/button";
 
+import { CategoriesGrid, CategoryFormDialog } from "./components";
 import {
-  AdminCategoriesCards,
-  AdminCategoriesPlanningList,
-  AdminCategoriesTable,
-} from "./components";
-import { getAdminCategoriesModuleData } from "./hooks";
+  adminCategoryIconOptions,
+  getAdminCategoryDefaultValues,
+} from "./mock-data";
+import { useAdminCategoriesModuleState } from "./hooks";
+import type { AdminCategoriesModuleProps } from "./types";
 
-function AdminCategoriesModule() {
-  const { planningItems, records } = getAdminCategoriesModuleData();
+function AdminCategoriesModule({
+  initialRecords,
+  isLoading = false,
+  onCreateCategory,
+  onDeleteCategory,
+  onUpdateCategory,
+  searchQuery,
+}: AdminCategoriesModuleProps) {
+  const {
+    deleteCategory,
+    dialogState,
+    filteredRecords,
+    isSubmitting,
+    openCreateDialog,
+    openEditDialog,
+    resetDialog,
+    submitCategory,
+  } = useAdminCategoriesModuleState({
+    initialRecords,
+    onCreateCategory,
+    onDeleteCategory,
+    onUpdateCategory,
+    searchQuery,
+  });
+
+  if (isLoading) {
+    return <AdminCategoriesLoadingState />;
+  }
 
   return (
     <div className="gap-section flex flex-col">
       <AdminPageHeader
         eyebrow="Collections"
-        title="Category planning"
-        description="A clean, tokenized view of category performance, shelf grouping, and curation tasks that fits the existing admin shell and prepares for future API-backed planning tools."
+        title="Category management"
+        description="Organize browse groupings, keep collection descriptions consistent, and prepare category records for future CRUD-backed staff workflows."
+        actions={
+          <Button size="sm" type="button" onClick={openCreateDialog}>
+            Add category
+          </Button>
+        }
       />
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(20rem,0.85fr)]">
-        <section className="space-y-4">
-          <div className="space-y-1">
-            <h2 className="text-title-sm text-foreground font-semibold">
-              Category snapshot
-            </h2>
-            <p className="text-body-sm text-text-secondary">
-              High-level category cards mirror the Figma hierarchy while staying
-              reusable across other operations pages.
-            </p>
-          </div>
-          <AdminCategoriesCards records={records} />
-        </section>
+      <CategoriesGrid
+        categories={filteredRecords}
+        onAddCategory={openCreateDialog}
+        onDeleteCategory={deleteCategory}
+        onEditCategory={openEditDialog}
+        searchQuery={searchQuery}
+      />
 
-        <AdminCategoriesPlanningList items={planningItems} />
-      </div>
-
-      <AdminDataTable
-        title="Category table"
-        description="A denser desktop summary for loan volume, fee visibility, and current category posture."
-      >
-        <AdminCategoriesTable records={records} />
-      </AdminDataTable>
+      {dialogState ? (
+        <CategoryFormDialog
+          open
+          mode={dialogState.mode}
+          iconOptions={adminCategoryIconOptions}
+          initialValues={getAdminCategoryDefaultValues(dialogState.record)}
+          isSubmitting={isSubmitting}
+          onOpenChange={(open) => {
+            if (!open) {
+              resetDialog();
+            }
+          }}
+          onSubmit={submitCategory}
+        />
+      ) : null}
     </div>
   );
 }
@@ -51,11 +86,14 @@ function AdminCategoriesLoadingState() {
     <div className="gap-section flex flex-col">
       <AdminPageHeader
         eyebrow="Collections"
-        title="Category planning"
-        description="Loading category planning surfaces."
+        title="Category management"
+        description="Loading category management surfaces."
       />
-      <LoadingSkeleton count={4} variant="card" className="xl:grid-cols-4" />
-      <LoadingSkeleton count={2} variant="table" className="xl:grid-cols-2" />
+      <LoadingSkeleton
+        count={6}
+        variant="card"
+        className="sm:grid-cols-2 2xl:grid-cols-3"
+      />
     </div>
   );
 }
