@@ -10,11 +10,16 @@ import {
 } from "lucide-react";
 
 import {
+  buildMockSignOutHref,
+} from "@/lib/auth/mock-auth";
+import { MockAuthProvider } from "@/components/auth/mock-auth-provider";
+import {
   AdminShell,
   AdminTopHeader,
   ShellBrand,
 } from "@/components/layout";
 import { Button } from "@/components/ui/button";
+import { requireMockAdminSession } from "@/server/auth/mock-session";
 
 const adminNavigationSections = [
   {
@@ -66,75 +71,102 @@ const adminNavigationSections = [
   },
 ];
 
-export default function AdminSectionLayout({
+function AdminFooter({
+  monogram,
+  subtitle,
+  fullName,
+}: {
+  monogram: string;
+  subtitle: string;
+  fullName: string;
+}) {
+
+  return (
+    <div className="border-border-subtle bg-background rounded-xl border px-3 py-3 shadow-xs">
+      <div className="flex items-center gap-3">
+        <span className="bg-secondary text-primary rounded-pill border-border-subtle text-caption inline-flex size-9 shrink-0 items-center justify-center border font-semibold uppercase">
+          {monogram}
+        </span>
+
+        <div className="min-w-0">
+          <p className="text-body-sm text-foreground truncate font-medium">
+            {fullName}
+          </p>
+          <p className="text-caption text-text-tertiary truncate">
+            {subtitle}
+          </p>
+        </div>
+      </div>
+
+      <p className="text-caption text-text-tertiary mt-3 text-pretty">
+        Mock-data admin workspace. Backend integration is intentionally deferred.
+      </p>
+
+      <Button asChild className="mt-3 w-full" size="sm" variant="outline">
+        <Link href={buildMockSignOutHref("/books")}>Sign out</Link>
+      </Button>
+    </div>
+  );
+}
+
+export default async function AdminSectionLayout({
   children,
 }: Readonly<{
   children: ReactNode;
 }>) {
+  const session = await requireMockAdminSession();
+  const currentUser = session.currentUser;
+
   return (
-    <AdminShell
-      brand={
-        <ShellBrand
-          href="/admin"
-          monogram="BL"
-          subtitle="Admin Console"
-          title="Borrow Library Books"
-        />
-      }
-      navigationSections={adminNavigationSections}
-      topHeader={
-        <AdminTopHeader
-          eyebrow="Library Admin"
-          title="Operations Workspace"
-          description="A shared admin frame for dashboard, catalog, borrowing, inventory, category, and member management modules built on the existing token and shell system."
-          actions={
-            <>
-              <Button asChild size="sm" variant="outline">
-                <Link href="/">Reader Experience</Link>
-              </Button>
-              <Button asChild size="sm" variant="secondary">
-                <Link href="/admin/books">Catalog queue</Link>
-              </Button>
-            </>
-          }
-        />
-      }
-      userSlot={
-        <div className="bg-secondary rounded-xl px-3 py-3">
-          <p className="text-label text-primary font-medium tracking-[0.18em] uppercase">
-            Shift lead
-          </p>
-          <p className="text-body-sm text-text-secondary mt-1">
-            Samir Chahine is covering catalog, circulation, and member
-            operations this afternoon.
-          </p>
-        </div>
-      }
-      footerSlot={
-        <div className="border-border-subtle bg-background rounded-xl border px-3 py-3 shadow-xs">
-          <div className="flex items-center gap-3">
-            <span className="bg-secondary text-primary rounded-pill border-border-subtle text-caption inline-flex size-9 shrink-0 items-center justify-center border font-semibold uppercase">
-              SC
-            </span>
-
-            <div className="min-w-0">
-              <p className="text-body-sm text-foreground truncate font-medium">
-                Samir Chahine
-              </p>
-              <p className="text-caption text-text-tertiary truncate">
-                Shift lead account
-              </p>
-            </div>
+    <MockAuthProvider value={session}>
+      <AdminShell
+        brand={
+          <ShellBrand
+            href="/admin"
+            monogram="BL"
+            subtitle="Admin Console"
+            title="Borrow Library Books"
+          />
+        }
+        navigationSections={adminNavigationSections}
+        topHeader={
+          <AdminTopHeader
+            eyebrow="Library Admin"
+            title="Operations Workspace"
+            description="A shared admin frame for dashboard, catalog, borrowing, inventory, category, and member management modules built on the existing token and shell system."
+            actions={
+              <>
+                <Button asChild size="sm" variant="outline">
+                  <Link href="/books">Reader Experience</Link>
+                </Button>
+                <Button asChild size="sm" variant="secondary">
+                  <Link href="/admin/books">Catalog queue</Link>
+                </Button>
+              </>
+            }
+          />
+        }
+        userSlot={
+          <div className="bg-secondary rounded-xl px-3 py-3">
+            <p className="text-label text-primary font-medium tracking-[0.18em] uppercase">
+              {currentUser?.subtitle ?? "Shift lead account"}
+            </p>
+            <p className="text-body-sm text-text-secondary mt-1">
+              {currentUser?.fullName ?? "Samir Chahine"} is covering catalog,
+              circulation, and member operations this afternoon.
+            </p>
           </div>
-
-          <p className="text-caption text-text-tertiary mt-3 text-pretty">
-            Mock-data admin workspace. Backend integration is intentionally
-            deferred.
-          </p>
-        </div>
-      }
-    >
-      {children}
-    </AdminShell>
+        }
+        footerSlot={
+          <AdminFooter
+            fullName={currentUser?.fullName ?? "Samir Chahine"}
+            monogram={currentUser?.monogram ?? "SC"}
+            subtitle={currentUser?.subtitle ?? "Shift lead account"}
+          />
+        }
+      >
+        {children}
+      </AdminShell>
+    </MockAuthProvider>
   );
 }

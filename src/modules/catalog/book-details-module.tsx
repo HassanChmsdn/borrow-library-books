@@ -11,6 +11,8 @@ import {
   BorrowStatusBadge,
   FeeBadge,
 } from "@/components/library";
+import { useMockAuth } from "@/hooks/use-mock-auth";
+import { buildMockSignInHref } from "@/lib/auth/mock-auth";
 import { PageHeader } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +33,8 @@ import {
   getBookFeeTone,
 } from "./book-presentation";
 
+const memberBorrowingHref = "/account/borrowings";
+
 const borrowDurationOptions = [
   { value: "7-days", label: "7 days", supportingText: "Short hold" },
   { value: "14-days", label: "14 days", supportingText: "Standard" },
@@ -44,12 +48,34 @@ interface BookDetailsModuleProps {
 function BookDetailsModule({ book }: BookDetailsModuleProps) {
   const [selectedDuration, setSelectedDuration] = useState("14-days");
   const [customDurationRequest, setCustomDurationRequest] = useState("");
+  const { isAdmin, isMember } = useMockAuth();
 
   const availabilityTone = getBookAvailabilityTone(book);
   const availabilityLabel = formatBookAvailabilityLabel(book);
   const feeLabel = formatBookFeeLabel(book.feeCents);
   const feeTone = getBookFeeTone(book.feeCents);
   const isUnavailable = book.availableCopies === 0;
+  const borrowHref = isMember
+    ? memberBorrowingHref
+    : buildMockSignInHref({
+        role: "member",
+        redirectTo: memberBorrowingHref,
+      });
+  const borrowPrimaryLabel = isMember
+    ? "Borrow this book"
+    : isAdmin
+      ? "Switch to member to borrow"
+      : "Sign in to borrow";
+  const customDurationLabel = isMember
+    ? "Request custom duration"
+    : isAdmin
+      ? "Switch to member for custom duration"
+      : "Sign in for custom duration";
+  const borrowHelperText = isMember
+    ? "Borrowing and duration-request actions route into the mocked authenticated member flow for now. Real circulation, payment, and member identity will be wired later."
+    : isAdmin
+      ? "Mock admin sessions cannot borrow titles directly. Switch to a member session to continue into the borrowing flow."
+      : "Borrowing actions require a member session. Guests can keep browsing publicly and sign in only when they are ready to borrow.";
 
   return (
     <div className="gap-section flex flex-col">
@@ -232,20 +258,29 @@ function BookDetailsModule({ book }: BookDetailsModuleProps) {
               </div>
 
               <div className="grid gap-3">
-                <Button disabled={isUnavailable} size="lg" type="button">
-                  <BookMarked className="size-4" />
-                  {isUnavailable ? "Currently unavailable" : "Borrow this book"}
-                </Button>
-                <Button size="lg" type="button" variant="outline">
-                  <Clock3 className="size-4" />
-                  Request custom duration
+                {isUnavailable ? (
+                  <Button disabled size="lg" type="button">
+                    <BookMarked className="size-4" />
+                    Currently unavailable
+                  </Button>
+                ) : (
+                  <Button asChild size="lg">
+                    <Link href={borrowHref}>
+                      <BookMarked className="size-4" />
+                      {borrowPrimaryLabel}
+                    </Link>
+                  </Button>
+                )}
+                <Button asChild size="lg" variant="outline">
+                  <Link href={borrowHref}>
+                    <Clock3 className="size-4" />
+                    {customDurationLabel}
+                  </Link>
                 </Button>
               </div>
 
               <p className="text-body-sm text-text-secondary">
-                This action section is static for now. It models the final
-                layout and states without connecting payment, member identity,
-                or circulation logic yet.
+                {borrowHelperText}
               </p>
             </CardContent>
           </Card>

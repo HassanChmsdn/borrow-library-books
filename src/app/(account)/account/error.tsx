@@ -8,15 +8,15 @@ import { EmptyState } from "@/components/feedback";
 import { PageHeader } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 
-interface PublicErrorPageProps {
+interface AccountErrorPageProps {
   error: Error & { digest?: string };
   reset: () => void;
 }
 
-export default function PublicErrorPage({
+export default function AccountErrorPage({
   error,
   reset,
-}: Readonly<PublicErrorPageProps>) {
+}: Readonly<AccountErrorPageProps>) {
   useEffect(() => {
     console.error(error);
   }, [error]);
@@ -24,12 +24,12 @@ export default function PublicErrorPage({
   return (
     <div className="gap-section flex flex-col">
       <PageHeader
-        eyebrow="Library"
-        title="Public view unavailable"
-        description="A route-level error interrupted this member-facing screen. You can retry the page or return to the public catalog."
+        eyebrow="Account"
+        title="Account view unavailable"
+        description="A route-level error interrupted this authenticated member screen. You can retry the page or return to your borrowing workspace."
         actions={
           <Button asChild size="sm" variant="outline">
-            <Link href="/books">Back to catalog</Link>
+            <Link href="/account/borrowings">Back to account</Link>
           </Button>
         }
       />
@@ -42,10 +42,10 @@ export default function PublicErrorPage({
         }
         description={
           error.message ||
-          "Try again now. If the problem persists, return to the public catalog and reopen the affected page."
+          "Try again now. If the problem persists, return to your borrowing workspace and reopen the affected page."
         }
         icon={<TriangleAlert className="size-5" />}
-        title="We couldn't load this page"
+        title="We couldn't load this account page"
       />
     </div>
   );

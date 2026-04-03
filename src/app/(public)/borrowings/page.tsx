@@ -1,9 +1,9 @@
-import { MyBorrowingsModule } from "@/modules/borrowings";
+import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "My Borrowings",
 };
 
 export default function MyBorrowingsPage() {
-  return <MyBorrowingsModule />;
+  redirect("/account/borrowings");
 }

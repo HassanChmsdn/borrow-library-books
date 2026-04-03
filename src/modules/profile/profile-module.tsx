@@ -53,7 +53,7 @@ function ProfileModule({ profile }: ProfileModuleProps) {
         actions={
           <>
             <Button asChild size="sm" variant="outline">
-              <Link href="/borrowings">My Borrowings</Link>
+              <Link href="/account/borrowings">My Borrowings</Link>
             </Button>
             <Button asChild size="sm">
               <Link href="/books">Browse Books</Link>
