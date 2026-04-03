@@ -7,13 +7,13 @@ import {
 
 type AdminUserProfilePageProps = {
   params: Promise<{
-    userId: string;
+    id: string;
   }>;
 };
 
 export async function generateMetadata(props: AdminUserProfilePageProps) {
-  const { userId } = await props.params;
-  const user = getAdminUserProfileRecordById(userId);
+  const { id } = await props.params;
+  const user = getAdminUserProfileRecordById(id);
 
   return {
     title: user ? `${user.fullName} | Admin Users` : "Admin User Profile",
@@ -21,14 +21,14 @@ export async function generateMetadata(props: AdminUserProfilePageProps) {
 }
 
 export function generateStaticParams() {
-  return adminUserProfileRecords.map((user) => ({ userId: user.id }));
+  return adminUserProfileRecords.map((user) => ({ id: user.id }));
 }
 
 export default async function AdminUserProfilePage(
   props: AdminUserProfilePageProps,
 ) {
-  const { userId } = await props.params;
-  const user = getAdminUserProfileRecordById(userId);
+  const { id } = await props.params;
+  const user = getAdminUserProfileRecordById(id);
 
   if (!user) {
     return <AdminUserProfileEmptyState />;

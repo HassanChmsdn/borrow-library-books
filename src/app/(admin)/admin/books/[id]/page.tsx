@@ -7,13 +7,13 @@ import {
 
 type AdminBookDetailsPageProps = {
   params: Promise<{
-    bookId: string;
+    id: string;
   }>;
 };
 
 export async function generateMetadata(props: AdminBookDetailsPageProps) {
-  const { bookId } = await props.params;
-  const book = getAdminBookDetailsRecordById(bookId);
+  const { id } = await props.params;
+  const book = getAdminBookDetailsRecordById(id);
 
   return {
     title: book ? `Edit ${book.title}` : "Edit Book",
@@ -21,14 +21,14 @@ export async function generateMetadata(props: AdminBookDetailsPageProps) {
 }
 
 export function generateStaticParams() {
-  return adminBookDetailRecords.map((book) => ({ bookId: book.id }));
+  return adminBookDetailRecords.map((book) => ({ id: book.id }));
 }
 
 export default async function AdminBookEditPage(
   props: AdminBookDetailsPageProps,
 ) {
-  const { bookId } = await props.params;
-  const book = getAdminBookDetailsRecordById(bookId);
+  const { id } = await props.params;
+  const book = getAdminBookDetailsRecordById(id);
 
   if (!book) {
     return <AdminBookDetailsEmptyState />;

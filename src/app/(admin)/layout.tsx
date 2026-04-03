@@ -111,10 +111,27 @@ export default function AdminSectionLayout({
         </div>
       }
       footerSlot={
-        <p className="text-caption text-text-tertiary">
-          Mock-data admin workspace. Backend integration is intentionally
-          deferred.
-        </p>
+        <div className="border-border-subtle bg-background rounded-xl border px-3 py-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <span className="bg-secondary text-primary rounded-pill border-border-subtle text-caption inline-flex size-9 shrink-0 items-center justify-center border font-semibold uppercase">
+              SC
+            </span>
+
+            <div className="min-w-0">
+              <p className="text-body-sm text-foreground truncate font-medium">
+                Samir Chahine
+              </p>
+              <p className="text-caption text-text-tertiary truncate">
+                Shift lead account
+              </p>
+            </div>
+          </div>
+
+          <p className="text-caption text-text-tertiary mt-3 text-pretty">
+            Mock-data admin workspace. Backend integration is intentionally
+            deferred.
+          </p>
+        </div>
       }
     >
       {children}
