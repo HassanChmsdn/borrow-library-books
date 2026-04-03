@@ -1,7 +1,13 @@
-import type {
-  AdminBorrowingRecord,
-  AdminBorrowingsTab,
-} from "./types";
+import {
+  adminSharedBorrowings,
+  formatAdminDateTime,
+  formatAdminShortDate,
+  getAdminBorrowingLateLabel,
+  getAdminSharedBook,
+  getAdminSharedUser,
+} from "@/modules/admin-shared/mock-data";
+
+import type { AdminBorrowingRecord, AdminBorrowingsTab } from "./types";
 
 export const adminBorrowingsTabLabels: Record<AdminBorrowingsTab, string> = {
   pending: "Pending",
@@ -10,192 +16,113 @@ export const adminBorrowingsTabLabels: Record<AdminBorrowingsTab, string> = {
   returned: "Returned",
 };
 
-export const adminBorrowingsRecords: ReadonlyArray<AdminBorrowingRecord> = [
-  {
-    id: "borrowing-1984-pending",
-    bookId: "1984",
-    bookTitle: "1984",
-    bookAuthor: "George Orwell",
-    bookCoverLabel: "1984",
-    bookCoverTone: "brand",
-    memberName: "Noor Haddad",
-    memberEmail: "noor.haddad@borrow.local",
-    memberMembership: "Student plan",
-    branch: "Hamra",
-    durationLabel: "14-day loan",
-    isCustomDuration: false,
-    timeline: {
-      primaryLabel: "Requested",
-      primaryValue: "Apr 3, 10:30 AM",
-      secondaryLabel: "Pickup by",
-      secondaryValue: "Today, 6:00 PM",
-    },
-    feeCents: 250,
-    paymentStatusLabel: "Unpaid cash",
-    paymentStatusTone: "warning",
-    paymentHelperText: "Onsite cash only",
-    borrowingStatusLabel: "Pending approval",
-    borrowingStatusTone: "warning",
-    tab: "pending",
-  },
-  {
-    id: "borrowing-time-pending",
-    bookId: "brief-history-time",
-    bookTitle: "A Brief History of Time",
-    bookAuthor: "Stephen Hawking",
-    bookCoverLabel: "Time",
-    bookCoverTone: "ocean",
-    memberName: "Maya Sayegh",
-    memberEmail: "maya.sayegh@borrow.local",
-    memberMembership: "Research plan",
-    branch: "Science Annex",
-    durationLabel: "21-day request",
-    isCustomDuration: true,
-    timeline: {
-      primaryLabel: "Requested",
-      primaryValue: "Apr 2, 4:10 PM",
-      secondaryLabel: "Review by",
-      secondaryValue: "Today, 2:00 PM",
-    },
-    feeCents: 350,
-    paymentStatusLabel: "Unpaid cash",
-    paymentStatusTone: "warning",
-    paymentHelperText: "Onsite cash only",
-    borrowingStatusLabel: "Needs review",
-    borrowingStatusTone: "info",
-    tab: "pending",
-  },
-  {
-    id: "borrowing-clean-code-active",
-    bookId: "clean-code",
-    bookTitle: "Clean Code",
-    bookAuthor: "Robert C. Martin",
-    bookCoverLabel: "Code",
-    bookCoverTone: "stone",
-    memberName: "Sara Chehab",
-    memberEmail: "sara.chehab@borrow.local",
-    memberMembership: "Community plan",
-    branch: "Downtown",
-    durationLabel: "14-day loan",
-    isCustomDuration: false,
-    timeline: {
-      primaryLabel: "Checked out",
-      primaryValue: "Mar 29",
-      secondaryLabel: "Due",
-      secondaryValue: "Apr 12",
-    },
-    feeCents: 0,
-    paymentStatusLabel: "No fee",
-    paymentStatusTone: "success",
-    borrowingStatusLabel: "Checked out",
-    borrowingStatusTone: "success",
-    tab: "active",
-  },
-  {
-    id: "borrowing-wild-active",
-    bookId: "into-the-wild",
-    bookTitle: "Into the Wild",
-    bookAuthor: "Jon Krakauer",
-    bookCoverLabel: "Wild",
-    bookCoverTone: "forest",
-    memberName: "Lina Saab",
-    memberEmail: "lina.saab@borrow.local",
-    memberMembership: "Reader plan",
-    branch: "Byblos",
-    durationLabel: "28-day custom",
-    isCustomDuration: true,
-    timeline: {
-      primaryLabel: "Checked out",
-      primaryValue: "Mar 18",
-      secondaryLabel: "Due",
-      secondaryValue: "Apr 15",
-    },
-    feeCents: 150,
-    paymentStatusLabel: "Unpaid cash",
-    paymentStatusTone: "warning",
-    paymentHelperText: "Collect onsite at return",
-    borrowingStatusLabel: "Extended loan",
-    borrowingStatusTone: "info",
-    tab: "active",
-  },
-  {
-    id: "borrowing-meditations-overdue",
-    bookId: "meditations",
-    bookTitle: "Meditations",
-    bookAuthor: "Marcus Aurelius",
-    bookCoverLabel: "Mind",
-    bookCoverTone: "amber",
-    memberName: "Jad Khoury",
-    memberEmail: "jad.khoury@borrow.local",
-    memberMembership: "Community plan",
-    branch: "Downtown",
-    durationLabel: "14-day loan",
-    isCustomDuration: false,
-    timeline: {
-      primaryLabel: "Due",
-      primaryValue: "Mar 31",
-      secondaryLabel: "Overdue",
-      secondaryValue: "4 days late",
-    },
-    feeCents: 0,
-    paymentStatusLabel: "Reminder sent",
-    paymentStatusTone: "danger",
-    borrowingStatusLabel: "Overdue",
-    borrowingStatusTone: "danger",
-    tab: "overdue",
-  },
-  {
-    id: "borrowing-sapiens-overdue",
-    bookId: "sapiens",
-    bookTitle: "Sapiens",
-    bookAuthor: "Yuval Noah Harari",
-    bookCoverLabel: "Sapiens",
-    bookCoverTone: "rose",
-    memberName: "Rami Nader",
-    memberEmail: "rami.nader@borrow.local",
-    memberMembership: "Faculty plan",
-    branch: "Hamra",
-    durationLabel: "21-day custom",
-    isCustomDuration: true,
-    timeline: {
-      primaryLabel: "Due",
-      primaryValue: "Mar 28",
-      secondaryLabel: "Overdue",
-      secondaryValue: "1 week late",
-    },
-    feeCents: 200,
-    paymentStatusLabel: "Unpaid cash",
-    paymentStatusTone: "danger",
-    paymentHelperText: "Onsite cash only",
-    borrowingStatusLabel: "Escalated",
-    borrowingStatusTone: "danger",
-    tab: "overdue",
-  },
-  {
-    id: "borrowing-odyssey-returned",
-    bookId: "the-odyssey",
-    bookTitle: "The Odyssey",
-    bookAuthor: "Homer",
-    bookCoverLabel: "Odyssey",
-    bookCoverTone: "brand",
-    memberName: "Dana Hage",
-    memberEmail: "dana.hage@borrow.local",
-    memberMembership: "Reader plan",
-    branch: "Byblos",
-    durationLabel: "14-day loan",
-    isCustomDuration: false,
-    timeline: {
-      primaryLabel: "Returned",
-      primaryValue: "Apr 2",
-      secondaryLabel: "Checked out",
-      secondaryValue: "Mar 19",
-    },
-    feeCents: 250,
-    paymentStatusLabel: "Paid cash",
-    paymentStatusTone: "success",
-    paymentHelperText: "Settled onsite",
-    borrowingStatusLabel: "Returned",
-    borrowingStatusTone: "neutral",
-    tab: "returned",
-  },
-];
+export const adminBorrowingsRecords: ReadonlyArray<AdminBorrowingRecord> =
+  adminSharedBorrowings.map((borrowing) => {
+    const book = getAdminSharedBook(borrowing.bookId);
+    const user = getAdminSharedUser(borrowing.userId);
+    const dueOn = borrowing.startedOn
+      ? new Date(
+          new Date(borrowing.startedOn).getTime() +
+            borrowing.durationDays * 24 * 60 * 60 * 1000,
+        ).toISOString()
+      : undefined;
+
+    const paymentStatusTone =
+      borrowing.paymentStatus === "cash-settled"
+        ? "success"
+        : borrowing.paymentStatus === "cash-due" && borrowing.status === "overdue"
+          ? "danger"
+          : borrowing.paymentStatus === "cash-due"
+            ? "warning"
+            : "success";
+
+    return {
+      id: borrowing.id,
+      bookId: borrowing.bookId,
+      bookTitle: book?.title ?? "Unknown book",
+      bookAuthor: book?.author ?? "Unknown author",
+      bookCoverLabel: book?.coverLabel ?? "Book",
+      bookCoverTone: (book?.coverTone ?? "brand") as AdminBorrowingRecord["bookCoverTone"],
+      memberName: user?.fullName ?? "Unknown member",
+      memberEmail: user?.email ?? "unknown@library.test",
+      memberMembership: user?.membershipLabel ?? "Member account",
+      branch: borrowing.branch,
+      durationLabel: borrowing.customDuration
+        ? `${borrowing.durationDays}-day custom`
+        : `${borrowing.durationDays}-day loan`,
+      isCustomDuration: borrowing.customDuration,
+      timeline:
+        borrowing.status === "pending"
+          ? {
+              primaryLabel: "Requested",
+              primaryValue: formatAdminDateTime(borrowing.requestedOn),
+              secondaryLabel: "Pickup by",
+              secondaryValue: formatAdminDateTime(
+                new Date(
+                  new Date(borrowing.requestedOn).getTime() + 24 * 60 * 60 * 1000,
+                ).toISOString(),
+              ),
+            }
+          : borrowing.status === "returned"
+            ? {
+                primaryLabel: "Started",
+                primaryValue: borrowing.startedOn
+                  ? formatAdminShortDate(borrowing.startedOn)
+                  : formatAdminDateTime(borrowing.requestedOn),
+                secondaryLabel: "Returned",
+                secondaryValue: borrowing.returnedOn
+                  ? formatAdminShortDate(borrowing.returnedOn)
+                  : undefined,
+              }
+            : borrowing.status === "overdue"
+              ? {
+                  primaryLabel: "Due",
+                  primaryValue: dueOn ? formatAdminShortDate(dueOn) : "No due date",
+                  secondaryLabel: "Overdue",
+                  secondaryValue: dueOn ? getAdminBorrowingLateLabel(dueOn) : undefined,
+                }
+              : {
+                  primaryLabel: "Started",
+                  primaryValue: borrowing.startedOn
+                    ? formatAdminShortDate(borrowing.startedOn)
+                    : formatAdminDateTime(borrowing.requestedOn),
+                  secondaryLabel: "Due",
+                  secondaryValue: dueOn ? formatAdminShortDate(dueOn) : undefined,
+                },
+      feeCents: borrowing.feeCents,
+      paymentStatusLabel:
+        borrowing.paymentStatus === "cash-settled"
+          ? "Paid cash"
+          : borrowing.paymentStatus === "cash-due"
+            ? "Unpaid cash"
+            : "No fee",
+      paymentStatusTone,
+      paymentHelperText:
+        borrowing.paymentStatus === "cash-settled"
+          ? "Settled onsite"
+          : borrowing.paymentStatus === "cash-due"
+            ? "Onsite cash only"
+            : undefined,
+      borrowingStatusLabel:
+        borrowing.status === "pending"
+          ? borrowing.customDuration
+            ? "Needs review"
+            : "Pending approval"
+          : borrowing.status === "active"
+            ? "Checked out"
+            : borrowing.status === "overdue"
+              ? "Overdue"
+              : "Returned",
+      borrowingStatusTone:
+        borrowing.status === "pending"
+          ? borrowing.customDuration
+            ? "info"
+            : "warning"
+          : borrowing.status === "active"
+            ? "success"
+            : borrowing.status === "overdue"
+              ? "danger"
+              : "neutral",
+      tab: borrowing.status,
+    };
+  });

@@ -1,3 +1,9 @@
+import {
+  adminSharedInventoryCopies,
+  formatAdminRelativeAuditLabel,
+  getAdminSharedBook,
+} from "@/modules/admin-shared/mock-data";
+
 import type {
   AdminInventoryCondition,
   AdminInventoryFormValues,
@@ -53,80 +59,23 @@ export const adminInventoryStatusOptions: ReadonlyArray<{
   { label: "Maintenance", value: "maintenance" },
 ];
 
-export const adminInventoryRecords: ReadonlyArray<AdminInventoryRecord> = [
-  {
-    id: "copy-1984-01",
-    bookId: "1984",
-    bookTitle: "1984",
-    bookAuthor: "George Orwell",
-    copyCode: "DT-FIC-1984-01",
-    location: "Downtown · Shelf F3",
-    locationNote: "Front fiction bay",
-    condition: "good",
-    status: "available",
-    updatedAtLabel: "Audited 2 hours ago",
-  },
-  {
-    id: "copy-1984-02",
-    bookId: "1984",
-    bookTitle: "1984",
-    bookAuthor: "George Orwell",
-    copyCode: "DT-FIC-1984-02",
-    location: "Downtown · Shelf F3",
-    locationNote: "Assigned to active loan",
-    condition: "fair",
-    status: "borrowed",
-    updatedAtLabel: "Checked out today",
-  },
-  {
-    id: "copy-clean-code-01",
-    bookId: "clean-code",
-    bookTitle: "Clean Code",
-    bookAuthor: "Robert C. Martin",
-    copyCode: "DT-TEC-CLN-01",
-    location: "Technology Floor · Rack T2",
-    locationNote: "Near software reference set",
-    condition: "good",
-    status: "available",
-    updatedAtLabel: "Audited yesterday",
-  },
-  {
-    id: "copy-brief-time-01",
-    bookId: "brief-history-time",
-    bookTitle: "A Brief History of Time",
-    bookAuthor: "Stephen Hawking",
-    copyCode: "HM-SCI-BHT-01",
-    location: "Hamra · Science Annex S1",
-    locationNote: "Queued for return review",
-    condition: "new",
-    status: "borrowed",
-    updatedAtLabel: "Due back tomorrow",
-  },
-  {
-    id: "copy-sapiens-03",
-    bookId: "sapiens",
-    bookTitle: "Sapiens",
-    bookAuthor: "Yuval Noah Harari",
-    copyCode: "HM-HIS-SAP-03",
-    location: "Hamra · History Shelf H4",
-    locationNote: "Binding check requested",
-    condition: "poor",
-    status: "maintenance",
-    updatedAtLabel: "Inspection logged today",
-  },
-  {
-    id: "copy-into-wild-02",
-    bookId: "into-the-wild",
-    bookTitle: "Into the Wild",
-    bookAuthor: "Jon Krakauer",
-    copyCode: "BY-TRV-WLD-02",
-    location: "Byblos · Travel Shelf T1",
-    locationNote: "Window display copy",
-    condition: "good",
-    status: "available",
-    updatedAtLabel: "Moved this morning",
-  },
-];
+export const adminInventoryRecords: ReadonlyArray<AdminInventoryRecord> =
+  adminSharedInventoryCopies.map((copy) => {
+    const book = getAdminSharedBook(copy.bookId);
+
+    return {
+      id: copy.id,
+      bookId: copy.bookId,
+      bookTitle: book?.title ?? "Unknown book",
+      bookAuthor: book?.author ?? "Unknown author",
+      copyCode: copy.copyCode,
+      location: `${copy.branch} · ${copy.shelfLabel}`,
+      locationNote: copy.locationNote,
+      condition: copy.condition,
+      status: copy.status,
+      updatedAtLabel: formatAdminRelativeAuditLabel(copy.updatedOn),
+    };
+  });
 
 export function createAdminInventoryFormValues(
   record?: AdminInventoryRecord,

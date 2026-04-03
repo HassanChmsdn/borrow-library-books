@@ -1,3 +1,8 @@
+import {
+  adminSharedCategories,
+  getAdminSharedBookCountByCategory,
+} from "@/modules/admin-shared/mock-data";
+
 import type {
   AdminCategoryFormValues,
   AdminCategoryIconKey,
@@ -17,108 +22,58 @@ const iconToneMap: Record<AdminCategoryIconKey, AdminCategoryMarkerTone> = {
   travel: "warning",
 };
 
-export const adminCategoryIconOptions: ReadonlyArray<AdminCategoryIconOption> =
-  [
-    {
-      value: "fiction",
-      label: "Fiction marker",
-      helperText: "Best for literature, novels, and story-led shelves.",
-    },
-    {
-      value: "science",
-      label: "Science marker",
-      helperText: "Use for research-led or academic knowledge groups.",
-    },
-    {
-      value: "history",
-      label: "History marker",
-      helperText:
-        "Works well for archives, biographies, and reference history.",
-    },
-    {
-      value: "philosophy",
-      label: "Philosophy marker",
-      helperText: "Good for reflection, theory, and critical reading shelves.",
-    },
-    {
-      value: "technology",
-      label: "Technology marker",
-      helperText: "Use for software, engineering, and systems topics.",
-    },
-    {
-      value: "art-design",
-      label: "Art and design marker",
-      helperText: "Best for creative, visual, and design-oriented collections.",
-    },
-    {
-      value: "business",
-      label: "Business marker",
-      helperText: "Suitable for operations, leadership, and finance topics.",
-    },
-    {
-      value: "travel",
-      label: "Travel marker",
-      helperText:
-        "Use for place-based guides, memoirs, and trip planning shelves.",
-    },
-  ];
-
-export const adminCategoryRecords: ReadonlyArray<AdminCategoryRecord> = [
+export const adminCategoryIconOptions: ReadonlyArray<AdminCategoryIconOption> = [
   {
-    id: "fiction",
-    name: "Fiction",
-    description:
-      "Contemporary and classic storytelling titles used heavily in the public browse flow and weekly circulation displays.",
-    bookCount: 34,
-    iconKey: "fiction",
-    markerTone: "brand",
+    value: "fiction",
+    label: "Fiction marker",
+    helperText: "Best for literature, novels, and story-led shelves.",
   },
   {
-    id: "science",
-    name: "Science",
-    description:
-      "Reference-friendly science titles with steady borrower demand from students, families, and research readers.",
-    bookCount: 18,
-    iconKey: "science",
-    markerTone: "info",
+    value: "science",
+    label: "Science marker",
+    helperText: "Use for research-led or academic knowledge groups.",
   },
   {
-    id: "history",
-    name: "History",
-    description:
-      "Biographies, archives, and context-driven reading lists that support classroom borrowing and curated displays.",
-    bookCount: 15,
-    iconKey: "history",
-    markerTone: "neutral",
+    value: "history",
+    label: "History marker",
+    helperText: "Works well for archives, biographies, and reference history.",
   },
   {
-    id: "philosophy",
-    name: "Philosophy",
-    description:
-      "Theory, ethics, and reflective reading grouped for staff curation and slower long-loan circulation patterns.",
-    bookCount: 11,
-    iconKey: "philosophy",
-    markerTone: "warning",
+    value: "philosophy",
+    label: "Philosophy marker",
+    helperText: "Good for reflection, theory, and critical reading shelves.",
   },
   {
-    id: "technology",
-    name: "Technology",
-    description:
-      "Software, product, and engineering titles that frequently need fee and duration checks in admin operations.",
-    bookCount: 15,
-    iconKey: "technology",
-    markerTone: "success",
+    value: "technology",
+    label: "Technology marker",
+    helperText: "Use for software, engineering, and systems topics.",
   },
   {
-    id: "art-design",
-    name: "Art & Design",
-    description:
-      "Creative practice, visual culture, and design systems titles grouped for editorial browsing and display planning.",
-    bookCount: 9,
-    iconKey: "art-design",
-    markerTone: "danger",
+    value: "art-design",
+    label: "Art and design marker",
+    helperText: "Best for creative, visual, and design-oriented collections.",
+  },
+  {
+    value: "business",
+    label: "Business marker",
+    helperText: "Suitable for operations, leadership, and finance topics.",
+  },
+  {
+    value: "travel",
+    label: "Travel marker",
+    helperText: "Use for place-based guides, memoirs, and trip planning shelves.",
   },
 ];
+
+export const adminCategoryRecords: ReadonlyArray<AdminCategoryRecord> =
+  adminSharedCategories.map((category) => ({
+    id: category.id,
+    name: category.name,
+    description: category.description,
+    iconKey: category.iconKey,
+    markerTone: category.markerTone,
+    bookCount: getAdminSharedBookCountByCategory(category.id),
+  }));
 
 export function getAdminCategoryDefaultValues(
   record?: AdminCategoryRecord,
