@@ -11,8 +11,8 @@ import {
   BorrowStatusBadge,
   FeeBadge,
 } from "@/components/library";
-import { useMockAuth } from "@/hooks/use-mock-auth";
-import { buildMockSignInHref } from "@/lib/auth/mock-auth";
+import { buildMockSignInHref } from "@/lib/auth";
+import { useMockAuth } from "@/lib/auth/react";
 import { PageHeader } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import {

@@ -2,16 +2,16 @@ import {
   AdminProfileModule,
   createAdminProfileRecord,
 } from "@/modules/admin-profile";
-import { requireMockAdminSession } from "@/server/auth/mock-session";
+import { getCurrentUser } from "@/lib/auth";
+import { requireMockAdminSession } from "@/lib/auth/server";
 
 export default async function AdminProfilePage() {
   const session = await requireMockAdminSession("/admin/profile");
+  const currentUser = getCurrentUser(session);
 
   return (
     <AdminProfileModule
-      profile={
-        session.currentUser ? createAdminProfileRecord(session.currentUser) : undefined
-      }
+      profile={currentUser ? createAdminProfileRecord(currentUser) : undefined}
     />
   );
 }

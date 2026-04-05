@@ -4,13 +4,16 @@ import Link from "next/link";
 import {
   buildMockSignInHref,
   buildMockSignOutHref,
+  getCurrentUser,
+  isAdmin,
+  isAuthenticated,
   type MockSession,
-} from "@/lib/auth/mock-auth";
-import { MockAuthProvider } from "@/components/auth/mock-auth-provider";
+} from "@/lib/auth";
+import { MockAuthProvider } from "@/lib/auth/react";
 import { PublicShell, ShellBrand } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { allBooksCatalog } from "@/modules/catalog/all-books-data";
-import { getMockSession } from "@/server/auth/mock-session";
+import { getMockSession } from "@/lib/auth/server";
 
 const publicNavigationItems = [
   {
@@ -26,7 +29,7 @@ function PublicUtilitySlot({
 }: {
   session: MockSession;
 }) {
-  if (!session.isAuthenticated) {
+  if (!isAuthenticated(session)) {
     return (
       <Button asChild size="sm" variant="outline">
         <Link
@@ -44,8 +47,8 @@ function PublicUtilitySlot({
   return (
     <>
       <Button asChild size="sm" variant="outline">
-        <Link href={session.isAdmin ? "/admin" : "/account/borrowings"}>
-          {session.isAdmin ? "Admin console" : "My account"}
+        <Link href={isAdmin(session) ? "/admin" : "/account/borrowings"}>
+          {isAdmin(session) ? "Admin console" : "My account"}
         </Link>
       </Button>
       <Button asChild size="sm" variant="secondary">
@@ -61,6 +64,7 @@ export default async function PublicSectionLayout({
   children: ReactNode;
 }>) {
   const session = await getMockSession();
+  const currentUser = getCurrentUser(session);
 
   return (
     <MockAuthProvider value={session}>
@@ -69,8 +73,8 @@ export default async function PublicSectionLayout({
           <ShellBrand
             href="/books"
             monogram="BL"
-            subtitle="Community Library"
-            title="Borrow Library Books"
+            subtitle={currentUser?.subtitle ?? "Community Library"}
+            title={currentUser?.fullName ?? "Borrow Library Books"}
           />
         }
         navigationItems={publicNavigationItems}

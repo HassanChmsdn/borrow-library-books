@@ -54,7 +54,7 @@
 ### Current mocked auth state
 
 - Implemented: mocked cookie-based auth with three conceptual states: guest, authenticated member, and authenticated admin.
-- Implemented: centralized helpers for current user, current role, `isAuthenticated`, `isMember`, and `isAdmin` in `src/lib/auth/mock-auth.ts` and `src/server/auth/mock-session.ts`.
+- Implemented: centralized auth helpers and access guards under `src/lib/auth/`, with shared state helpers in `src/lib/auth/index.ts`, server session helpers in `src/lib/auth/server.ts`, and client hooks/provider utilities in `src/lib/auth/react.tsx`.
 - Implemented: member-only access for `/account/*` and admin-only access for `/admin/*`.
 
 ### Missing real auth integration

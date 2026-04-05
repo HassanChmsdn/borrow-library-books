@@ -2,17 +2,16 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import {
+  MOCK_AUTH_COOKIE,
   buildMockSignInHref,
   createMockAuthState,
-  getDefaultRedirectForRole,
   getCurrentRole,
   getCurrentUser,
   isAdmin,
   isAuthenticated,
   isMember,
   type MockAuthState,
-  MOCK_AUTH_COOKIE,
-} from "@/lib/auth/mock-auth";
+} from "./index";
 
 export type MockSession = MockAuthState;
 
@@ -44,7 +43,7 @@ export async function getMockAuthFlags() {
 export async function requireMockMemberSession(redirectTo = "/account/borrowings") {
   const session = await getMockSession();
 
-  if (!session.isMember) {
+  if (!isMember(session)) {
     redirect(
       buildMockSignInHref({
         role: "member",
@@ -59,11 +58,11 @@ export async function requireMockMemberSession(redirectTo = "/account/borrowings
 export async function requireMockAdminSession(redirectTo = "/admin") {
   const session = await getMockSession();
 
-  if (!session.isAdmin) {
+  if (!isAdmin(session)) {
     redirect(
       buildMockSignInHref({
         role: "admin",
-        redirectTo: redirectTo || getDefaultRedirectForRole("admin"),
+        redirectTo,
       }),
     );
   }

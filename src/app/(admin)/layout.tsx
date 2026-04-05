@@ -11,15 +11,16 @@ import {
 
 import {
   buildMockSignOutHref,
-} from "@/lib/auth/mock-auth";
-import { MockAuthProvider } from "@/components/auth/mock-auth-provider";
+  getCurrentUser,
+} from "@/lib/auth";
+import { MockAuthProvider } from "@/lib/auth/react";
 import {
   AdminShell,
   AdminTopHeader,
   ShellBrand,
 } from "@/components/layout";
 import { Button } from "@/components/ui/button";
-import { requireMockAdminSession } from "@/server/auth/mock-session";
+import { requireMockAdminSession } from "@/lib/auth/server";
 
 const adminNavigationSections = [
   {
@@ -121,7 +122,7 @@ export default async function AdminSectionLayout({
   children: ReactNode;
 }>) {
   const session = await requireMockAdminSession();
-  const currentUser = session.currentUser;
+  const currentUser = getCurrentUser(session);
 
   return (
     <MockAuthProvider value={session}>

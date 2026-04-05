@@ -4,8 +4,10 @@ import { NextResponse } from "next/server";
 import {
   buildMockSignInHref,
   createMockAuthState,
+  isAdmin,
+  isMember,
   MOCK_AUTH_COOKIE,
-} from "@/lib/auth/mock-auth";
+} from "@/lib/auth";
 
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -17,7 +19,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (pathname.startsWith("/admin") && !authState.isAdmin) {
+  if (pathname.startsWith("/admin") && !isAdmin(authState)) {
     return NextResponse.redirect(
       new URL(
         buildMockSignInHref({ role: "admin", redirectTo }),
@@ -26,7 +28,7 @@ export function middleware(request: NextRequest) {
     );
   }
 
-  if (pathname.startsWith("/account") && !authState.isMember) {
+  if (pathname.startsWith("/account") && !isMember(authState)) {
     return NextResponse.redirect(
       new URL(
         buildMockSignInHref({ role: "member", redirectTo }),

@@ -1,8 +1,10 @@
 import { MemberAuthPanel } from "@/components/auth/member-auth-panel";
 
 import {
+  getCurrentRole,
+  getCurrentUser,
   sanitizeRedirectTo,
-} from "@/lib/auth/mock-auth";
+} from "@/lib/auth";
 import { PageHeader } from "@/components/layout";
 import {
   Card,
@@ -11,7 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getMockSession } from "@/server/auth/mock-session";
+import { getMockSession } from "@/lib/auth/server";
 
 interface SignInPageProps {
   searchParams: Promise<{
@@ -27,6 +29,8 @@ export default async function MockSignInPage({ searchParams }: SignInPageProps) 
   const params = await searchParams;
   const redirectTo = sanitizeRedirectTo(params.redirectTo, "/account/borrowings");
   const session = await getMockSession();
+  const currentUser = getCurrentUser(session);
+  const currentRole = getCurrentRole(session);
 
   return (
     <div className="gap-section flex flex-col">
@@ -38,8 +42,8 @@ export default async function MockSignInPage({ searchParams }: SignInPageProps) 
 
       <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,22rem)]">
         <MemberAuthPanel
-          currentRole={session.currentRole}
-          currentUserName={session.currentUser?.fullName ?? null}
+          currentRole={currentRole}
+          currentUserName={currentUser?.fullName ?? null}
           redirectTo={redirectTo}
         />
         <Card>

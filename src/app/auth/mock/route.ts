@@ -5,7 +5,7 @@ import {
   isMockAuthRole,
   MOCK_AUTH_COOKIE,
   sanitizeRedirectTo,
-} from "@/lib/auth/mock-auth";
+} from "@/lib/auth";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LoaderCircle, LogIn, UserPlus } from "lucide-react";
 
-import { buildMockAuthorizeHref, type MockAuthRole } from "@/lib/auth/mock-auth";
+import { buildMockAuthorizeHref, type MockAuthRole } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {

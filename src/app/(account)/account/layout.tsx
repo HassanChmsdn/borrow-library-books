@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 
-import { buildMockSignOutHref } from "@/lib/auth/mock-auth";
-import { MockAuthProvider } from "@/components/auth/mock-auth-provider";
+import { buildMockSignOutHref, getCurrentUser } from "@/lib/auth";
+import { MockAuthProvider } from "@/lib/auth/react";
 import { PublicShell, ShellBrand } from "@/components/layout";
 import { Button } from "@/components/ui/button";
-import { requireMockMemberSession } from "@/server/auth/mock-session";
+import { requireMockMemberSession } from "@/lib/auth/server";
 
 const accountNavigationItems = [
   {
@@ -41,6 +41,7 @@ export default async function AccountSectionLayout({
   children: ReactNode;
 }>) {
   const session = await requireMockMemberSession();
+  const currentUser = getCurrentUser(session);
 
   return (
     <MockAuthProvider value={session}>
@@ -48,9 +49,9 @@ export default async function AccountSectionLayout({
         brand={
           <ShellBrand
             href="/books"
-            monogram={session.currentUser?.monogram ?? "BL"}
-            subtitle={session.currentUser?.subtitle ?? "Member Account"}
-            title={session.currentUser?.fullName ?? "Borrow Library Books"}
+            monogram={currentUser?.monogram ?? "BL"}
+            subtitle={currentUser?.subtitle ?? "Member Account"}
+            title={currentUser?.fullName ?? "Borrow Library Books"}
           />
         }
         navigationItems={accountNavigationItems}

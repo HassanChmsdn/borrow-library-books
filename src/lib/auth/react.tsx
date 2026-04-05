@@ -1,13 +1,33 @@
 "use client";
 
+import { createContext, useContext, type PropsWithChildren } from "react";
+
 import {
+  createMockAuthState,
   getCurrentRole,
   getCurrentUser,
   isAdmin,
   isAuthenticated,
   isMember,
-} from "@/lib/auth/mock-auth";
-import { useMockAuthContext } from "@/components/auth/mock-auth-provider";
+  type MockAuthState,
+} from "./index";
+
+const MockAuthContext = createContext<MockAuthState>(createMockAuthState(null));
+
+interface MockAuthProviderProps extends PropsWithChildren {
+  value: MockAuthState;
+}
+
+export function MockAuthProvider({
+  children,
+  value,
+}: MockAuthProviderProps) {
+  return <MockAuthContext.Provider value={value}>{children}</MockAuthContext.Provider>;
+}
+
+export function useMockAuthContext() {
+  return useContext(MockAuthContext);
+}
 
 export function useMockAuth() {
   const authState = useMockAuthContext();

@@ -4,8 +4,11 @@ import { ShieldCheck } from "lucide-react";
 import {
   buildMockAuthorizeHref,
   buildMockSignOutHref,
+  getCurrentRole,
+  getCurrentUser,
+  isAuthenticated,
   sanitizeRedirectTo,
-} from "@/lib/auth/mock-auth";
+} from "@/lib/auth";
 import { ShellBrand } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getMockSession } from "@/server/auth/mock-session";
+import { getMockSession } from "@/lib/auth/server";
 
 interface AdminAccessPageProps {
   searchParams: Promise<{
@@ -31,6 +34,9 @@ export default async function AdminAccessPage({ searchParams }: AdminAccessPageP
   const params = await searchParams;
   const redirectTo = sanitizeRedirectTo(params.redirectTo, "/admin");
   const session = await getMockSession();
+  const currentUser = getCurrentUser(session);
+  const currentRole = getCurrentRole(session);
+  const authenticated = isAuthenticated(session);
 
   return (
     <main className="bg-background min-h-screen">
@@ -89,8 +95,8 @@ export default async function AdminAccessPage({ searchParams }: AdminAccessPageP
                   Current session
                 </p>
                 <p className="text-body text-foreground mt-2 font-medium">
-                  {session.currentUser
-                    ? `${session.currentUser.fullName} (${session.currentRole})`
+                  {currentUser
+                    ? `${currentUser.fullName} (${currentRole})`
                     : "Guest"}
                 </p>
                 <p className="text-body-sm text-text-secondary mt-2">
@@ -107,7 +113,7 @@ export default async function AdminAccessPage({ searchParams }: AdminAccessPageP
                 <Button asChild variant="outline">
                   <Link href="/books">Back to catalog</Link>
                 </Button>
-                {session.isAuthenticated ? (
+                {authenticated ? (
                   <Button asChild variant="ghost">
                     <Link
                       href={buildMockSignOutHref(

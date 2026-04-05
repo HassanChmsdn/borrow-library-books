@@ -1,4 +1,4 @@
-import type { MockAuthUser } from "@/lib/auth/mock-auth";
+import type { MockAuthUser } from "@/lib/auth";
 import {
   adminSharedActivities,
   adminSharedBorrowings,
