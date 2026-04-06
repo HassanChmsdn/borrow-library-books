@@ -4,7 +4,7 @@ import { ShieldCheck } from "lucide-react";
 import {
   buildAuth0LoginHref,
   buildMockAuthorizeHref,
-  buildMockSignOutHref,
+  buildSignOutHref,
   getCurrentRole,
   getCurrentUser,
   isAuthenticated,
@@ -19,7 +19,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getMockSession } from "@/lib/auth/server";
+import { getCurrentSession } from "@/lib/auth/server";
 import { isAuth0Configured } from "@/lib/auth/auth0";
 
 interface AdminAccessPageProps {
@@ -35,7 +35,7 @@ export const metadata = {
 export default async function AdminAccessPage({ searchParams }: AdminAccessPageProps) {
   const params = await searchParams;
   const redirectTo = sanitizeRedirectTo(params.redirectTo, "/admin");
-  const session = await getMockSession();
+  const session = await getCurrentSession();
   const currentUser = getCurrentUser(session);
   const currentRole = getCurrentRole(session);
   const authenticated = isAuthenticated(session);
@@ -126,7 +126,8 @@ export default async function AdminAccessPage({ searchParams }: AdminAccessPageP
                 {authenticated ? (
                   <Button asChild variant="ghost">
                     <Link
-                      href={buildMockSignOutHref(
+                      href={buildSignOutHref(
+                        session,
                         `/admin/auth?redirectTo=${encodeURIComponent(redirectTo)}`,
                       )}
                     >

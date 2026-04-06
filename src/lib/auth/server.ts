@@ -4,23 +4,37 @@ import { redirect } from "next/navigation";
 import {
   MOCK_AUTH_COOKIE,
   buildMockSignInHref,
+  createAuth0AuthState,
+  createGuestAuthState,
   createMockAuthState,
   getCurrentRole,
   getCurrentUser,
   isAdmin,
   isAuthenticated,
   isMember,
-  type MockAuthState,
+  type AppAuthState,
 } from "./index";
 import { getCurrentAuth0User, getAuth0Session } from "./auth0";
 
-export type MockSession = MockAuthState;
+export type AppSession = AppAuthState;
+export type MockSession = AppAuthState;
 
-export async function getMockSession(): Promise<MockSession> {
+export async function getMockSession(): Promise<AppSession> {
   const cookieStore = await cookies();
   const roleValue = cookieStore.get(MOCK_AUTH_COOKIE)?.value;
 
   return createMockAuthState(roleValue);
+}
+
+export async function getCurrentSession(): Promise<AppSession> {
+  const auth0Session = await getAuth0Session();
+  const auth0State = createAuth0AuthState(auth0Session);
+
+  if (auth0Session?.user) {
+    return auth0State ?? createGuestAuthState();
+  }
+
+  return getMockSession();
 }
 
 export async function getCurrentMockUser() {
@@ -33,8 +47,16 @@ export async function getCurrentMockRole() {
   return getCurrentRole(await getMockSession());
 }
 
+export async function getCurrentUserSession() {
+  return getCurrentUser(await getCurrentSession());
+}
+
+export async function getCurrentSessionRole() {
+  return getCurrentRole(await getCurrentSession());
+}
+
 export async function getMockAuthFlags() {
-  const session = await getMockSession();
+  const session = await getCurrentSession();
 
   return {
     isAuthenticated: isAuthenticated(session),
@@ -43,8 +65,8 @@ export async function getMockAuthFlags() {
   };
 }
 
-export async function requireMockMemberSession(redirectTo = "/account/borrowings") {
-  const session = await getMockSession();
+export async function requireMemberSession(redirectTo = "/account/borrowings") {
+  const session = await getCurrentSession();
 
   if (!isMember(session)) {
     redirect(
@@ -58,8 +80,8 @@ export async function requireMockMemberSession(redirectTo = "/account/borrowings
   return session;
 }
 
-export async function requireMockAdminSession(redirectTo = "/admin") {
-  const session = await getMockSession();
+export async function requireAdminSession(redirectTo = "/admin") {
+  const session = await getCurrentSession();
 
   if (!isAdmin(session)) {
     redirect(
@@ -72,3 +94,6 @@ export async function requireMockAdminSession(redirectTo = "/admin") {
 
   return session;
 }
+
+export const requireMockMemberSession = requireMemberSession;
+export const requireMockAdminSession = requireAdminSession;

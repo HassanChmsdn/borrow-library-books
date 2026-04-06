@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 
-import { buildMockSignOutHref, getCurrentUser } from "@/lib/auth";
+import { buildSignOutHref, getCurrentUser } from "@/lib/auth";
 import { MockAuthProvider } from "@/lib/auth/react";
 import { PublicShell, ShellBrand } from "@/components/layout";
 import { Button } from "@/components/ui/button";
-import { requireMockMemberSession } from "@/lib/auth/server";
+import { requireMemberSession } from "@/lib/auth/server";
 
 const accountNavigationItems = [
   {
@@ -25,11 +25,11 @@ const accountNavigationItems = [
   },
 ];
 
-function AccountUtilitySlot() {
+function AccountUtilitySlot({ signOutHref }: { signOutHref: string }) {
   return (
     <>
       <Button asChild size="sm" variant="secondary">
-        <Link href={buildMockSignOutHref("/books")}>Sign out</Link>
+        <Link href={signOutHref}>Sign out</Link>
       </Button>
     </>
   );
@@ -40,7 +40,7 @@ export default async function AccountSectionLayout({
 }: Readonly<{
   children: ReactNode;
 }>) {
-  const session = await requireMockMemberSession();
+  const session = await requireMemberSession();
   const currentUser = getCurrentUser(session);
 
   return (
@@ -55,7 +55,7 @@ export default async function AccountSectionLayout({
           />
         }
         navigationItems={accountNavigationItems}
-        utilitySlot={<AccountUtilitySlot />}
+        utilitySlot={<AccountUtilitySlot signOutHref={buildSignOutHref(session, "/books")} />}
       >
         {children}
       </PublicShell>

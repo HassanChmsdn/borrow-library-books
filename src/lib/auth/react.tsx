@@ -3,19 +3,21 @@
 import { createContext, useContext, type PropsWithChildren } from "react";
 
 import {
-  createMockAuthState,
+  createGuestAuthState,
   getCurrentRole,
+  getCurrentStatus,
   getCurrentUser,
   isAdmin,
   isAuthenticated,
   isMember,
-  type MockAuthState,
+  isSuspended,
+  type AppAuthState,
 } from "./index";
 
-const MockAuthContext = createContext<MockAuthState>(createMockAuthState(null));
+const MockAuthContext = createContext<AppAuthState>(createGuestAuthState());
 
 interface MockAuthProviderProps extends PropsWithChildren {
-  value: MockAuthState;
+  value: AppAuthState;
 }
 
 export function MockAuthProvider({
@@ -36,9 +38,11 @@ export function useMockAuth() {
     ...authState,
     currentUser: getCurrentUser(authState),
     currentRole: getCurrentRole(authState),
+    currentStatus: getCurrentStatus(authState),
     isAuthenticated: isAuthenticated(authState),
     isMember: isMember(authState),
     isAdmin: isAdmin(authState),
+    isSuspended: isSuspended(authState),
   };
 }
 
@@ -60,4 +64,8 @@ export function useIsMember() {
 
 export function useIsAdmin() {
   return useMockAuth().isAdmin;
+}
+
+export function useIsSuspended() {
+  return useMockAuth().isSuspended;
 }

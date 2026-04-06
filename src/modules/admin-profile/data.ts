@@ -23,7 +23,7 @@ const adminProfileSeeds: Record<
     primaryWorkspace: "Circulation and catalog operations",
     focusAreas: ["Borrowings approvals", "Catalog quality", "Member follow-up"],
     accountSummaryNote:
-      "This mocked admin profile is scoped for future Auth0 claims and Mongo-backed staff preferences, while still surfacing the current workspace posture in a realistic way.",
+      "This mocked admin profile is scoped for future Auth0 identity and Mongo-backed staff preferences, while still surfacing the current workspace posture in a realistic way.",
   },
 };
 
@@ -87,7 +87,7 @@ export function createAdminProfileRecord(currentUser: MockAuthUser): AdminProfil
       {
         label: "Auth mode",
         value: "Mocked admin access",
-        hint: "Prepared to map later to Auth0 role claims and Mongo-backed staff records.",
+        hint: "Prepared to map later to Auth0 identity and Mongo-backed staff records.",
       },
     ],
     metrics: [

@@ -2,18 +2,19 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 
 import {
+  buildSignOutHref,
   buildMockSignInHref,
-  buildMockSignOutHref,
   getCurrentUser,
   isAdmin,
   isAuthenticated,
-  type MockSession,
+  isMember,
+  type AppAuthState,
 } from "@/lib/auth";
 import { MockAuthProvider } from "@/lib/auth/react";
 import { PublicShell, ShellBrand } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { allBooksCatalog } from "@/modules/catalog/all-books-data";
-import { getMockSession } from "@/lib/auth/server";
+import { getCurrentSession } from "@/lib/auth/server";
 
 const publicNavigationItems = [
   {
@@ -27,7 +28,7 @@ const publicNavigationItems = [
 function PublicUtilitySlot({
   session,
 }: {
-  session: MockSession;
+  session: AppAuthState;
 }) {
   if (!isAuthenticated(session)) {
     return (
@@ -46,13 +47,17 @@ function PublicUtilitySlot({
 
   return (
     <>
-      <Button asChild size="sm" variant="outline">
-        <Link href={isAdmin(session) ? "/admin" : "/account/borrowings"}>
-          {isAdmin(session) ? "Admin console" : "My account"}
-        </Link>
-      </Button>
+      {isAdmin(session) ? (
+        <Button asChild size="sm" variant="outline">
+          <Link href="/admin">Admin console</Link>
+        </Button>
+      ) : isMember(session) ? (
+        <Button asChild size="sm" variant="outline">
+          <Link href="/account/borrowings">My account</Link>
+        </Button>
+      ) : null}
       <Button asChild size="sm" variant="secondary">
-        <Link href={buildMockSignOutHref("/books")}>Sign out</Link>
+        <Link href={buildSignOutHref(session, "/books")}>Sign out</Link>
       </Button>
     </>
   );
@@ -63,7 +68,7 @@ export default async function PublicSectionLayout({
 }: Readonly<{
   children: ReactNode;
 }>) {
-  const session = await getMockSession();
+  const session = await getCurrentSession();
   const currentUser = getCurrentUser(session);
 
   return (

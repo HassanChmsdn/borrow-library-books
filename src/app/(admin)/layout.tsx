@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 import {
-  buildMockSignOutHref,
+  buildSignOutHref,
   getCurrentUser,
 } from "@/lib/auth";
 import { MockAuthProvider } from "@/lib/auth/react";
@@ -20,7 +20,7 @@ import {
   ShellBrand,
 } from "@/components/layout";
 import { Button } from "@/components/ui/button";
-import { requireMockAdminSession } from "@/lib/auth/server";
+import { requireAdminSession } from "@/lib/auth/server";
 
 const adminNavigationSections = [
   {
@@ -76,10 +76,12 @@ function AdminFooter({
   monogram,
   subtitle,
   fullName,
+  signOutHref,
 }: {
   monogram: string;
   subtitle: string;
   fullName: string;
+  signOutHref: string;
 }) {
 
   return (
@@ -109,7 +111,7 @@ function AdminFooter({
         </Button>
 
         <Button asChild className="w-full" size="sm" variant="secondary">
-          <Link href={buildMockSignOutHref("/books")}>Sign out</Link>
+          <Link href={signOutHref}>Sign out</Link>
         </Button>
       </div>
     </div>
@@ -121,7 +123,7 @@ export default async function AdminSectionLayout({
 }: Readonly<{
   children: ReactNode;
 }>) {
-  const session = await requireMockAdminSession();
+  const session = await requireAdminSession();
   const currentUser = getCurrentUser(session);
 
   return (
@@ -168,6 +170,7 @@ export default async function AdminSectionLayout({
           <AdminFooter
             fullName={currentUser?.fullName ?? "Samir Chahine"}
             monogram={currentUser?.monogram ?? "SC"}
+            signOutHref={buildSignOutHref(session, "/books")}
             subtitle={currentUser?.subtitle ?? "Shift lead account"}
           />
         }

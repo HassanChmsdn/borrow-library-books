@@ -3,10 +3,10 @@ import {
   createAdminProfileRecord,
 } from "@/modules/admin-profile";
 import { getCurrentUser } from "@/lib/auth";
-import { requireMockAdminSession } from "@/lib/auth/server";
+import { requireAdminSession } from "@/lib/auth/server";
 
 export default async function AdminProfilePage() {
-  const session = await requireMockAdminSession("/admin/profile");
+  const session = await requireAdminSession("/admin/profile");
   const currentUser = getCurrentUser(session);
 
   return (

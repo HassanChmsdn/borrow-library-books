@@ -14,7 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getMockSession } from "@/lib/auth/server";
+import { getCurrentSession } from "@/lib/auth/server";
 import { isAuth0Configured } from "@/lib/auth/auth0";
 
 interface SignInPageProps {
@@ -30,7 +30,7 @@ export const metadata = {
 export default async function MockSignInPage({ searchParams }: SignInPageProps) {
   const params = await searchParams;
   const redirectTo = sanitizeRedirectTo(params.redirectTo, "/account/borrowings");
-  const session = await getMockSession();
+  const session = await getCurrentSession();
   const currentUser = getCurrentUser(session);
   const currentRole = getCurrentRole(session);
   const auth0Enabled = isAuth0Configured();
