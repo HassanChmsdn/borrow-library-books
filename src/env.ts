@@ -13,6 +13,8 @@ export const env = createEnv({
     AUTH0_CLIENT_SECRET: z.string().min(1).optional(),
     AUTH0_DOMAIN: z.string().min(1).optional(),
     AUTH0_SECRET: z.string().min(1).optional(),
+    MONGODB_DB_NAME: z.string().min(1).optional(),
+    MONGODB_URI: z.string().min(1).optional(),
   },
   client: {},
   runtimeEnv: {
@@ -21,6 +23,8 @@ export const env = createEnv({
     AUTH0_CLIENT_SECRET: process.env.AUTH0_CLIENT_SECRET,
     AUTH0_DOMAIN: process.env.AUTH0_DOMAIN,
     AUTH0_SECRET: process.env.AUTH0_SECRET,
+    MONGODB_DB_NAME: process.env.MONGODB_DB_NAME,
+    MONGODB_URI: process.env.MONGODB_URI,
     NODE_ENV: process.env.NODE_ENV,
   },
   emptyStringAsUndefined: true,

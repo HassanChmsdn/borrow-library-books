@@ -24,6 +24,8 @@ Create a local environment file when you add application variables:
 cp .env.example .env.local
 ```
 
+MongoDB integration lives under `src/lib/db`. Set `MONGODB_URI` and, optionally, `MONGODB_DB_NAME` when you are ready to connect a database.
+
 ## Source structure
 
 ```text
