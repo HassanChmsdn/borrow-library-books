@@ -1,9 +1,9 @@
 import {
-  adminSharedBooks,
-  adminSharedInventoryCopies,
-  formatAdminRelativeAuditLabel,
-  getAdminSharedBook,
-} from "@/modules/admin-shared/mock-data";
+  getBookRecordById,
+  listBookCopyRecords,
+  listBookRecords,
+} from "@/lib/data";
+import { formatAdminRelativeAuditLabel } from "@/modules/admin-shared/mock-data";
 
 import type {
   AdminInventoryCondition,
@@ -66,7 +66,7 @@ export const adminInventoryBookOptions = [
     label: "Select a book",
     value: "",
   },
-  ...adminSharedBooks.map((book) => ({
+  ...listBookRecords().map((book) => ({
     description: `${book.author} · ${book.shelfCode}`,
     label: book.title,
     value: book.id,
@@ -74,8 +74,8 @@ export const adminInventoryBookOptions = [
 ] as const;
 
 export const adminInventoryRecords: ReadonlyArray<AdminInventoryRecord> =
-  adminSharedInventoryCopies.map((copy) => {
-    const book = getAdminSharedBook(copy.bookId);
+  listBookCopyRecords().map((copy) => {
+    const book = getBookRecordById(copy.bookId);
 
     return {
       id: copy.id,

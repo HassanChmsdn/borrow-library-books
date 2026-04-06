@@ -8,13 +8,15 @@ import {
 } from "lucide-react";
 
 import {
+  getUserRecordById,
+  listBorrowRequestRecords,
+  listVisibleUserRecords,
+} from "@/lib/data";
+import {
   adminSharedActivities,
-  adminSharedBorrowings,
   adminSharedNow,
-  adminSharedUsers,
   formatAdminActivityMeta,
   formatAdminCurrency,
-  getAdminSharedUser,
   getAdminSharedWeekdayLabel,
 } from "@/modules/admin-shared/mock-data";
 
@@ -29,12 +31,14 @@ import type {
 
 const oneDayInMs = 24 * 60 * 60 * 1000;
 
-function countBorrowingsByStatus(status: (typeof adminSharedBorrowings)[number]["status"]) {
-  return adminSharedBorrowings.filter((record) => record.status === status).length;
+function countBorrowingsByStatus(
+  status: ReturnType<typeof listBorrowRequestRecords>[number]["status"],
+) {
+  return listBorrowRequestRecords().filter((record) => record.status === status).length;
 }
 
 function getActiveLoanCount() {
-  return adminSharedBorrowings.filter(
+  return listBorrowRequestRecords().filter(
     (record) => record.status === "active" || record.status === "overdue",
   ).length;
 }
@@ -42,7 +46,7 @@ function getActiveLoanCount() {
 function getActiveUsersCount() {
   const threshold = adminSharedNow.getTime() - 30 * oneDayInMs;
   const activeUserIds = new Set(
-    adminSharedBorrowings
+    listBorrowRequestRecords()
       .filter((record) => {
         const timestamps = [record.requestedOn, record.startedOn, record.returnedOn].filter(
           Boolean,
@@ -57,17 +61,17 @@ function getActiveUsersCount() {
 }
 
 function getCashRevenueCents() {
-  return adminSharedBorrowings
+  return listBorrowRequestRecords()
     .filter((record) => record.paymentStatus === "cash-settled")
     .reduce((total, record) => total + record.feeCents, 0);
 }
 
 const pendingCount = countBorrowingsByStatus("pending");
 const overdueCount = countBorrowingsByStatus("overdue");
-const pendingCustomReviewCount = adminSharedBorrowings.filter(
+const pendingCustomReviewCount = listBorrowRequestRecords().filter(
   (record) => record.status === "pending" && record.customDuration,
 ).length;
-const overdueCashCount = adminSharedBorrowings.filter(
+const overdueCashCount = listBorrowRequestRecords().filter(
   (record) => record.status === "overdue" && record.paymentStatus === "cash-due",
 ).length;
 
@@ -105,7 +109,7 @@ export const adminDashboardMetrics: ReadonlyArray<AdminDashboardMetric> = [
     value: formatAdminCurrency(getCashRevenueCents()),
     supportingText: "Onsite cash fees already settled in the current mock circulation history.",
     icon: HandCoins,
-    trend: `${adminSharedBorrowings.filter((record) => record.paymentStatus === "cash-settled").length} settled records`,
+    trend: `${listBorrowRequestRecords().filter((record) => record.paymentStatus === "cash-settled").length} settled records`,
     tone: "success",
   },
   {
@@ -114,7 +118,7 @@ export const adminDashboardMetrics: ReadonlyArray<AdminDashboardMetric> = [
     value: String(getActiveUsersCount()),
     supportingText: "Members with borrowing activity in the last 30 days across requests, loans, and returns.",
     icon: Users,
-    trend: `${adminSharedUsers.filter((user) => user.role === "user").length} member accounts`,
+    trend: `${listVisibleUserRecords().filter((user) => user.role === "member").length} member accounts`,
     tone: "info",
   },
 ];
@@ -148,19 +152,19 @@ export const adminDashboardNotices: ReadonlyArray<AdminDashboardNoticeItem> = [
 
 function getTrendPointValue(dateKey: string, kind: "borrowings" | "returns" | "overdue") {
   if (kind === "borrowings") {
-    return adminSharedBorrowings.filter((record) => {
+    return listBorrowRequestRecords().filter((record) => {
       const timestamp = record.startedOn ?? record.requestedOn;
       return timestamp.slice(0, 10) === dateKey;
     }).length;
   }
 
   if (kind === "returns") {
-    return adminSharedBorrowings.filter(
+    return listBorrowRequestRecords().filter(
       (record) => record.returnedOn?.slice(0, 10) === dateKey,
     ).length;
   }
 
-  return adminSharedBorrowings.filter((record) => {
+  return listBorrowRequestRecords().filter((record) => {
     if (record.status !== "overdue" || !record.startedOn) {
       return false;
     }
@@ -189,7 +193,7 @@ export const adminDashboardTrendPoints: ReadonlyArray<AdminDashboardTrendPoint> 
     };
   });
 
-const returnedBorrowings = adminSharedBorrowings.filter((record) => record.status === "returned");
+const returnedBorrowings = listBorrowRequestRecords().filter((record) => record.status === "returned");
 const returnedOnTimeCount = returnedBorrowings.filter((record) => {
   if (!record.startedOn || !record.returnedOn) {
     return false;
@@ -234,7 +238,7 @@ export const adminDashboardActivity: ReadonlyArray<AdminDashboardActivityItem> =
     id: activity.id,
     title: activity.title,
     description: activity.description,
-    actor: getAdminSharedUser(activity.actorUserId)?.fullName ?? "Unknown staff",
+    actor: getUserRecordById(activity.actorUserId)?.fullName ?? "Unknown staff",
     actorRole: activity.actorRoleLabel,
     meta: formatAdminActivityMeta(activity.occurredOn),
     statusLabel: activity.statusLabel,

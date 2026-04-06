@@ -1,4 +1,13 @@
-import { adminSharedBorrowings, adminSharedUsers, formatAdminJoinedDate, formatAdminShortDate, formatAdminCurrency, getAdminSharedBook } from "@/modules/admin-shared/mock-data";
+import {
+  getBookRecordById,
+  listBorrowRequestRecords,
+  listVisibleUserRecords,
+} from "@/lib/data";
+import {
+  formatAdminCurrency,
+  formatAdminJoinedDate,
+  formatAdminShortDate,
+} from "@/modules/admin-shared/mock-data";
 import type { AdminFilterOption } from "@/components/admin";
 
 import type {
@@ -16,9 +25,9 @@ function getBorrowingFeeLabel(feeCents: number) {
 }
 
 function toUserBorrowingRecord(
-  borrowing: (typeof adminSharedBorrowings)[number],
+  borrowing: ReturnType<typeof listBorrowRequestRecords>[number],
 ): AdminUserBorrowingRecord {
-  const book = getAdminSharedBook(borrowing.bookId);
+  const book = getBookRecordById(borrowing.bookId);
   const dueOn = borrowing.startedOn
     ? new Date(
         new Date(borrowing.startedOn).getTime() +
@@ -147,8 +156,8 @@ export const adminUserFormDefaults: AdminUserFormValues = {
 };
 
 export const adminUserProfileRecords: ReadonlyArray<AdminUserProfileRecord> =
-  adminSharedUsers.map((user) => {
-    const borrowings = adminSharedBorrowings.filter((record) => record.userId === user.id);
+  listVisibleUserRecords().map((user) => {
+    const borrowings = listBorrowRequestRecords().filter((record) => record.userId === user.id);
     const currentBorrowings = borrowings
       .filter((record) => record.status !== "returned")
       .map(toUserBorrowingRecord);
@@ -165,7 +174,7 @@ export const adminUserProfileRecords: ReadonlyArray<AdminUserProfileRecord> =
       id: user.id,
       fullName: user.fullName,
       email: user.email,
-      role: user.role,
+      role: user.managementRole,
       status: user.status,
       joinedDateLabel: formatAdminJoinedDate(user.joinedOn),
       profileHref: `/admin/users/${user.id}`,
@@ -174,12 +183,12 @@ export const adminUserProfileRecords: ReadonlyArray<AdminUserProfileRecord> =
         pendingCount,
         overdueCount,
         borrowings.length,
-        user.role,
+        user.managementRole,
       ),
       borrowingSummaryMeta: getBorrowingSummaryMeta(
         currentBorrowings,
         borrowingHistory,
-        user.role,
+        user.managementRole,
       ),
       profileSummaryNote: user.profileNote,
       totalBorrowingsCount: borrowings.length,

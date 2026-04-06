@@ -1,7 +1,7 @@
 import {
-  adminSharedCategories,
-  getAdminSharedBookCountByCategory,
-} from "@/modules/admin-shared/mock-data";
+  countBookRecordsByCategory,
+  listCategoryRecords,
+} from "@/lib/data";
 
 import type {
   AdminCategoryFormValues,
@@ -9,8 +9,8 @@ import type {
 } from "./types";
 
 export const adminCategoryRecords: ReadonlyArray<AdminCategoryRecord> =
-  adminSharedCategories.map((category) => ({
-    bookCount: getAdminSharedBookCountByCategory(category.id),
+  listCategoryRecords().map((category) => ({
+    bookCount: countBookRecordsByCategory(category.id),
     description: category.description,
     id: category.id,
     name: category.name,

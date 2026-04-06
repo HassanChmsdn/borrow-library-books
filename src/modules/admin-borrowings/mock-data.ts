@@ -1,10 +1,12 @@
 import {
-  adminSharedBorrowings,
+  getBookRecordById,
+  getUserRecordById,
+  listBorrowRequestRecords,
+} from "@/lib/data";
+import {
   formatAdminDateTime,
   formatAdminShortDate,
   getAdminBorrowingLateLabel,
-  getAdminSharedBook,
-  getAdminSharedUser,
 } from "@/modules/admin-shared/mock-data";
 
 import type { AdminBorrowingRecord, AdminBorrowingsTab } from "./types";
@@ -17,9 +19,9 @@ export const adminBorrowingsTabLabels: Record<AdminBorrowingsTab, string> = {
 };
 
 export const adminBorrowingsRecords: ReadonlyArray<AdminBorrowingRecord> =
-  adminSharedBorrowings.map((borrowing) => {
-    const book = getAdminSharedBook(borrowing.bookId);
-    const user = getAdminSharedUser(borrowing.userId);
+  listBorrowRequestRecords().map((borrowing) => {
+    const book = getBookRecordById(borrowing.bookId);
+    const user = getUserRecordById(borrowing.userId);
     const dueOn = borrowing.startedOn
       ? new Date(
           new Date(borrowing.startedOn).getTime() +

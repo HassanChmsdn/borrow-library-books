@@ -1,9 +1,10 @@
 import type { BookCoverTone } from "@/modules/catalog/all-books-data";
 import {
-  adminSharedBooks,
-  adminSharedCategories,
-  getAdminSharedBookInventorySummary,
-} from "@/modules/admin-shared/mock-data";
+  getBookInventorySnapshot,
+  listBookRecords,
+  listCategoryRecords,
+} from "@/lib/data";
+import { formatAdminRelativeAuditLabel } from "@/modules/admin-shared/mock-data";
 
 import type {
   AdminBookCategory,
@@ -48,7 +49,7 @@ function toAdminBookCategory(categoryName: string) {
 
 export const adminBooksCategories: ReadonlyArray<AdminBooksCategory> = [
   "All",
-  ...adminSharedCategories.map((category) => category.name as AdminBookCategory),
+  ...listCategoryRecords().map((category) => category.name as AdminBookCategory),
 ];
 
 export const adminBooksStatusOptions: ReadonlyArray<{
@@ -69,10 +70,10 @@ export const adminBookDurationOptions: ReadonlyArray<AdminBookDurationOption> = 
 ];
 
 export const adminBookDetailRecords: ReadonlyArray<AdminBookDetailsRecord> =
-  adminSharedBooks.map((book) => {
-    const inventorySummary = getAdminSharedBookInventorySummary(book.id);
+  listBookRecords().map((book) => {
+    const inventorySnapshot = getBookInventorySnapshot(book.id);
     const categoryName =
-      adminSharedCategories.find((category) => category.id === book.categoryId)?.name ??
+      listCategoryRecords().find((category) => category.id === book.categoryId)?.name ??
       "Fiction";
 
     return {
@@ -81,8 +82,8 @@ export const adminBookDetailRecords: ReadonlyArray<AdminBookDetailsRecord> =
       author: book.author,
       category: toAdminBookCategory(categoryName),
       shelfCode: book.shelfCode,
-      totalCopies: inventorySummary.totalCopies,
-      availableCopies: inventorySummary.availableCopies,
+      totalCopies: inventorySnapshot.totalCopies,
+      availableCopies: inventorySnapshot.availableCopies,
       feeCents: book.feeCents,
       coverTone: book.coverTone as BookCoverTone,
       coverLabel: book.coverLabel,
@@ -93,10 +94,19 @@ export const adminBookDetailRecords: ReadonlyArray<AdminBookDetailsRecord> =
       allowCustomDuration: book.allowCustomDuration,
       metadata: book.metadata,
       recordStatus: book.recordStatus,
-      inventorySummary,
+      inventorySummary: {
+        availableCopies: inventorySnapshot.availableCopies,
+        borrowedCopies: inventorySnapshot.borrowedCopies,
+        lastAuditLabel: inventorySnapshot.lastUpdatedOn
+          ? formatAdminRelativeAuditLabel(inventorySnapshot.lastUpdatedOn)
+          : "No copies tracked yet",
+        reservedCopies: inventorySnapshot.reservedCopies,
+        shelfCode: inventorySnapshot.shelfCode,
+        totalCopies: inventorySnapshot.totalCopies,
+      },
       ...deriveAvailabilityState(
-        inventorySummary.availableCopies,
-        Math.max(inventorySummary.totalCopies, 1),
+        inventorySnapshot.availableCopies,
+        Math.max(inventorySnapshot.totalCopies, 1),
       ),
     };
   });

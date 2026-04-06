@@ -1,8 +1,7 @@
 import type { MockAuthUser } from "@/lib/auth";
+import { listBookCopyRecords, listBorrowRequestRecords } from "@/lib/data";
 import {
   adminSharedActivities,
-  adminSharedBorrowings,
-  adminSharedInventoryCopies,
   formatAdminActivityMeta,
   formatAdminJoinedDate,
 } from "@/modules/admin-shared/mock-data";
@@ -28,15 +27,15 @@ const adminProfileSeeds: Record<
 };
 
 function getPendingBorrowingsCount() {
-  return adminSharedBorrowings.filter((record) => record.status === "pending").length;
+  return listBorrowRequestRecords().filter((record) => record.status === "pending").length;
 }
 
 function getOverdueBorrowingsCount() {
-  return adminSharedBorrowings.filter((record) => record.status === "overdue").length;
+  return listBorrowRequestRecords().filter((record) => record.status === "overdue").length;
 }
 
 function getMaintenanceCopiesCount() {
-  return adminSharedInventoryCopies.filter((copy) => copy.status === "maintenance").length;
+  return listBookCopyRecords().filter((copy) => copy.status === "maintenance").length;
 }
 
 export function createAdminProfileRecord(currentUser: MockAuthUser): AdminProfileRecord {
