@@ -1,6 +1,7 @@
 import { MemberAuthPanel } from "@/components/auth/member-auth-panel";
 
 import {
+  buildAuth0LoginHref,
   getCurrentRole,
   getCurrentUser,
   sanitizeRedirectTo,
@@ -14,6 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getMockSession } from "@/lib/auth/server";
+import { isAuth0Configured } from "@/lib/auth/auth0";
 
 interface SignInPageProps {
   searchParams: Promise<{
@@ -31,6 +33,7 @@ export default async function MockSignInPage({ searchParams }: SignInPageProps) 
   const session = await getMockSession();
   const currentUser = getCurrentUser(session);
   const currentRole = getCurrentRole(session);
+  const auth0Enabled = isAuth0Configured();
 
   return (
     <div className="gap-section flex flex-col">
@@ -42,6 +45,8 @@ export default async function MockSignInPage({ searchParams }: SignInPageProps) 
 
       <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,22rem)]">
         <MemberAuthPanel
+          auth0Enabled={auth0Enabled}
+          auth0Href={buildAuth0LoginHref(redirectTo)}
           currentRole={currentRole}
           currentUserName={currentUser?.fullName ?? null}
           redirectTo={redirectTo}
@@ -71,6 +76,17 @@ export default async function MockSignInPage({ searchParams }: SignInPageProps) 
                 Login and register currently create the same mocked member session. The form structure stays ready for future Auth0-backed credential handling.
               </p>
             </div>
+
+            {auth0Enabled ? (
+              <div className="rounded-2xl border border-dashed border-black/5 p-4">
+                <p className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
+                  Auth0 path enabled
+                </p>
+                <p className="text-body-sm text-text-secondary mt-2">
+                  This workspace has Auth0 configuration available, so members can also continue through the parallel Auth0 login route from the main form.
+                </p>
+              </div>
+            ) : null}
           </CardContent>
         </Card>
       </section>

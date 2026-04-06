@@ -1,4 +1,9 @@
 export {
+  buildAuth0LoginHref,
+  isAuth0Configured,
+} from "./auth0";
+
+export {
   MOCK_AUTH_COOKIE,
   buildMockAuthorizeHref,
   buildMockSignInHref,

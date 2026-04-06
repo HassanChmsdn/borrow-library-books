@@ -12,6 +12,7 @@ import {
   isMember,
   type MockAuthState,
 } from "./index";
+import { getCurrentAuth0User, getAuth0Session } from "./auth0";
 
 export type MockSession = MockAuthState;
 
@@ -25,6 +26,8 @@ export async function getMockSession(): Promise<MockSession> {
 export async function getCurrentMockUser() {
   return getCurrentUser(await getMockSession());
 }
+
+export { getAuth0Session, getCurrentAuth0User };
 
 export async function getCurrentMockRole() {
   return getCurrentRole(await getMockSession());

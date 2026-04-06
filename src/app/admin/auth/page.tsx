@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 
 import {
+  buildAuth0LoginHref,
   buildMockAuthorizeHref,
   buildMockSignOutHref,
   getCurrentRole,
@@ -19,6 +20,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getMockSession } from "@/lib/auth/server";
+import { isAuth0Configured } from "@/lib/auth/auth0";
 
 interface AdminAccessPageProps {
   searchParams: Promise<{
@@ -37,6 +39,7 @@ export default async function AdminAccessPage({ searchParams }: AdminAccessPageP
   const currentUser = getCurrentUser(session);
   const currentRole = getCurrentRole(session);
   const authenticated = isAuthenticated(session);
+  const auth0Enabled = isAuth0Configured();
 
   return (
     <main className="bg-background min-h-screen">
@@ -110,6 +113,13 @@ export default async function AdminAccessPage({ searchParams }: AdminAccessPageP
                     Continue as admin
                   </Link>
                 </Button>
+                {auth0Enabled ? (
+                  <Button asChild className="sm:min-w-52" variant="outline">
+                    <Link href={buildAuth0LoginHref(redirectTo)}>
+                      Continue with Auth0
+                    </Link>
+                  </Button>
+                ) : null}
                 <Button asChild variant="outline">
                   <Link href="/books">Back to catalog</Link>
                 </Button>

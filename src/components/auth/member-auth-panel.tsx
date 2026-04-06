@@ -29,6 +29,8 @@ interface MemberAuthValues {
 type MemberAuthErrors = Partial<Record<keyof MemberAuthValues | "form", string>>;
 
 interface MemberAuthPanelProps {
+  auth0Enabled: boolean;
+  auth0Href: string;
   currentRole: MockAuthRole;
   currentUserName: string | null;
   redirectTo: string;
@@ -42,6 +44,8 @@ const defaultValues: MemberAuthValues = {
 };
 
 export function MemberAuthPanel({
+  auth0Enabled,
+  auth0Href,
   currentRole,
   currentUserName,
   redirectTo,
@@ -283,6 +287,17 @@ export function MemberAuthPanel({
               <Link href="/books">Keep browsing</Link>
             </Button>
           </div>
+
+          {auth0Enabled ? (
+            <div className="grid gap-3 border-t border-black/5 pt-4">
+              <p className="text-body-sm text-text-tertiary">
+                Prefer the Auth0-ready path? Continue with the parallel integration without replacing the mocked member flow yet.
+              </p>
+              <Button asChild disabled={isPending} type="button" variant="outline">
+                <Link href={auth0Href}>Continue with Auth0</Link>
+              </Button>
+            </div>
+          ) : null}
         </form>
       </CardContent>
     </Card>
