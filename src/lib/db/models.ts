@@ -1,87 +1,215 @@
-import type { ObjectId } from "mongodb";
+import { ObjectId } from "mongodb";
+import { z } from "zod";
 
-export type AppUserRole = "member" | "admin";
+export const AppUserRoleSchema = z.enum(["member", "admin"]);
+export type AppUserRole = z.infer<typeof AppUserRoleSchema>;
 
-export type AppUserStatus = "active" | "suspended";
+export const AppUserStatusSchema = z.enum(["active", "suspended"]);
+export type AppUserStatus = z.infer<typeof AppUserStatusSchema>;
 
-export type BookStatus = "active" | "inactive";
+export const BookStatusSchema = z.enum(["active", "inactive"]);
+export type BookStatus = z.infer<typeof BookStatusSchema>;
 
-export type BookCopyCondition = "new" | "good" | "fair" | "poor";
+export const BookCopyConditionSchema = z.enum(["new", "good", "fair", "poor"]);
+export type BookCopyCondition = z.infer<typeof BookCopyConditionSchema>;
 
-export type BookCopyStatus = "available" | "reserved" | "borrowed" | "maintenance";
+export const BookCopyStatusSchema = z.enum([
+  "available",
+  "reserved",
+  "borrowed",
+  "maintenance",
+]);
+export type BookCopyStatus = z.infer<typeof BookCopyStatusSchema>;
 
-export type BorrowRequestStatus =
-  | "draft"
-  | "pending"
-  | "active"
-  | "overdue"
-  | "returned"
-  | "cancelled";
+export const BorrowDurationTypeSchema = z.enum(["predefined", "custom"]);
+export type BorrowDurationType = z.infer<typeof BorrowDurationTypeSchema>;
 
-export type PaymentStatus = "unpaid" | "pending" | "paid" | "waived";
+export const BorrowRequestStatusSchema = z.enum([
+  "draft",
+  "pending",
+  "active",
+  "overdue",
+  "returned",
+  "cancelled",
+]);
+export type BorrowRequestStatus = z.infer<typeof BorrowRequestStatusSchema>;
 
-export interface BaseDocument {
-  _id?: ObjectId;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
+export const PaymentMethodSchema = z.enum(["onsite-cash"]);
+export type PaymentMethod = z.infer<typeof PaymentMethodSchema>;
 
-export interface UserDocument extends BaseDocument {
-  authProvider: "auth0" | "mock";
-  authSubject: string;
-  email: string;
-  fullName: string;
-  role: AppUserRole;
-  status: AppUserStatus;
-  avatarUrl?: string;
-  lastLoginAt?: Date;
-}
+export const PaymentStatusSchema = z.enum(["unpaid", "pending", "paid", "waived"]);
+export type PaymentStatus = z.infer<typeof PaymentStatusSchema>;
 
-export interface CategoryDocument extends BaseDocument {
-  description?: string;
-  name: string;
-  slug: string;
-}
+export type DatabaseId = ObjectId | string;
 
-export interface BookDocument extends BaseDocument {
-  allowCustomDuration: boolean;
-  author: string;
-  categoryId: ObjectId | string;
-  coverImageUrl?: string;
-  description: string;
-  feeCents: number;
-  isbn: string;
-  metadata?: {
-    edition?: string;
-    language?: string;
-    publishedYear?: string;
-    publisher?: string;
-  };
-  predefinedDurations: number[];
-  status: BookStatus;
-  title: string;
-}
+export const DatabaseIdSchema = z.union([
+  z.string().trim().min(1),
+  z.instanceof(ObjectId),
+]) as z.ZodType<DatabaseId>;
 
-export interface BookCopyDocument extends BaseDocument {
-  bookId: ObjectId | string;
-  condition: BookCopyCondition;
-  copyCode: string;
-  notes?: string;
-  status: BookCopyStatus;
-}
+export type UserId = DatabaseId;
+export type CategoryId = DatabaseId;
+export type BookId = DatabaseId;
+export type BookCopyId = DatabaseId;
+export type BorrowRequestId = DatabaseId;
 
-export interface BorrowRequestDocument extends BaseDocument {
-  approvedAt?: Date;
-  bookCopyId?: ObjectId | string;
-  bookId: ObjectId | string;
-  dueAt?: Date;
-  notes?: string;
-  paymentStatus: PaymentStatus;
-  requestedAt: Date;
-  requestedCustomDuration: boolean;
-  requestedDurationDays: number;
-  returnedAt?: Date;
-  startedAt?: Date;
-  status: BorrowRequestStatus;
-  userId: ObjectId | string;
-}
+export const BaseDocumentSchema = z.object({
+  _id: DatabaseIdSchema.optional(),
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
+});
+
+export type BaseDocument = z.infer<typeof BaseDocumentSchema>;
+
+export const UserDocumentSchema = BaseDocumentSchema.extend({
+  auth0UserId: z.string().trim().min(1),
+  avatarUrl: z.string().trim().url().optional(),
+  email: z.string().trim().toLowerCase().email(),
+  lastLoginAt: z.date().optional(),
+  name: z.string().trim().min(1).max(120),
+  role: AppUserRoleSchema,
+  status: AppUserStatusSchema,
+});
+
+export type UserDocument = z.infer<typeof UserDocumentSchema>;
+
+export const CreateUserInputSchema = UserDocumentSchema.omit({
+  _id: true,
+  createdAt: true,
+  updatedAt: true,
+  lastLoginAt: true,
+});
+export type CreateUserInput = z.infer<typeof CreateUserInputSchema>;
+
+export const UpdateUserInputSchema = CreateUserInputSchema.partial();
+export type UpdateUserInput = z.infer<typeof UpdateUserInputSchema>;
+
+export const CategoryDocumentSchema = BaseDocumentSchema.extend({
+  description: z.string().trim().max(500).optional(),
+  name: z.string().trim().min(1).max(120),
+  slug: z.string().trim().min(1).max(140),
+});
+
+export type CategoryDocument = z.infer<typeof CategoryDocumentSchema>;
+
+export const CreateCategoryInputSchema = CategoryDocumentSchema.omit({
+  _id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type CreateCategoryInput = z.infer<typeof CreateCategoryInputSchema>;
+
+export const UpdateCategoryInputSchema = CreateCategoryInputSchema.partial();
+export type UpdateCategoryInput = z.infer<typeof UpdateCategoryInputSchema>;
+
+export const BookPublicationMetadataSchema = z
+  .object({
+    edition: z.string().trim().max(80).optional(),
+    language: z.string().trim().max(80).optional(),
+    publishedYear: z.string().trim().max(4).optional(),
+    publisher: z.string().trim().max(120).optional(),
+  })
+  .partial();
+
+export type BookPublicationMetadata = z.infer<typeof BookPublicationMetadataSchema>;
+
+export const BookDocumentSchema = BaseDocumentSchema.extend({
+  allowCustomDuration: z.boolean(),
+  author: z.string().trim().min(1).max(160),
+  categoryId: DatabaseIdSchema,
+  coverImageUrl: z.string().trim().url().optional(),
+  description: z.string().trim().min(1).max(5000),
+  feeCents: z.number().int().min(0),
+  isbn: z.string().trim().min(10).max(20),
+  metadata: BookPublicationMetadataSchema.optional(),
+  predefinedDurations: z.array(z.number().int().positive()).min(1),
+  status: BookStatusSchema,
+  title: z.string().trim().min(1).max(220),
+});
+
+export type BookDocument = z.infer<typeof BookDocumentSchema>;
+
+export const CreateBookInputSchema = BookDocumentSchema.omit({
+  _id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type CreateBookInput = z.infer<typeof CreateBookInputSchema>;
+
+export const UpdateBookInputSchema = CreateBookInputSchema.partial();
+export type UpdateBookInput = z.infer<typeof UpdateBookInputSchema>;
+
+export const BookCopyDocumentSchema = BaseDocumentSchema.extend({
+  bookId: DatabaseIdSchema,
+  condition: BookCopyConditionSchema,
+  copyCode: z.string().trim().min(1).max(80),
+  notes: z.string().trim().max(1000).optional(),
+  status: BookCopyStatusSchema,
+});
+
+export type BookCopyDocument = z.infer<typeof BookCopyDocumentSchema>;
+
+export const CreateBookCopyInputSchema = BookCopyDocumentSchema.omit({
+  _id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type CreateBookCopyInput = z.infer<typeof CreateBookCopyInputSchema>;
+
+export const UpdateBookCopyInputSchema = CreateBookCopyInputSchema.partial();
+export type UpdateBookCopyInput = z.infer<typeof UpdateBookCopyInputSchema>;
+
+export const BorrowRequestDocumentSchema = BaseDocumentSchema.extend({
+  approvedDurationDays: z.number().int().positive().optional(),
+  bookCopyId: DatabaseIdSchema,
+  bookId: DatabaseIdSchema,
+  cancelledAt: z.date().optional(),
+  dueAt: z.date().optional(),
+  durationType: BorrowDurationTypeSchema,
+  feeCents: z.number().int().min(0),
+  notes: z.string().trim().max(2000).optional(),
+  paymentMethod: PaymentMethodSchema,
+  paymentStatus: PaymentStatusSchema,
+  rejectionReason: z.string().trim().max(500).optional(),
+  requestedAt: z.date(),
+  requestedDurationDays: z.number().int().positive(),
+  returnedAt: z.date().optional(),
+  reviewedAt: z.date().optional(),
+  reviewedByUserId: DatabaseIdSchema.optional(),
+  startedAt: z.date().optional(),
+  status: BorrowRequestStatusSchema,
+  userId: DatabaseIdSchema,
+});
+
+export type BorrowRequestDocument = z.infer<typeof BorrowRequestDocumentSchema>;
+
+export const CreateBorrowRequestInputSchema = BorrowRequestDocumentSchema.omit({
+  _id: true,
+  approvedDurationDays: true,
+  cancelledAt: true,
+  createdAt: true,
+  dueAt: true,
+  rejectionReason: true,
+  returnedAt: true,
+  reviewedAt: true,
+  reviewedByUserId: true,
+  startedAt: true,
+  updatedAt: true,
+}).extend({
+  paymentMethod: PaymentMethodSchema.default("onsite-cash"),
+  paymentStatus: PaymentStatusSchema.default("unpaid"),
+  requestedAt: z.date().optional(),
+  status: BorrowRequestStatusSchema.default("pending"),
+});
+export type CreateBorrowRequestInput = z.infer<typeof CreateBorrowRequestInputSchema>;
+
+export const UpdateBorrowRequestInputSchema = BorrowRequestDocumentSchema.omit({
+  _id: true,
+  createdAt: true,
+  updatedAt: true,
+  requestedAt: true,
+  userId: true,
+  bookId: true,
+  bookCopyId: true,
+}).partial();
+export type UpdateBorrowRequestInput = z.infer<typeof UpdateBorrowRequestInputSchema>;
