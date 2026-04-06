@@ -1,14 +1,169 @@
-import type { AppUserRole } from "@/lib/db";
+import "server-only";
+
+import type { WithId } from "mongodb";
+
+import type {
+  AppUserRole,
+  AppUserStatus,
+  UserDocument,
+} from "@/lib/db";
+import { getUsersCollection, isMongoConfigured } from "@/lib/db";
 
 import {
   findUserRecordByAuth0Subject,
   findUserRecordByMockRole,
 } from "../repositories/users";
 
-export function lookupAppUserByAuth0Identity(subject: string) {
-  return findUserRecordByAuth0Subject(subject);
+export interface AppUserLookupRecord {
+  auth0UserId?: string;
+  email: string;
+  fullName: string;
+  id: string;
+  role: AppUserRole;
+  status: AppUserStatus;
+  subtitle: string;
+}
+
+function createDefaultSubtitle(role: AppUserRole) {
+  return role === "admin" ? "Admin account" : "Library member";
+}
+
+function createFallbackEmail(subject: string) {
+  return `${subject.replace(/[^a-z0-9._-]/gi, "-").toLowerCase()}@auth.local`;
+}
+
+function createFallbackName(options: {
+  email: string;
+  name?: string | null;
+  subject: string;
+}) {
+  if (options.name?.trim()) {
+    return options.name.trim();
+  }
+
+  const localPart = options.email.split("@")[0]?.replace(/[._-]+/g, " ").trim();
+
+  if (localPart) {
+    return localPart.replace(/\b\w/g, (match) => match.toUpperCase());
+  }
+
+  return `Member ${options.subject.slice(-6)}`;
+}
+
+function mapRepositoryRecord(record: {
+  auth0UserId?: string;
+  email: string;
+  fullName: string;
+  id: string;
+  role: AppUserRole;
+  status: AppUserStatus;
+  subtitle: string;
+}): AppUserLookupRecord {
+  return {
+    auth0UserId: record.auth0UserId,
+    email: record.email,
+    fullName: record.fullName,
+    id: record.id,
+    role: record.role,
+    status: record.status,
+    subtitle: record.subtitle,
+  };
+}
+
+function mapUserDocument(record: WithId<UserDocument>): AppUserLookupRecord {
+  return {
+    auth0UserId: record.auth0UserId,
+    email: record.email,
+    fullName: record.name,
+    id: record._id.toString(),
+    role: record.role,
+    status: record.status,
+    subtitle: createDefaultSubtitle(record.role),
+  };
+}
+
+export async function lookupAppUserByAuth0Identity(subject: string) {
+  if (!isMongoConfigured()) {
+    const mockRecord = findUserRecordByAuth0Subject(subject);
+
+    return mockRecord ? mapRepositoryRecord(mockRecord) : null;
+  }
+
+  const users = await getUsersCollection();
+  const user = await users.findOne({ auth0UserId: subject });
+
+  return user ? mapUserDocument(user) : null;
+}
+
+export async function ensureAppUserForAuth0Identity(options: {
+  email?: string | null;
+  name?: string | null;
+  subject: string;
+}) {
+  if (!isMongoConfigured()) {
+    const mockRecord = findUserRecordByAuth0Subject(options.subject);
+
+    if (mockRecord) {
+      return mapRepositoryRecord(mockRecord);
+    }
+
+    const fallbackEmail = options.email?.trim().toLowerCase() || createFallbackEmail(options.subject);
+
+    return {
+      auth0UserId: options.subject,
+      email: fallbackEmail,
+      fullName: createFallbackName({
+        email: fallbackEmail,
+        name: options.name,
+        subject: options.subject,
+      }),
+      id: `auth0:${options.subject}`,
+      role: "member",
+      status: "active",
+      subtitle: createDefaultSubtitle("member"),
+    } satisfies AppUserLookupRecord;
+  }
+
+  const users = await getUsersCollection();
+  const now = new Date();
+  const email = options.email?.trim().toLowerCase() || createFallbackEmail(options.subject);
+  const name = createFallbackName({
+    email,
+    name: options.name,
+    subject: options.subject,
+  });
+
+  const result = await users.findOneAndUpdate(
+    { auth0UserId: options.subject },
+    {
+      $set: {
+        auth0UserId: options.subject,
+        email,
+        lastLoginAt: now,
+        name,
+        updatedAt: now,
+      },
+      $setOnInsert: {
+        createdAt: now,
+        role: "member" as const,
+        status: "active" as const,
+      },
+    },
+    {
+      returnDocument: "after",
+      upsert: true,
+    },
+  );
+
+  if (!result) {
+    return null;
+  }
+
+  return mapUserDocument(result);
 }
 
 export function lookupAppUserByMockRole(role: AppUserRole) {
-  return findUserRecordByMockRole(role);
+  const record = findUserRecordByMockRole(role);
+
+  return record ? mapRepositoryRecord(record) : null;
 }

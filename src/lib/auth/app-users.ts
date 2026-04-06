@@ -1,8 +1,5 @@
 import type { AppUserRole, AppUserStatus } from "@/lib/db";
-import {
-  lookupAppUserByAuth0Identity,
-  lookupAppUserByMockRole,
-} from "@/lib/data";
+import { findUserRecordByMockRole } from "@/lib/data/repositories/users";
 
 export type { AppUserRole, AppUserStatus } from "@/lib/db";
 
@@ -42,28 +39,11 @@ function toAppUserRecord(
 }
 
 export function getMockAppUserRecord(role: AppUserRole) {
-  const record = lookupAppUserByMockRole(role);
+  const record = findUserRecordByMockRole(role);
 
   if (!record) {
     return null;
   }
 
   return toAppUserRecord("mock", role, record);
-}
-
-export function getAppUserRecordByIdentity(options: {
-  provider: AppUserRecord["authProvider"];
-  subject: string;
-}) {
-  if (options.provider === "mock") {
-    return getMockAppUserRecord(options.subject as AppUserRole);
-  }
-
-  const record = lookupAppUserByAuth0Identity(options.subject);
-
-  if (!record) {
-    return null;
-  }
-
-  return toAppUserRecord("auth0", options.subject, record);
 }

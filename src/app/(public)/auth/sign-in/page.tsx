@@ -1,7 +1,6 @@
 import { MemberAuthPanel } from "@/components/auth/member-auth-panel";
 
 import {
-  buildAuth0LoginHref,
   getCurrentRole,
   getCurrentUser,
   sanitizeRedirectTo,
@@ -15,7 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getCurrentSession } from "@/lib/auth/server";
-import { isAuth0Configured } from "@/lib/auth/auth0";
+import { buildAuth0LoginHref, isAuth0Configured } from "@/lib/auth/auth0";
 
 interface SignInPageProps {
   searchParams: Promise<{

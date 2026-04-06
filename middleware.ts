@@ -3,19 +3,18 @@ import { NextResponse } from "next/server";
 
 import {
   buildMockSignInHref,
-  createAuth0AuthState,
   createGuestAuthState,
   createMockAuthState,
-  getAuth0SessionForRequest,
   isAdmin,
   isMember,
   MOCK_AUTH_COOKIE,
 } from "@/lib/auth";
+import { createAuth0AuthState, getAuth0SessionForRequest } from "@/lib/auth/auth0";
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const auth0Session = await getAuth0SessionForRequest(request);
-  const auth0State = createAuth0AuthState(auth0Session);
+  const auth0State = await createAuth0AuthState(auth0Session);
   const authState = auth0Session?.user
     ? (auth0State ?? createGuestAuthState())
     : createMockAuthState(request.cookies.get(MOCK_AUTH_COOKIE)?.value);

@@ -1,16 +1,4 @@
 export {
-  buildAuth0LoginHref,
-  createAuth0AuthState,
-  getAuth0AppRole,
-  getCurrentAuth0AuthState,
-  getCurrentAuth0AuthStateForRequest,
-  getCurrentAuth0User,
-  getAuth0Session,
-  getAuth0SessionForRequest,
-  isAuth0Configured,
-} from "./auth0";
-
-export {
   MOCK_AUTH_COOKIE,
   buildSignOutHref,
   buildMockAuthorizeHref,
@@ -46,7 +34,6 @@ export {
 } from "./mock-auth";
 
 export {
-  getAppUserRecordByIdentity,
   getMockAppUserRecord,
   type AppUserRecord,
   type AppUserRole,

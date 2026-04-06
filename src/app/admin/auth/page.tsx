@@ -2,7 +2,6 @@ import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 
 import {
-  buildAuth0LoginHref,
   buildMockAuthorizeHref,
   buildSignOutHref,
   getCurrentRole,
@@ -20,7 +19,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getCurrentSession } from "@/lib/auth/server";
-import { isAuth0Configured } from "@/lib/auth/auth0";
+import { buildAuth0LoginHref, isAuth0Configured } from "@/lib/auth/auth0";
 
 interface AdminAccessPageProps {
   searchParams: Promise<{

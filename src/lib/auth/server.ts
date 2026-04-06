@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import {
   MOCK_AUTH_COOKIE,
   buildMockSignInHref,
-  createAuth0AuthState,
   createGuestAuthState,
   createMockAuthState,
   getCurrentRole,
@@ -14,7 +13,11 @@ import {
   isMember,
   type AppAuthState,
 } from "./index";
-import { getCurrentAuth0User, getAuth0Session } from "./auth0";
+import {
+  createAuth0AuthState,
+  getCurrentAuth0User,
+  getAuth0Session,
+} from "./auth0";
 
 export type AppSession = AppAuthState;
 export type MockSession = AppAuthState;
@@ -28,7 +31,7 @@ export async function getMockSession(): Promise<AppSession> {
 
 export async function getCurrentSession(): Promise<AppSession> {
   const auth0Session = await getAuth0Session();
-  const auth0State = createAuth0AuthState(auth0Session);
+  const auth0State = await createAuth0AuthState(auth0Session);
 
   if (auth0Session?.user) {
     return auth0State ?? createGuestAuthState();

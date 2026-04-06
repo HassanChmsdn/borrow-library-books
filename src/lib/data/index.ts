@@ -37,8 +37,3 @@ export {
   listVisibleUserRecords,
   type UserRepositoryRecord,
 } from "./repositories/users";
-
-export {
-  lookupAppUserByAuth0Identity,
-  lookupAppUserByMockRole,
-} from "./services/app-users";

@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 
 import { env } from "@/env";
 
-import { getAppUserRecordByIdentity } from "./app-users";
+import { ensureAuth0AppUserRecord } from "./app-users.server";
 import {
   createAppAuthUser,
   createAuthenticatedAuthState,
@@ -76,33 +76,36 @@ export async function getCurrentAuth0User() {
   return session?.user ?? null;
 }
 
-function resolveAuth0AppUser(user: Record<string, unknown> | null | undefined) {
+async function resolveAuth0AppUser(user: Record<string, unknown> | null | undefined) {
   const subject = typeof user?.sub === "string" ? user.sub : null;
 
   if (!subject) {
     return null;
   }
 
-  return getAppUserRecordByIdentity({
-    provider: "auth0",
+  return ensureAuth0AppUserRecord({
+    email: typeof user?.email === "string" ? user.email : null,
+    fullName: typeof user?.name === "string" ? user.name : null,
     subject,
   });
 }
 
-export function getAuth0AppRole(user: Record<string, unknown> | null | undefined) {
-  return resolveAuth0AppUser(user)?.role ?? null;
+export async function getAuth0AppRole(
+  user: Record<string, unknown> | null | undefined,
+) {
+  return (await resolveAuth0AppUser(user))?.role ?? null;
 }
 
-export function createAuth0AuthState(
+export async function createAuth0AuthState(
   session:
     | Awaited<ReturnType<typeof getAuth0Session>>
     | Awaited<ReturnType<typeof getAuth0SessionForRequest>>,
-): AppAuthState | null {
+): Promise<AppAuthState | null> {
   if (!session?.user) {
     return null;
   }
 
-  const appUser = resolveAuth0AppUser(session.user);
+  const appUser = await resolveAuth0AppUser(session.user);
 
   if (!appUser) {
     return null;
