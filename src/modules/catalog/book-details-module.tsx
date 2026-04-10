@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { startTransition, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, BookMarked, Clock3, HandCoins } from "lucide-react";
 
@@ -11,6 +11,7 @@ import {
   BorrowStatusBadge,
   FeeBadge,
 } from "@/components/library";
+import { getBookRecordById } from "@/lib/data";
 import { buildMockSignInHref } from "@/lib/auth";
 import { useMockAuth } from "@/lib/auth/react";
 import { PageHeader } from "@/components/layout";
@@ -25,7 +26,12 @@ import {
 import { Input } from "@/components/ui/input";
 
 import type { AllBooksItem } from "./all-books-data";
+import { createBookBorrowRequestAction } from "./actions";
 import { BookCoverArt } from "./book-cover-art";
+import {
+  initialBookBorrowRequestState,
+  type BookBorrowRequestState,
+} from "./borrow-request";
 import {
   formatBookAvailabilityLabel,
   formatBookFeeLabel,
@@ -33,12 +39,10 @@ import {
   getBookFeeTone,
 } from "./book-presentation";
 
-const memberBorrowingHref = "/account/borrowings";
-
 const borrowDurationOptions = [
-  { value: "7-days", label: "7 days", supportingText: "Short hold" },
-  { value: "14-days", label: "14 days", supportingText: "Standard" },
-  { value: "21-days", label: "21 days", supportingText: "Extended" },
+  { value: "7", label: "7 days", supportingText: "Short hold" },
+  { value: "14", label: "14 days", supportingText: "Standard" },
+  { value: "21", label: "21 days", supportingText: "Extended" },
 ] as const;
 
 interface BookDetailsModuleProps {
@@ -46,15 +50,24 @@ interface BookDetailsModuleProps {
 }
 
 function BookDetailsModule({ book }: BookDetailsModuleProps) {
-  const [selectedDuration, setSelectedDuration] = useState("14-days");
+  const [selectedDuration, setSelectedDuration] = useState("14");
   const [customDurationRequest, setCustomDurationRequest] = useState("");
+  const [requestState, setRequestState] = useState<BookBorrowRequestState>(
+    initialBookBorrowRequestState,
+  );
+  const [submittingMode, setSubmittingMode] = useState<
+    "custom" | "predefined" | null
+  >(null);
   const { isAdmin, isMember } = useMockAuth();
+  const bookRecord = useMemo(() => getBookRecordById(book.id), [book.id]);
 
   const availabilityTone = getBookAvailabilityTone(book);
   const availabilityLabel = formatBookAvailabilityLabel(book);
   const feeLabel = formatBookFeeLabel(book.feeCents);
   const feeTone = getBookFeeTone(book.feeCents);
   const isUnavailable = book.availableCopies === 0;
+  const customDurationAllowed = bookRecord?.allowCustomDuration ?? false;
+  const memberBorrowingHref = `/books/${encodeURIComponent(book.id)}`;
   const borrowHref = isMember
     ? memberBorrowingHref
     : buildMockSignInHref({
@@ -72,10 +85,56 @@ function BookDetailsModule({ book }: BookDetailsModuleProps) {
       ? "Switch to member for custom duration"
       : "Sign in for custom duration";
   const borrowHelperText = isMember
-    ? "Borrowing and duration-request actions route into the mocked authenticated member flow for now. Real circulation, payment, and member identity will be wired later."
+    ? "Borrow requests are created from this page and the first available physical copy is assigned automatically. My Borrowings remains the member list and status page."
     : isAdmin
       ? "Mock admin sessions cannot borrow titles directly. Switch to a member session to continue into the borrowing flow."
       : "Borrowing actions require a member session. Guests can keep browsing publicly and sign in only when they are ready to borrow.";
+
+  const handleBorrowRequest = (mode: "custom" | "predefined") => {
+    if (!isMember || isUnavailable) {
+      return;
+    }
+
+    if (mode === "custom") {
+      if (!customDurationAllowed) {
+        setRequestState({
+          message: "Custom duration requests are not available for this title.",
+          status: "error",
+        });
+        return;
+      }
+
+      if (customDurationRequest.trim().length === 0) {
+        setRequestState({
+          message:
+            "Enter the number of days you want to request before submitting a custom duration.",
+          status: "error",
+        });
+        return;
+      }
+    }
+
+    setSubmittingMode(mode);
+
+    const formData = new FormData();
+    formData.set("bookId", book.id);
+    formData.set("durationOption", selectedDuration);
+    formData.set("requestMode", mode);
+
+    if (mode === "custom") {
+      formData.set("customDurationDays", customDurationRequest.trim());
+    }
+
+    startTransition(async () => {
+      const nextState = await createBookBorrowRequestAction(formData);
+      setRequestState(nextState);
+      setSubmittingMode(null);
+
+      if (nextState.status === "success") {
+        setCustomDurationRequest("");
+      }
+    });
+  };
 
   return (
     <div className="gap-section flex flex-col">
@@ -121,7 +180,7 @@ function BookDetailsModule({ book }: BookDetailsModuleProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <CardTitle className="font-heading text-title lg:text-title-lg text-balance">
+                  <CardTitle className="font-heading text-title text-balance lg:text-title-lg">
                     {book.title}
                   </CardTitle>
                   <CardDescription className="text-body">
@@ -183,15 +242,22 @@ function BookDetailsModule({ book }: BookDetailsModuleProps) {
                     Custom duration request
                   </span>
                   <Input
+                    disabled={!customDurationAllowed}
                     inputMode="numeric"
                     onChange={(event) =>
                       setCustomDurationRequest(event.target.value)
                     }
-                    placeholder="Request a custom number of days"
+                    placeholder={
+                      customDurationAllowed
+                        ? "Request a custom number of days"
+                        : "Custom requests are unavailable for this title"
+                    }
                     value={customDurationRequest}
                   />
                   <span className="text-body-sm text-text-secondary">
-                    Leave blank to use the predefined option above.
+                    {customDurationAllowed
+                      ? "Leave blank to use the predefined option above. The first available copy is assigned automatically."
+                      : "This title uses predefined borrowing durations only."}
                   </span>
                 </label>
               </CardContent>
@@ -255,13 +321,50 @@ function BookDetailsModule({ book }: BookDetailsModuleProps) {
                     {availabilityLabel}
                   </span>
                 </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-body-sm text-text-secondary">
+                    Copy assignment
+                  </span>
+                  <span className="text-body text-foreground font-medium">
+                    First available copy
+                  </span>
+                </div>
               </div>
+
+              {requestState.message ? (
+                <div
+                  className={
+                    requestState.status === "success"
+                      ? "border-success-border bg-success-surface text-success rounded-2xl border px-4 py-3"
+                      : "border-danger-border bg-danger-surface text-danger rounded-2xl border px-4 py-3"
+                  }
+                >
+                  <p className="text-body-sm font-medium">{requestState.message}</p>
+                  {requestState.status === "success" ? (
+                    <Button asChild className="mt-3" size="sm" variant="outline">
+                      <Link href="/account/borrowings">View My Borrowings</Link>
+                    </Button>
+                  ) : null}
+                </div>
+              ) : null}
 
               <div className="grid gap-3">
                 {isUnavailable ? (
                   <Button disabled size="lg" type="button">
                     <BookMarked className="size-4" />
                     Currently unavailable
+                  </Button>
+                ) : isMember ? (
+                  <Button
+                    disabled={submittingMode !== null}
+                    onClick={() => handleBorrowRequest("predefined")}
+                    size="lg"
+                    type="button"
+                  >
+                    <BookMarked className="size-4" />
+                    {submittingMode === "predefined"
+                      ? "Creating request..."
+                      : borrowPrimaryLabel}
                   </Button>
                 ) : (
                   <Button asChild size="lg">
@@ -271,12 +374,30 @@ function BookDetailsModule({ book }: BookDetailsModuleProps) {
                     </Link>
                   </Button>
                 )}
-                <Button asChild size="lg" variant="outline">
-                  <Link href={borrowHref}>
+
+                {isMember ? (
+                  <Button
+                    disabled={submittingMode !== null || !customDurationAllowed}
+                    onClick={() => handleBorrowRequest("custom")}
+                    size="lg"
+                    type="button"
+                    variant="outline"
+                  >
                     <Clock3 className="size-4" />
-                    {customDurationLabel}
-                  </Link>
-                </Button>
+                    {submittingMode === "custom"
+                      ? "Submitting request..."
+                      : customDurationAllowed
+                        ? customDurationLabel
+                        : "Custom duration unavailable"}
+                  </Button>
+                ) : (
+                  <Button asChild size="lg" variant="outline">
+                    <Link href={borrowHref}>
+                      <Clock3 className="size-4" />
+                      {customDurationLabel}
+                    </Link>
+                  </Button>
+                )}
               </div>
 
               <p className="text-body-sm text-text-secondary">

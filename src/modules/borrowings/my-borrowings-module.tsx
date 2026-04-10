@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, BookCopy, Clock3, ReceiptText } from "lucide-react";
 
@@ -36,7 +36,7 @@ import {
 
 const borrowingTabDescriptions: Record<MyBorrowingsTab, string> = {
   active: "Books currently on loan, including items due soon.",
-  pending: "Reserved titles that are ready or nearly ready for pickup.",
+  pending: "Requests waiting for review or desk pickup confirmation.",
   returned: "Recently completed loans and their payment outcomes.",
   overdue: "Items that need attention before the next renewal cycle.",
 };
@@ -48,17 +48,17 @@ const borrowingEmptyStates: Record<
   active: {
     title: "No active borrowings",
     description:
-      "You do not have any currently checked out books in the mock account view.",
+      "You do not have any currently checked out books in the current account view.",
   },
   pending: {
-    title: "No pending pickups",
+    title: "No pending requests",
     description:
-      "Reserved books that are waiting at the desk will appear here with pickup timing and payment notes.",
+      "New borrowing requests and desk holds will appear here once they are created.",
   },
   returned: {
     title: "No returned books yet",
     description:
-      "Completed borrowings will appear here once the account history is connected beyond the current mock records.",
+      "Completed borrowings will appear here once there is account history beyond the current sample records.",
   },
   overdue: {
     title: "No overdue books",
@@ -70,6 +70,10 @@ const borrowingEmptyStates: Record<
 function getBorrowingStatusTone(
   record: BorrowingRecord,
 ): BorrowStatusBadgeTone {
+  if (record.status === "pending-review") {
+    return "info";
+  }
+
   if (record.status === "overdue") {
     return "danger";
   }
@@ -230,9 +234,7 @@ function BorrowingsDesktopTable({
                   <p
                     className={cn(
                       "text-body font-medium",
-                      record.tab === "overdue"
-                        ? "text-danger"
-                        : "text-foreground",
+                      record.tab === "overdue" ? "text-danger" : "text-foreground",
                     )}
                   >
                     {record.timelineValue}
@@ -268,29 +270,44 @@ function BorrowingsDesktopTable({
           ))}
         </AdminTableBody>
         <AdminTableCaption>
-          All borrowings on this page are sourced from local mock account data.
-          Cash fees, when present, are paid onsite only.
+          Borrowings on this page combine seeded account history and persisted
+          pending requests. Cash fees, when present, are paid onsite only.
         </AdminTableCaption>
       </AdminTable>
     </div>
   );
 }
 
-function MyBorrowingsModule() {
+interface MyBorrowingsModuleProps {
+  persistedRecords?: ReadonlyArray<BorrowingRecord>;
+}
+
+function MyBorrowingsModule({
+  persistedRecords = [],
+}: Readonly<MyBorrowingsModuleProps>) {
   const [activeTab, setActiveTab] = useState<MyBorrowingsTab>("active");
+  const records = useMemo(() => {
+    const merged = [...persistedRecords, ...myBorrowingsRecords];
+    const seen = new Set<string>();
 
-  const visibleRecords = myBorrowingsRecords.filter(
-    (record) => record.tab === activeTab,
-  );
+    return merged.filter((record) => {
+      if (seen.has(record.id)) {
+        return false;
+      }
 
-  const totalRecords = myBorrowingsRecords.length;
+      seen.add(record.id);
+      return true;
+    });
+  }, [persistedRecords]);
+  const visibleRecords = records.filter((record) => record.tab === activeTab);
+  const totalRecords = records.length;
 
   return (
     <div className="gap-section flex flex-col">
       <PageHeader
         eyebrow="Account"
         title="My Borrowings"
-        description="Track current loans, desk pickups, and overdue items in a mobile-first account view. This page is still powered by local mock data and matches the existing public shell structure."
+        description="Track current loans, pending requests, desk pickups, and overdue items in the authenticated member account view."
         actions={
           <Button asChild size="sm" variant="outline">
             <Link href="/books">Browse more books</Link>
@@ -301,7 +318,7 @@ function MyBorrowingsModule() {
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-1">
               <p className="text-label text-foreground font-medium">
-                {totalRecords} mock borrowing records
+                {totalRecords} borrowing records
               </p>
               <p className="text-body-sm text-text-secondary max-w-2xl">
                 {borrowingTabDescriptions[activeTab]}
@@ -330,9 +347,7 @@ function MyBorrowingsModule() {
             <div className="flex min-w-max gap-2">
               {myBorrowingsTabs.map((tab) => {
                 const isActive = tab.value === activeTab;
-                const count = myBorrowingsRecords.filter(
-                  (record) => record.tab === tab.value,
-                ).length;
+                const count = records.filter((record) => record.tab === tab.value).length;
 
                 return (
                   <Button
@@ -368,19 +383,16 @@ function MyBorrowingsModule() {
               id="my-borrowings-title"
               className="text-title-sm text-foreground font-semibold"
             >
-              {myBorrowingsTabs.find((tab) => tab.value === activeTab)?.label}{" "}
-              records
+              {myBorrowingsTabs.find((tab) => tab.value === activeTab)?.label} records
             </h2>
             <p className="text-body-sm text-text-secondary">
-              {visibleRecords.length}{" "}
-              {visibleRecords.length === 1 ? "item" : "items"} in this section.
+              {visibleRecords.length} {visibleRecords.length === 1 ? "item" : "items"} in this section.
             </p>
           </div>
 
           <p className="text-body-sm text-text-secondary flex items-center gap-2">
             <Clock3 className="size-4" />
-            Due and pickup timing stays visible in both mobile cards and the
-            desktop table.
+            Due and pickup timing stays visible in both mobile cards and the desktop table.
           </p>
         </div>
 
@@ -417,7 +429,7 @@ function MyBorrowingsLoadingState() {
       <PageHeader
         eyebrow="Account"
         title="My Borrowings"
-        description="Preparing your mock borrowing history, statuses, and payment notes."
+        description="Preparing your borrowing history, statuses, and payment notes."
       >
         <div className="rounded-card border-border-subtle bg-card grid gap-4 border p-4 shadow-xs sm:p-5">
           <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
@@ -440,10 +452,7 @@ function MyBorrowingsLoadingState() {
         </div>
       </PageHeader>
 
-      <section
-        aria-labelledby="my-borrowings-loading-title"
-        className="space-y-4"
-      >
+      <section aria-labelledby="my-borrowings-loading-title" className="space-y-4">
         <div className="space-y-1">
           <h2
             id="my-borrowings-loading-title"

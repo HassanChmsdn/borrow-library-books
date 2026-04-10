@@ -16,6 +16,7 @@ interface BorrowingRecord {
   book: AllBooksItem;
   tab: MyBorrowingsTab;
   status:
+    | "pending-review"
     | "due-soon"
     | "ready-for-pickup"
     | "checked-out"
@@ -44,6 +45,50 @@ function requireMockBook(bookId: string) {
   }
 
   return book;
+}
+
+function formatBorrowingShortDate(value: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
+function buildBorrowingPaymentStatus(feeCents: number): BorrowingPaymentStatus {
+  if (feeCents > 0) {
+    return {
+      label: "Cash due on pickup",
+      tone: "warning",
+    };
+  }
+
+  return {
+    label: "No payment due",
+    tone: "neutral",
+  };
+}
+
+function createPendingBorrowingRecord(options: {
+  book: AllBooksItem;
+  copyId: string;
+  customDuration: boolean;
+  id: string;
+  requestedAt: string;
+  requestedDurationDays: number;
+}): BorrowingRecord {
+  return {
+    id: options.id,
+    book: options.book,
+    paymentStatus: buildBorrowingPaymentStatus(options.book.feeCents),
+    status: "pending-review",
+    supportingMeta: options.customDuration
+      ? `Custom duration request · Copy ${options.copyId}`
+      : `Awaiting staff review · Copy ${options.copyId}`,
+    tab: "pending",
+    timelineLabel: "Requested on",
+    timelineValue: `${formatBorrowingShortDate(options.requestedAt)} · ${options.requestedDurationDays} days`,
+  };
 }
 
 const myBorrowingsRecords: ReadonlyArray<BorrowingRecord> = [
@@ -102,6 +147,7 @@ const myBorrowingsRecords: ReadonlyArray<BorrowingRecord> = [
 ];
 
 export {
+  createPendingBorrowingRecord,
   myBorrowingsRecords,
   myBorrowingsTabs,
   type BorrowingPaymentStatus,

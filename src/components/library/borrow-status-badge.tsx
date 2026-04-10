@@ -4,6 +4,7 @@ import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 type BorrowStatus =
+  | "pending-review"
   | "due-soon"
   | "ready-for-pickup"
   | "saved-for-later"
@@ -40,6 +41,7 @@ const borrowStatusConfig: Record<
   BorrowStatus,
   { label: string; tone: BorrowStatusBadgeTone }
 > = {
+  "pending-review": { label: "Pending review", tone: "info" },
   "due-soon": { label: "Due soon", tone: "warning" },
   "ready-for-pickup": { label: "Ready for pickup", tone: "info" },
   "saved-for-later": { label: "Saved for later", tone: "neutral" },
