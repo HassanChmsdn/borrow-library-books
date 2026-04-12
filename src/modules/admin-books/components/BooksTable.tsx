@@ -133,7 +133,7 @@ function BooksTable({
     return (
       <AdminEmptyState
         title="No books in the catalog yet"
-        description="Start the catalog with your first title. This page is ready for backend integration, but it currently runs on mock data only."
+        description="Start the catalog with your first title. New books created here are stored in MongoDB and appear in both admin and public views."
         action={
           <Button type="button" size="sm" onClick={onAddBook}>
             Add book

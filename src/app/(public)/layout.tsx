@@ -57,7 +57,7 @@ function PublicUtilitySlot({
         </Button>
       ) : null}
       <Button asChild size="sm" variant="secondary">
-        <Link href={buildSignOutHref(session, "/books")}>Sign out</Link>
+        <a href={buildSignOutHref(session, "/books")}>Sign out</a>
       </Button>
     </>
   );

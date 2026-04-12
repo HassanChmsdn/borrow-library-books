@@ -113,7 +113,7 @@ function BookTableRow({
               confirm: {
                 title: `Delete ${book.title}?`,
                 description:
-                  "This is a mock confirmation flow for future API integration. No backend delete action has been wired yet.",
+                  "Delete this catalog title. Books with borrowing history remain protected from destructive removal.",
                 confirmLabel: "Delete book",
                 tone: "danger",
               },

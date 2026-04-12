@@ -73,8 +73,8 @@ function AdminBookDetailsModule({
         title={isCreateMode ? "Add new book" : `Edit ${book?.title ?? "book"}`}
         description={
           isCreateMode
-            ? "Create a new catalog record with fee, duration, metadata, and cover placeholders already structured for future API integration."
-            : "Update catalog details, fee behavior, and circulation settings while keeping the edit screen aligned with the rest of the admin workspace."
+            ? "Create a new catalog record with fee, duration, metadata, and cover details stored directly in MongoDB."
+            : "Update catalog details, fee behavior, and circulation settings while keeping the admin record synchronized with the live data store."
         }
         actions={
           <Button asChild size="sm" variant="outline">
@@ -121,7 +121,7 @@ function AdminBookDetailsEmptyState() {
 
       <AdminEmptyState
         title="Book not found"
-        description="Return to the books table and choose another record. This fallback stays local so the route can be refined safely before backend wiring exists."
+        description="Return to the books table and choose another record. The selected book no longer exists in the current catalog data."
         action={
           <Button asChild>
             <Link href="/admin/books">Back to books</Link>

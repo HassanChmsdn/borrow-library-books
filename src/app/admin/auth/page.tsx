@@ -108,15 +108,15 @@ export default async function AdminAccessPage({ searchParams }: AdminAccessPageP
 
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Button asChild className="sm:min-w-52">
-                  <Link href={buildMockAuthorizeHref("admin", redirectTo)}>
+                  <a href={buildMockAuthorizeHref("admin", redirectTo)}>
                     Continue as admin
-                  </Link>
+                  </a>
                 </Button>
                 {auth0Enabled ? (
                   <Button asChild className="sm:min-w-52" variant="outline">
-                    <Link href={buildAuth0LoginHref(redirectTo)}>
+                    <a href={buildAuth0LoginHref(redirectTo)}>
                       Continue with Auth0
-                    </Link>
+                    </a>
                   </Button>
                 ) : null}
                 <Button asChild variant="outline">
@@ -124,14 +124,14 @@ export default async function AdminAccessPage({ searchParams }: AdminAccessPageP
                 </Button>
                 {authenticated ? (
                   <Button asChild variant="ghost">
-                    <Link
+                    <a
                       href={buildSignOutHref(
                         session,
                         `/admin/auth?redirectTo=${encodeURIComponent(redirectTo)}`,
                       )}
                     >
                       Clear mock session
-                    </Link>
+                    </a>
                   </Button>
                 ) : null}
               </div>

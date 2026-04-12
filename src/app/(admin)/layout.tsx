@@ -111,7 +111,7 @@ function AdminFooter({
         </Button>
 
         <Button asChild className="w-full" size="sm" variant="secondary">
-          <Link href={signOutHref}>Sign out</Link>
+          <a href={signOutHref}>Sign out</a>
         </Button>
       </div>
     </div>

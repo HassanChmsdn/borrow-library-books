@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
 
 import { buildSignOutHref, getCurrentUser } from "@/lib/auth";
 import { MockAuthProvider } from "@/lib/auth/react";
@@ -29,7 +28,7 @@ function AccountUtilitySlot({ signOutHref }: { signOutHref: string }) {
   return (
     <>
       <Button asChild size="sm" variant="secondary">
-        <Link href={signOutHref}>Sign out</Link>
+        <a href={signOutHref}>Sign out</a>
       </Button>
     </>
   );

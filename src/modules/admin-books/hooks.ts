@@ -1,13 +1,15 @@
 "use client";
 
-import { useDeferredValue, useState } from "react";
+import { startTransition, useDeferredValue, useState } from "react";
 import type { FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { z } from "zod";
 
 import {
   adminBookCreateDefaults,
   adminBooksCatalog,
 } from "./mock-data";
+import { deleteAdminBookAction, saveAdminBookAction } from "./actions";
 import type {
   AdminBookDetailsRecord,
   AdminBookDurationPreset,
@@ -107,6 +109,7 @@ export function useAdminBookDetailsFormState({
   onDeleteBook,
   onSaveBook,
 }: UseAdminBookDetailsFormStateProps) {
+  const router = useRouter();
   const [errors, setErrors] = useState<AdminBookFormFieldErrors>({});
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -228,7 +231,7 @@ export function useAdminBookDetailsFormState({
     clearFieldError("status");
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmissionState(null);
 
@@ -248,39 +251,85 @@ export function useAdminBookDetailsFormState({
     setErrors({});
     setIsSubmitting(true);
 
-    window.setTimeout(() => {
-      onSaveBook?.(parsedValues.data);
+    if (onSaveBook) {
+      onSaveBook(parsedValues.data);
       setSubmissionState({
         description:
           mode === "create"
-            ? "A mock create request was recorded. No backend persistence has been wired yet."
-            : "A mock update request was recorded. This page is ready for later API integration.",
+            ? "The local save handler completed for the new book draft."
+            : "The local save handler completed for the selected book.",
         tone: "success",
-        title:
-          mode === "create" ? "Book draft created" : "Book draft updated",
+        title: mode === "create" ? "Book saved" : "Changes saved",
       });
       setIsSubmitting(false);
-    }, 550);
+      return;
+    }
+
+    const result = await saveAdminBookAction({
+      bookId: book?.id,
+      mode,
+      values: parsedValues.data,
+    });
+
+    setSubmissionState({
+      description: result.message,
+      tone: result.status === "success" ? "success" : "danger",
+      title:
+        result.status === "success"
+          ? mode === "create"
+            ? "Book created"
+            : "Book updated"
+          : "Save failed",
+    });
+    setIsSubmitting(false);
+
+    if (result.status !== "success") {
+      return;
+    }
+
+    startTransition(() => {
+      if (mode === "create" && result.bookId) {
+        router.push(`/admin/books/${result.bookId}`);
+        return;
+      }
+
+      router.refresh();
+    });
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!book) {
+      return;
+    }
+
+    if (onDeleteBook) {
+      onDeleteBook(book);
       return;
     }
 
     setSubmissionState(null);
     setIsDeleting(true);
 
-    window.setTimeout(() => {
-      onDeleteBook?.(book);
-      setSubmissionState({
-        description:
-          "This is a mock delete hook only. Keep the dialog wiring and replace the handler when the real admin API is available.",
-        tone: "danger",
-        title: `${book.title} queued for deletion`,
-      });
-      setIsDeleting(false);
-    }, 450);
+    const result = await deleteAdminBookAction(book.id);
+
+    setSubmissionState({
+      description: result.message,
+      tone: result.status === "success" ? "success" : "danger",
+      title:
+        result.status === "success"
+          ? `${book.title} deleted`
+          : `Could not delete ${book.title}`,
+    });
+    setIsDeleting(false);
+
+    if (result.status !== "success") {
+      return;
+    }
+
+    startTransition(() => {
+      router.push("/admin/books");
+      router.refresh();
+    });
   };
 
   return {

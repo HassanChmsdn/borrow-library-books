@@ -1,8 +1,7 @@
 "use client";
 
-import { startTransition, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { LoaderCircle, LogIn, UserPlus } from "lucide-react";
 
 import { buildMockAuthorizeHref, type MockAuthRole } from "@/lib/auth";
@@ -50,7 +49,6 @@ export function MemberAuthPanel({
   currentUserName,
   redirectTo,
 }: MemberAuthPanelProps) {
-  const router = useRouter();
   const [mode, setMode] = useState<MemberAuthMode>("login");
   const [values, setValues] = useState<MemberAuthValues>(defaultValues);
   const [errors, setErrors] = useState<MemberAuthErrors>({});
@@ -133,10 +131,7 @@ export function MemberAuthPanel({
 
     setErrors({});
     setIsPending(true);
-
-    startTransition(() => {
-      router.push(buildMockAuthorizeHref("member", redirectTo));
-    });
+    window.location.assign(buildMockAuthorizeHref("member", redirectTo));
   }
 
   return (
@@ -294,7 +289,7 @@ export function MemberAuthPanel({
                 Prefer the Auth0-ready path? Continue with the parallel integration without replacing the mocked member flow yet.
               </p>
               <Button asChild disabled={isPending} type="button" variant="outline">
-                <Link href={auth0Href}>Continue with Auth0</Link>
+                <a href={auth0Href}>Continue with Auth0</a>
               </Button>
             </div>
           ) : null}

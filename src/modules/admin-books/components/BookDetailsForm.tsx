@@ -119,7 +119,7 @@ function BookDetailsForm({
       <div className="grid gap-5">
         <AdminSectionCard
           title="Basic info"
-          description="Keep the primary catalog data short, typed, and ready for later API-backed validation."
+          description="Keep the primary catalog data short, typed, and valid for the live catalog record."
         >
           <div className="grid gap-4 sm:grid-cols-2">
             <FormField
@@ -254,7 +254,7 @@ function BookDetailsForm({
         {mode === "edit" && book?.inventorySummary ? (
           <AdminSectionCard
             title="Inventory summary"
-            description="A live API can later replace these operational numbers. For now the panel is fed by typed mock inventory data."
+            description="Current operational numbers derived from the stored copy and borrowing records for this title."
           >
             <AdminDetailSection
               columns={1}
@@ -279,7 +279,7 @@ function BookDetailsForm({
 
         <AdminSectionCard
           title="Form actions"
-          description="Save keeps the interaction local for now. Replace the handlers later when the admin API is ready."
+          description="Saving writes catalog changes to MongoDB and refreshes the related admin and public views."
         >
           <div className="grid gap-3">
             <Button type="submit" size="lg" disabled={isSubmitting || isDeleting}>
@@ -307,7 +307,7 @@ function BookDetailsForm({
                   </Button>
                 }
                 title={`Delete ${book.title}?`}
-                description="This delete flow is still mock-only. Keep it here so the page is ready when destructive backend actions are introduced."
+                description="Deleting removes the book and any orphaned copy records. Books with borrowing history stay protected from deletion."
                 confirmLabel="Delete book"
                 tone="danger"
                 onConfirm={onDelete}
@@ -334,8 +334,8 @@ function BookDetailsForm({
           ) : (
             <p className="text-body-sm text-text-secondary">
               {mode === "create"
-                ? "A successful save only confirms the mock form contract for now. No real book is persisted yet."
-                : "Edit mode keeps the existing inventory summary visible while the mock form simulates update and delete hooks."}
+                ? "Create mode saves a new book record immediately and then routes to its detail page."
+                : "Edit mode keeps the current inventory summary visible while catalog changes are persisted and revalidated."}
             </p>
           )}
         </AdminSectionCard>

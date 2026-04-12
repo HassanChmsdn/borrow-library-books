@@ -43,6 +43,7 @@ export function getAuth0Client() {
     clientId: env.AUTH0_CLIENT_ID,
     clientSecret: env.AUTH0_CLIENT_SECRET,
     domain: env.AUTH0_DOMAIN,
+    logoutStrategy: "v2",
     secret: env.AUTH0_SECRET,
     signInReturnToPath: "/books",
   });
