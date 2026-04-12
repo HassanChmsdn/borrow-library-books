@@ -1,11 +1,7 @@
 import "server-only";
 
-import {
-  getBorrowRequestsCollection,
-  isMongoConfigured,
-  type BorrowRequestDocument,
-} from "@/lib/db";
-import { getAllBooksItemById } from "@/modules/catalog/all-books-data";
+import { listStoredBorrowRequestRecordsForUser } from "@/lib/data/server";
+import { getCatalogBookById } from "@/modules/catalog/server";
 
 import {
   createPendingBorrowingRecord,
@@ -21,27 +17,27 @@ function formatBorrowingShortDate(value: Date) {
   }).format(value);
 }
 
-function buildPaymentStatus(record: BorrowRequestDocument): BorrowingPaymentStatus {
-  if (record.paymentStatus === "paid") {
+function buildPaymentStatus(
+  record: Awaited<ReturnType<typeof listStoredBorrowRequestRecordsForUser>>[number],
+): BorrowingPaymentStatus {
+  if (record.paymentStatus === "cash-settled") {
     return { label: "Paid onsite", tone: "success" };
   }
 
-  if (record.paymentStatus === "pending") {
-    return { label: "Payment pending", tone: "info" };
-  }
-
-  if (record.paymentStatus === "waived") {
-    return { label: "Fee waived", tone: "neutral" };
+  if (record.paymentStatus === "not-required") {
+    return { label: "No payment due", tone: "neutral" };
   }
 
   return {
-    label: record.feeCents > 0 ? "Cash due on pickup" : "No payment due",
-    tone: record.feeCents > 0 ? "warning" : "neutral",
+    label: "Cash due on pickup",
+    tone: record.status === "overdue" ? "danger" : "warning",
   };
 }
 
-function mapPersistedBorrowRequest(record: BorrowRequestDocument): BorrowingRecord | null {
-  const book = getAllBooksItemById(String(record.bookId));
+async function mapPersistedBorrowRequest(
+  record: Awaited<ReturnType<typeof listStoredBorrowRequestRecordsForUser>>[number],
+): Promise<BorrowingRecord | null> {
+  const book = await getCatalogBookById(record.bookId);
 
   if (!book) {
     return null;
@@ -50,21 +46,21 @@ function mapPersistedBorrowRequest(record: BorrowRequestDocument): BorrowingReco
   if (record.status === "pending") {
     return createPendingBorrowingRecord({
       book,
-      copyId: String(record.bookCopyId),
-      customDuration: record.durationType === "custom",
-      id: String(record._id ?? `${record.userId}-${record.requestedAt.toISOString()}`),
-      requestedAt: record.requestedAt.toISOString(),
-      requestedDurationDays: record.requestedDurationDays,
+      copyId: "assigned",
+      customDuration: record.customDuration,
+      id: record.id,
+      requestedAt: record.requestedOn,
+      requestedDurationDays: record.durationDays,
     });
   }
 
   const timelineDate =
     record.status === "returned"
-      ? record.returnedAt ?? record.updatedAt ?? record.requestedAt
-      : record.dueAt ?? record.startedAt ?? record.requestedAt;
+      ? record.returnedOn ?? record.startedOn ?? record.requestedOn
+      : record.startedOn ?? record.requestedOn;
 
   return {
-    id: String(record._id ?? `${record.userId}-${record.requestedAt.toISOString()}`),
+    id: record.id,
     book,
     paymentStatus: buildPaymentStatus(record),
     status:
@@ -74,9 +70,7 @@ function mapPersistedBorrowRequest(record: BorrowRequestDocument): BorrowingReco
           ? "returned"
           : "checked-out",
     supportingMeta:
-      record.durationType === "custom"
-        ? `Custom duration · Copy ${String(record.bookCopyId)}`
-        : `Copy ${String(record.bookCopyId)}`,
+      record.customDuration ? "Custom duration request" : "Standard borrowing request",
     tab:
       record.status === "overdue"
         ? "overdue"
@@ -84,28 +78,16 @@ function mapPersistedBorrowRequest(record: BorrowRequestDocument): BorrowingReco
           ? "returned"
           : "active",
     timelineLabel: record.status === "returned" ? "Returned on" : "Due on",
-    timelineValue: formatBorrowingShortDate(timelineDate),
+    timelineValue: formatBorrowingShortDate(new Date(timelineDate)),
   };
 }
 
 export async function listPersistedBorrowingRecordsForUser(userId: string) {
-  if (!isMongoConfigured()) {
-    return [] satisfies ReadonlyArray<BorrowingRecord>;
-  }
-
   try {
-    const borrowRequests = await getBorrowRequestsCollection();
-    const records = await borrowRequests
-      .find({
-        userId,
-        status: { $in: ["pending", "active", "overdue", "returned"] },
-      })
-      .sort({ requestedAt: -1 })
-      .toArray();
+    const records = await listStoredBorrowRequestRecordsForUser(userId);
+    const mappedRecords = await Promise.all(records.map((record) => mapPersistedBorrowRequest(record)));
 
-    return records
-      .map((record) => mapPersistedBorrowRequest(record))
-      .filter((record): record is BorrowingRecord => Boolean(record));
+    return mappedRecords.filter((record): record is BorrowingRecord => Boolean(record));
   } catch (error) {
     console.error("Failed to load persisted borrowing records", error);
     return [] satisfies ReadonlyArray<BorrowingRecord>;

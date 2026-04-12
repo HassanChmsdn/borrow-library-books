@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { requireMemberSession } from "@/lib/auth/server";
 import { createBorrowRequestForUser } from "@/lib/data/services/borrow-requests";
-import { getBookRecordById } from "@/lib/data";
+import { getStoredBookRecordById } from "@/lib/data/server";
 
 import {
   type BookBorrowRequestState,
@@ -69,7 +69,7 @@ export async function createBookBorrowRequestAction(
     };
   }
 
-  const book = getBookRecordById(parsed.data.bookId);
+  const book = await getStoredBookRecordById(parsed.data.bookId);
 
   if (!book) {
     return {

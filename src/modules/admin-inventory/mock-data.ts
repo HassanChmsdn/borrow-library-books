@@ -84,7 +84,7 @@ export const adminInventoryRecords: ReadonlyArray<AdminInventoryRecord> =
       bookAuthor: book?.author ?? "Unknown author",
       copyCode: copy.copyCode,
       condition: copy.condition,
-      status: copy.status,
+      status: copy.status === "reserved" ? "borrowed" : copy.status,
       updatedAtLabel: formatAdminRelativeAuditLabel(copy.updatedOn),
     };
   });

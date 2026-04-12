@@ -33,7 +33,7 @@ function AdminProfileModule({
       <AdminPageHeader
         eyebrow="Admin profile"
         title={profile.fullName}
-        description="Review the currently authenticated admin account, workspace scope, and recent operating activity in a future-ready mock profile view."
+        description="Review the currently authenticated admin account, workspace scope, and recent operating activity."
         actions={
           <Button asChild size="sm" variant="outline">
             <Link href="/admin">

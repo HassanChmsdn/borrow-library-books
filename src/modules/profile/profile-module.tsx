@@ -49,7 +49,7 @@ function ProfileModule({ profile }: ProfileModuleProps) {
       <PageHeader
         eyebrow="Account"
         title="Profile"
-        description="Review personal details, account information, and borrowing preferences in the member shell. This profile view is powered by local mock data and follows the existing token system."
+        description="Review personal details, account information, and borrowing preferences in the member shell."
         actions={
           <>
             <Button asChild size="sm" variant="outline">
@@ -145,7 +145,7 @@ function ProfileModule({ profile }: ProfileModuleProps) {
               <CardTitle>Settings</CardTitle>
               <CardDescription>
                 A clean, mobile-first settings layout for future self-service
-                flows. The current values are local placeholders only.
+                flows. The current values are ready for progressive account wiring.
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-6">

@@ -1,9 +1,11 @@
 import {
   AdminBookDetailsEmptyState,
   AdminBookDetailsModule,
-  adminBookDetailRecords,
-  getAdminBookDetailsRecordById,
 } from "@/modules/admin-books";
+import {
+  getAdminBookDetailsRecordByIdFromStore,
+  listAdminBookDetailRecords,
+} from "@/modules/admin-books/server";
 
 type AdminBookDetailsPageProps = {
   params: Promise<{
@@ -13,22 +15,24 @@ type AdminBookDetailsPageProps = {
 
 export async function generateMetadata(props: AdminBookDetailsPageProps) {
   const { id } = await props.params;
-  const book = getAdminBookDetailsRecordById(id);
+  const book = await getAdminBookDetailsRecordByIdFromStore(id);
 
   return {
     title: book ? `Edit ${book.title}` : "Edit Book",
   };
 }
 
-export function generateStaticParams() {
-  return adminBookDetailRecords.map((book) => ({ id: book.id }));
+export async function generateStaticParams() {
+  const books = await listAdminBookDetailRecords();
+
+  return books.map((book) => ({ id: book.id }));
 }
 
 export default async function AdminBookEditPage(
   props: AdminBookDetailsPageProps,
 ) {
   const { id } = await props.params;
-  const book = getAdminBookDetailsRecordById(id);
+  const book = await getAdminBookDetailsRecordByIdFromStore(id);
 
   if (!book) {
     return <AdminBookDetailsEmptyState />;

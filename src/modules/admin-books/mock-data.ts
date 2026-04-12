@@ -179,7 +179,7 @@ export function createAdminBookFormValues(
   return {
     basicInfo: {
       author: record.author,
-      category: record.category,
+      category: record.category as AdminBookFormValues["basicInfo"]["category"],
       description: record.description,
       isbn: record.isbn,
       title: record.title,

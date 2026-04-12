@@ -11,11 +11,28 @@ import {
   AdminDashboardQuickActionsSection,
   AdminDashboardTrendSection,
 } from "./components";
-import { getAdminDashboardModuleData } from "./hooks";
+import type {
+  AdminDashboardActivityItem,
+  AdminDashboardMetric,
+  AdminDashboardNoticeItem,
+  AdminDashboardQuickAction,
+  AdminDashboardTrendPoint,
+  AdminDashboardTrendSummaryItem,
+} from "./types";
 
-function AdminDashboardModule() {
-  const { activity, metrics, notices, quickActions, trendPoints, trendSummary } =
-    getAdminDashboardModuleData();
+interface AdminDashboardModuleProps {
+  data: {
+    activity: ReadonlyArray<AdminDashboardActivityItem>;
+    metrics: ReadonlyArray<AdminDashboardMetric>;
+    notices: ReadonlyArray<AdminDashboardNoticeItem>;
+    quickActions: ReadonlyArray<AdminDashboardQuickAction>;
+    trendPoints: ReadonlyArray<AdminDashboardTrendPoint>;
+    trendSummary: ReadonlyArray<AdminDashboardTrendSummaryItem>;
+  };
+}
+
+function AdminDashboardModule({ data }: Readonly<AdminDashboardModuleProps>) {
+  const { activity, metrics, notices, quickActions, trendPoints, trendSummary } = data;
 
   const hasDashboardContent =
     activity.length > 0 ||
@@ -34,7 +51,7 @@ function AdminDashboardModule() {
       <AdminPageHeader
         eyebrow="Dashboard"
         title="Library operations dashboard"
-        description="A production-oriented overview of pending circulation work, active borrowing pressure, overdue follow-up, cash fee intake, and member activity using typed mock data."
+        description="A production-oriented overview of pending circulation work, active borrowing pressure, overdue follow-up, cash fee intake, and member activity."
         actions={
           <>
             <Button asChild size="sm" variant="outline">

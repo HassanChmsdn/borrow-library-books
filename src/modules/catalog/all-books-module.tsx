@@ -11,8 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 import {
-  allBooksCatalog,
-  allBooksCategories,
   allBooksSortOptions,
   type AllBooksCategory,
   type AllBooksItem,
@@ -59,16 +57,24 @@ function sortBooks(
   return nextBooks;
 }
 
-function AllBooksModule() {
+interface AllBooksModuleProps {
+  books: ReadonlyArray<AllBooksItem>;
+}
+
+function AllBooksModule({ books }: Readonly<AllBooksModuleProps>) {
   const [searchValue, setSearchValue] = useState("");
   const [activeCategory, setActiveCategory] = useState<AllBooksCategory>("All");
   const [sortValue, setSortValue] = useState<AllBooksSortValue>("featured");
+  const allBooksCategories = [
+    "All",
+    ...new Set(books.map((book) => book.category)),
+  ] satisfies ReadonlyArray<AllBooksCategory>;
 
   const deferredSearchValue = useDeferredValue(searchValue);
   const normalizedSearchValue = deferredSearchValue.trim().toLowerCase();
 
   const filteredBooks = sortBooks(
-    allBooksCatalog.filter((book) => {
+    books.filter((book) => {
       const matchesCategory =
         activeCategory === "All" || book.category === activeCategory;
       const matchesSearch =
@@ -224,7 +230,7 @@ function AllBooksModule() {
                 Reset catalog filters
               </Button>
             }
-            description="Try a different title, author, or category filter. The catalog is still powered by local mock data, so this state is safe to iterate on without backend wiring."
+            description="Try a different title, author, or category filter to bring matching catalog records back into view."
             icon={<BookOpenText className="size-5" />}
             title="No books match your filters"
           />

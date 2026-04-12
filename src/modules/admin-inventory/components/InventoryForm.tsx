@@ -16,6 +16,7 @@ import {
 import { adminInventoryFormSchema } from "../types";
 
 import type {
+  AdminInventoryBookOption,
   AdminInventoryCondition,
   AdminInventoryFormFieldErrors,
   AdminInventoryFormMode,
@@ -24,6 +25,7 @@ import type {
 } from "../types";
 
 interface InventoryFormProps {
+  bookOptions?: ReadonlyArray<AdminInventoryBookOption>;
   initialValues: AdminInventoryFormValues;
   mode: AdminInventoryFormMode;
   onOpenChange: (open: boolean) => void;
@@ -32,6 +34,7 @@ interface InventoryFormProps {
 }
 
 function InventoryForm({
+  bookOptions = adminInventoryBookOptions,
   initialValues,
   mode,
   onOpenChange,
@@ -43,8 +46,8 @@ function InventoryForm({
   const [errors, setErrors] = React.useState<AdminInventoryFormFieldErrors>({});
 
   const selectedBook = React.useMemo(
-    () => adminInventoryBookOptions.find((option) => option.value === values.bookId),
-    [values.bookId],
+    () => bookOptions.find((option) => option.value === values.bookId),
+    [bookOptions, values.bookId],
   );
 
   React.useEffect(() => {
@@ -177,7 +180,7 @@ function InventoryForm({
               <label className={fieldClassName}>
                 <AdminFilterSelect
                   label="Book title"
-                  options={adminInventoryBookOptions}
+                  options={bookOptions}
                   value={values.bookId}
                   onValueChange={(value) => updateField("bookId", value)}
                   className={cn(errors.bookId ? "aria-invalid:border-destructive" : undefined)}

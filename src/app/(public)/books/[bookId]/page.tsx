@@ -1,8 +1,5 @@
-import {
-  getAllBooksItemById,
-  allBooksCatalog,
-} from "@/modules/catalog/all-books-data";
 import { BookDetailsEmptyState, BookDetailsModule } from "@/modules/catalog";
+import { getCatalogBookDetailsById, listCatalogBooks } from "@/modules/catalog/server";
 
 type BookDetailsPageProps = {
   params: Promise<{
@@ -12,24 +9,26 @@ type BookDetailsPageProps = {
 
 export async function generateMetadata(props: BookDetailsPageProps) {
   const { bookId } = await props.params;
-  const book = getAllBooksItemById(bookId);
+  const book = await getCatalogBookDetailsById(bookId);
 
   return {
-    title: book ? `${book.title} | Book Details` : "Book Details",
+    title: book ? `${book.book.title} | Book Details` : "Book Details",
   };
 }
 
-export function generateStaticParams() {
-  return allBooksCatalog.map((book) => ({ bookId: book.id }));
+export async function generateStaticParams() {
+  const books = await listCatalogBooks();
+
+  return books.map((book) => ({ bookId: book.id }));
 }
 
 export default async function BookDetailsPage(props: BookDetailsPageProps) {
   const { bookId } = await props.params;
-  const book = getAllBooksItemById(bookId);
+  const book = await getCatalogBookDetailsById(bookId);
 
   if (!book) {
     return <BookDetailsEmptyState />;
   }
 
-  return <BookDetailsModule book={book} />;
+  return <BookDetailsModule allowCustomDuration={book.allowCustomDuration} book={book.book} />;
 }

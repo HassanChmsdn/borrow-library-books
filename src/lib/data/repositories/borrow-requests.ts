@@ -1,8 +1,25 @@
 import { adminSharedBorrowings } from "@/modules/admin-shared/mock-data";
 
-import type { AdminSharedBorrowingRecord } from "@/modules/admin-shared/types";
+import type {
+  AdminSharedBorrowingStatus,
+  AdminSharedPaymentStatus,
+} from "@/modules/admin-shared/types";
 
-export type BorrowRequestRepositoryRecord = AdminSharedBorrowingRecord;
+export interface BorrowRequestRepositoryRecord {
+  bookId: string;
+  branch: string;
+  customDuration: boolean;
+  durationDays: number;
+  feeCents: number;
+  id: string;
+  note?: string;
+  paymentStatus: AdminSharedPaymentStatus;
+  requestedOn: string;
+  returnedOn?: string;
+  startedOn?: string;
+  status: AdminSharedBorrowingStatus;
+  userId: string;
+}
 
 const borrowRequestRecords: ReadonlyArray<BorrowRequestRepositoryRecord> =
   adminSharedBorrowings;

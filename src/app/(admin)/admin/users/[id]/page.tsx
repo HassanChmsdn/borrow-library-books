@@ -1,9 +1,11 @@
 import {
   AdminUserProfileEmptyState,
   AdminUserProfileModule,
-  adminUserProfileRecords,
-  getAdminUserProfileRecordById,
 } from "@/modules/admin-users";
+import {
+  getAdminUserProfileRecordByIdFromStore,
+  listAdminUserProfileRecords,
+} from "@/modules/admin-users/server";
 
 type AdminUserProfilePageProps = {
   params: Promise<{
@@ -13,22 +15,24 @@ type AdminUserProfilePageProps = {
 
 export async function generateMetadata(props: AdminUserProfilePageProps) {
   const { id } = await props.params;
-  const user = getAdminUserProfileRecordById(id);
+  const user = await getAdminUserProfileRecordByIdFromStore(id);
 
   return {
     title: user ? `${user.fullName} | Admin Users` : "Admin User Profile",
   };
 }
 
-export function generateStaticParams() {
-  return adminUserProfileRecords.map((user) => ({ id: user.id }));
+export async function generateStaticParams() {
+  const users = await listAdminUserProfileRecords();
+
+  return users.map((user) => ({ id: user.id }));
 }
 
 export default async function AdminUserProfilePage(
   props: AdminUserProfilePageProps,
 ) {
   const { id } = await props.params;
-  const user = getAdminUserProfileRecordById(id);
+  const user = await getAdminUserProfileRecordByIdFromStore(id);
 
   if (!user) {
     return <AdminUserProfileEmptyState />;

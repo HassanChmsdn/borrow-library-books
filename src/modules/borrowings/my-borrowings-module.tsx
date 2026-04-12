@@ -283,22 +283,13 @@ interface MyBorrowingsModuleProps {
 }
 
 function MyBorrowingsModule({
-  persistedRecords = [],
+  persistedRecords,
 }: Readonly<MyBorrowingsModuleProps>) {
   const [activeTab, setActiveTab] = useState<MyBorrowingsTab>("active");
-  const records = useMemo(() => {
-    const merged = [...persistedRecords, ...myBorrowingsRecords];
-    const seen = new Set<string>();
-
-    return merged.filter((record) => {
-      if (seen.has(record.id)) {
-        return false;
-      }
-
-      seen.add(record.id);
-      return true;
-    });
-  }, [persistedRecords]);
+  const records = useMemo(
+    () => persistedRecords ?? myBorrowingsRecords,
+    [persistedRecords],
+  );
   const visibleRecords = records.filter((record) => record.tab === activeTab);
   const totalRecords = records.length;
 

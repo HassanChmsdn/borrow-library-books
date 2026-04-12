@@ -8,10 +8,10 @@ import {
   type PaymentStatus,
 } from "@/lib/db";
 import {
-  getBookCopyRecordById,
-  getBookRecordById,
-  listBookCopyRecordsForBook,
-} from "@/lib/data";
+  getStoredBookCopyRecordById,
+  getStoredBookRecordById,
+  listStoredBookCopyRecordsForBook,
+} from "@/lib/data/server";
 
 export interface CreatedBorrowRequestRecord {
   bookCopyId: string;
@@ -71,14 +71,14 @@ export async function createBorrowRequestForUser(
     );
   }
 
-  const book = getBookRecordById(input.bookId);
+  const book = await getStoredBookRecordById(input.bookId);
 
   if (!book) {
     throw new Error("The selected book could not be found.");
   }
 
   const reservedCopyIds = await listReservedCopyIds(input.bookId);
-  const availableCopies = listBookCopyRecordsForBook(input.bookId)
+  const availableCopies = (await listStoredBookCopyRecordsForBook(input.bookId))
     .filter(
       (copy) =>
         copy.status === "available" && !reservedCopyIds.has(copy.id),
@@ -86,7 +86,7 @@ export async function createBorrowRequestForUser(
     .sort((left, right) => left.copyCode.localeCompare(right.copyCode));
 
   const copy = input.bookCopyId
-    ? getBookCopyRecordById(input.bookCopyId)
+    ? await getStoredBookCopyRecordById(input.bookCopyId)
     : availableCopies[0] ?? null;
 
   if (!copy || copy.bookId !== input.bookId) {

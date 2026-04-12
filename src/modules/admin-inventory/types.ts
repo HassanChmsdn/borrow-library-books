@@ -33,6 +33,12 @@ export interface AdminInventoryRecord {
   updatedAtLabel: string;
 }
 
+export interface AdminInventoryBookOption {
+  description: string;
+  label: string;
+  value: string;
+}
+
 export const adminInventoryFormSchema = z.object({
   bookId: z.string().trim().min(1, "Select an existing book title."),
   condition: z.enum(adminInventoryConditionValues),
@@ -59,6 +65,7 @@ export interface AdminInventoryActionHandlers {
 }
 
 export interface AdminInventoryModuleProps extends AdminInventoryActionHandlers {
+  bookOptions?: ReadonlyArray<AdminInventoryBookOption>;
   isLoading?: boolean;
   records?: ReadonlyArray<AdminInventoryRecord>;
 }

@@ -21,6 +21,7 @@ import { useAdminInventoryModuleState } from "./hooks";
 import type { AdminInventoryModuleProps } from "./types";
 
 function AdminInventoryModule({
+  bookOptions,
   isLoading = false,
   onSaveCopy,
   records,
@@ -117,6 +118,7 @@ function AdminInventoryModule({
       </div>
 
       <InventoryForm
+        bookOptions={bookOptions}
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
         mode={formMode}

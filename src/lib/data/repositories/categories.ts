@@ -1,8 +1,13 @@
 import { adminSharedCategories } from "@/modules/admin-shared/mock-data";
 
-import type { AdminSharedCategoryRecord } from "@/modules/admin-shared/types";
+import type { AdminSharedMarkerTone } from "@/modules/admin-shared/types";
 
-export interface CategoryRepositoryRecord extends AdminSharedCategoryRecord {
+export interface CategoryRepositoryRecord {
+  description: string;
+  iconKey: string;
+  id: string;
+  markerTone: AdminSharedMarkerTone;
+  name: string;
   slug: string;
 }
 

@@ -7,7 +7,6 @@ import { z } from "zod";
 import {
   adminBookCreateDefaults,
   adminBooksCatalog,
-  adminBooksCategories,
 } from "./mock-data";
 import type {
   AdminBookDetailsRecord,
@@ -30,6 +29,14 @@ export function useAdminBooksModuleState(
   const normalizedSearchValue = deferredSearchValue.trim().toLowerCase();
 
   const sourceRecords = records ?? adminBooksCatalog;
+  const categories = [
+    "All",
+    ...new Set(
+      sourceRecords
+        .map((book) => book.category)
+        .sort((left, right) => left.localeCompare(right)),
+    ),
+  ] satisfies ReadonlyArray<AdminBooksCategory>;
   const filteredBooks = sourceRecords.filter((book) => {
     const matchesCategory = category === "All" || book.category === category;
     const matchesSearch =
@@ -44,7 +51,7 @@ export function useAdminBooksModuleState(
   return {
     allRecordsCount: sourceRecords.length,
     books: filteredBooks,
-    categories: adminBooksCategories,
+    categories,
     searchValue,
     setSearchValue,
     category,

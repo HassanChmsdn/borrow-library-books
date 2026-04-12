@@ -1,8 +1,22 @@
 export {
   getMongoClient,
   getMongoDatabaseName,
+  hasExplicitMongoDatabaseName,
   isMongoConfigured,
 } from "./client";
+
+export {
+  checkDatabaseReadiness,
+  type DatabaseDiagnostic,
+  type DatabaseDiagnosticCode,
+  type DatabaseDiagnosticLevel,
+  type DatabaseReadinessResult,
+} from "./core/diagnostics";
+
+export {
+  initializeDatabase,
+  type DatabaseInitializationResult,
+} from "./core/init";
 
 export {
   COLLECTIONS,

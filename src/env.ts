@@ -8,6 +8,7 @@ export const env = createEnv({
       .default("development"),
   },
   server: {
+    APP_ENV: z.enum(["local", "development", "staging", "production"]).optional(),
     APP_BASE_URL: z.string().url().optional(),
     AUTH0_CLIENT_ID: z.string().min(1).optional(),
     AUTH0_CLIENT_SECRET: z.string().min(1).optional(),
@@ -23,6 +24,7 @@ export const env = createEnv({
   },
   client: {},
   runtimeEnv: {
+    APP_ENV: process.env.APP_ENV,
     APP_BASE_URL: process.env.APP_BASE_URL,
     AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID,
     AUTH0_CLIENT_SECRET: process.env.AUTH0_CLIENT_SECRET,

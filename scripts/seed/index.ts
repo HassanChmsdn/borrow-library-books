@@ -15,15 +15,17 @@ type IdMap = Map<string, DatabaseId>;
 loadEnvConfig(process.cwd());
 
 async function getDbApi() {
-  const [clientModule, collectionsModule, modelsModule] = await Promise.all([
+  const [clientModule, collectionsModule, initModule, modelsModule] = await Promise.all([
     import("@/lib/db/core/client"),
     import("@/lib/db/core/collections"),
+    import("@/lib/db/core/init"),
     import("@/lib/db/models"),
   ]);
 
   return {
     ...clientModule,
     ...collectionsModule,
+    ...initModule,
     ...modelsModule,
   };
 }
@@ -278,7 +280,7 @@ async function seedDevelopmentData({ reset }: { reset: boolean }) {
 }
 
 async function main() {
-  const { COLLECTIONS, getMongoClient } = await getDbApi();
+  const { COLLECTIONS, getMongoClient, initializeDatabase } = await getDbApi();
   const reset = hasResetFlag();
   const modeLabel = reset ? "reset + reseed" : "seed/upsert";
 
@@ -289,6 +291,12 @@ async function main() {
   const client = await getMongoClient();
 
   try {
+    const initialization = await initializeDatabase();
+
+    console.log(
+      `Database initialized: ${initialization.initializedCollections.length} collections, ${initialization.ensuredIndexes.length} indexes ensured.`,
+    );
+
     const summary = await seedDevelopmentData({ reset });
 
     console.log(

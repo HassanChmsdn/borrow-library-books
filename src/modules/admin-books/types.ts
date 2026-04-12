@@ -7,16 +7,7 @@ import type {
   BorrowStatusBadgeTone,
 } from "@/components/library";
 
-export type AdminBooksCategory =
-  | "All"
-  | "Fiction"
-  | "Science"
-  | "History"
-  | "Philosophy"
-  | "Technology"
-  | "Art & Design"
-  | "Business"
-  | "Travel";
+export type AdminBooksCategory = string;
 
 export const adminBookCategoryValues = [
   "Fiction",
@@ -62,7 +53,7 @@ export interface AdminBookRecord {
   id: string;
   title: string;
   author: string;
-  category: AdminBookCategory;
+  category: string;
   shelfCode: string;
   totalCopies: number;
   availableCopies: number;

@@ -1,10 +1,34 @@
 import { adminSharedBooks } from "@/modules/admin-shared/mock-data";
 
-import type { AdminSharedBookRecord } from "@/modules/admin-shared/types";
+import type {
+  AdminSharedCoverTone,
+  AdminSharedDurationPreset,
+} from "@/modules/admin-shared/types";
 
 import { listBookCopyRecordsForBook } from "./book-copies";
 
-export type BookRepositoryRecord = AdminSharedBookRecord;
+export interface BookRepositoryRecord {
+  allowCustomDuration: boolean;
+  author: string;
+  categoryId: string;
+  coverImageFileName: string;
+  coverLabel: string;
+  coverTone: AdminSharedCoverTone;
+  description: string;
+  feeCents: number;
+  id: string;
+  isbn: string;
+  metadata: {
+    edition: string;
+    language: string;
+    publishedYear: string;
+    publisher: string;
+  };
+  predefinedDurations: ReadonlyArray<AdminSharedDurationPreset>;
+  recordStatus: "active" | "inactive";
+  shelfCode: string;
+  title: string;
+}
 
 export interface BookInventorySnapshot {
   availableCopies: number;

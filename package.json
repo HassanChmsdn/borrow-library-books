@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
+    "db:init": "tsx scripts/db/init.ts",
     "db:seed": "tsx scripts/seed/index.ts",
     "db:seed:reset": "tsx scripts/seed/index.ts --reset",
     "format": "prettier --write .",

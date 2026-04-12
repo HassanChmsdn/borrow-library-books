@@ -11,7 +11,6 @@ import {
   BorrowStatusBadge,
   FeeBadge,
 } from "@/components/library";
-import { getBookRecordById } from "@/lib/data";
 import { buildMockSignInHref } from "@/lib/auth";
 import { useMockAuth } from "@/lib/auth/react";
 import { PageHeader } from "@/components/layout";
@@ -46,10 +45,11 @@ const borrowDurationOptions = [
 ] as const;
 
 interface BookDetailsModuleProps {
+  allowCustomDuration: boolean;
   book: AllBooksItem;
 }
 
-function BookDetailsModule({ book }: BookDetailsModuleProps) {
+function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps) {
   const [selectedDuration, setSelectedDuration] = useState("14");
   const [customDurationRequest, setCustomDurationRequest] = useState("");
   const [requestState, setRequestState] = useState<BookBorrowRequestState>(
@@ -59,14 +59,13 @@ function BookDetailsModule({ book }: BookDetailsModuleProps) {
     "custom" | "predefined" | null
   >(null);
   const { isAdmin, isMember } = useMockAuth();
-  const bookRecord = useMemo(() => getBookRecordById(book.id), [book.id]);
 
   const availabilityTone = getBookAvailabilityTone(book);
   const availabilityLabel = formatBookAvailabilityLabel(book);
   const feeLabel = formatBookFeeLabel(book.feeCents);
   const feeTone = getBookFeeTone(book.feeCents);
   const isUnavailable = book.availableCopies === 0;
-  const customDurationAllowed = bookRecord?.allowCustomDuration ?? false;
+  const customDurationAllowed = useMemo(() => allowCustomDuration, [allowCustomDuration]);
   const memberBorrowingHref = `/books/${encodeURIComponent(book.id)}`;
   const borrowHref = isMember
     ? memberBorrowingHref
@@ -141,7 +140,7 @@ function BookDetailsModule({ book }: BookDetailsModuleProps) {
       <PageHeader
         eyebrow="Catalog"
         title={book.title}
-        description="Book details are still powered by local mock data, but the screen structure is ready for live catalog wiring later."
+        description="Review availability, borrowing duration options, and onsite fee policy before placing a borrowing request."
         actions={
           <Button asChild size="sm" variant="outline">
             <Link href="/books">
