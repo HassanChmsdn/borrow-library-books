@@ -12,14 +12,19 @@ export async function GET(request: Request) {
     );
 
     return NextResponse.redirect(
-      new URL(`/auth/sign-in?redirectTo=${encodeURIComponent(redirectTo)}`, request.url),
+      new URL(
+        `/auth/sign-in?error=auth0-not-configured&redirectTo=${encodeURIComponent(redirectTo)}`,
+        request.url,
+      ),
     );
   }
 
   const client = getAuth0Client();
 
   if (!client) {
-    return NextResponse.redirect(new URL("/auth/sign-in", request.url));
+    return NextResponse.redirect(
+      new URL("/auth/sign-in?error=auth0-not-configured", request.url),
+    );
   }
 
   return client.middleware(request);

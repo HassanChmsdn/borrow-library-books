@@ -1,21 +1,68 @@
 import { Auth0Client } from "@auth0/nextjs-auth0/server";
+import { cookies } from "next/headers";
 import type { NextRequest } from "next/server";
 
 import { env } from "@/env";
 
 import { ensureAuth0AppUserRecord } from "./app-users.server";
 import {
+  MEMBER_AUTH_REGISTRATION_NAME_COOKIE,
+  sanitizePendingMemberName,
+} from "./member-auth-flow";
+import {
   createAppAuthUser,
   createAuthenticatedAuthState,
   type AppAuthState,
 } from "./mock-auth";
 
-export function buildAuth0LoginHref(returnTo = "/books") {
+export interface Auth0LoginHrefOptions {
+  connection?: string;
+  returnTo?: string;
+  screenHint?: "login" | "signup";
+}
+
+function normalizeAuth0LoginHrefOptions(
+  options?: string | Auth0LoginHrefOptions,
+) {
+  if (typeof options === "string") {
+    return { returnTo: options };
+  }
+
+  return options ?? {};
+}
+
+function createAuth0LoginSearchParams(
+  options?: string | Auth0LoginHrefOptions,
+) {
+  const normalizedOptions = normalizeAuth0LoginHrefOptions(options);
   const params = new URLSearchParams({
-    returnTo,
+    returnTo: normalizedOptions.returnTo ?? "/books",
   });
 
+  if (normalizedOptions.connection) {
+    params.set("connection", normalizedOptions.connection);
+  }
+
+  if (normalizedOptions.screenHint) {
+    params.set("screen_hint", normalizedOptions.screenHint);
+  }
+
+  return params;
+}
+
+export function buildAuth0LoginHref(options?: string | Auth0LoginHrefOptions) {
+  const params = createAuth0LoginSearchParams(options);
+
   return `/auth/login?${params.toString()}`;
+}
+
+export function buildAuth0SignupHref(
+  options?: string | Omit<Auth0LoginHrefOptions, "screenHint">,
+) {
+  return buildAuth0LoginHref({
+    ...normalizeAuth0LoginHrefOptions(options),
+    screenHint: "signup",
+  });
 }
 
 let auth0Client: Auth0Client | null | undefined;
@@ -77,6 +124,14 @@ export async function getCurrentAuth0User() {
   return session?.user ?? null;
 }
 
+async function getPendingMemberRegistrationName() {
+  const cookieStore = await cookies();
+
+  return sanitizePendingMemberName(
+    cookieStore.get(MEMBER_AUTH_REGISTRATION_NAME_COOKIE)?.value,
+  );
+}
+
 async function resolveAuth0AppUser(user: Record<string, unknown> | null | undefined) {
   const subject = typeof user?.sub === "string" ? user.sub : null;
 
@@ -84,9 +139,12 @@ async function resolveAuth0AppUser(user: Record<string, unknown> | null | undefi
     return null;
   }
 
+  const auth0Name =
+    typeof user?.name === "string" ? sanitizePendingMemberName(user.name) : null;
+
   return ensureAuth0AppUserRecord({
     email: typeof user?.email === "string" ? user.email : null,
-    fullName: typeof user?.name === "string" ? user.name : null,
+    fullName: auth0Name ?? (await getPendingMemberRegistrationName()),
     subject,
   });
 }

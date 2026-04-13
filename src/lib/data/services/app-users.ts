@@ -125,13 +125,16 @@ export async function ensureAppUserForAuth0Identity(options: {
   }
 
   const users = await getUsersCollection();
+  const existingUser = await users.findOne({ auth0UserId: options.subject });
   const now = new Date();
   const email = options.email?.trim().toLowerCase() || createFallbackEmail(options.subject);
-  const name = createFallbackName({
-    email,
-    name: options.name,
-    subject: options.subject,
-  });
+  const name =
+    existingUser?.name?.trim() ||
+    createFallbackName({
+      email,
+      name: options.name,
+      subject: options.subject,
+    });
 
   const result = await users.findOneAndUpdate(
     { auth0UserId: options.subject },

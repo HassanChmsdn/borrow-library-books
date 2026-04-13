@@ -1,10 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { LoaderCircle, LogIn, UserPlus } from "lucide-react";
+import { ArrowRight, LoaderCircle, LogIn, UserPlus } from "lucide-react";
 
-import { buildMockAuthorizeHref, type MockAuthRole } from "@/lib/auth";
+import {
+  MEMBER_AUTH_REGISTRATION_NAME_COOKIE,
+  sanitizePendingMemberName,
+} from "@/lib/auth/member-auth-flow";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,51 +23,44 @@ type MemberAuthMode = "login" | "register";
 
 interface MemberAuthValues {
   fullName: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
 }
 
 type MemberAuthErrors = Partial<Record<keyof MemberAuthValues | "form", string>>;
 
 interface MemberAuthPanelProps {
   auth0Enabled: boolean;
-  auth0Href: string;
-  currentRole: MockAuthRole;
-  currentUserName: string | null;
+  errorMessage?: string | null;
+  loginHref: string;
+  mode: MemberAuthMode;
   redirectTo: string;
+  signupHref: string;
 }
 
 const defaultValues: MemberAuthValues = {
   fullName: "",
-  email: "",
-  password: "",
-  confirmPassword: "",
 };
 
 export function MemberAuthPanel({
   auth0Enabled,
-  auth0Href,
-  currentRole,
-  currentUserName,
+  errorMessage,
+  loginHref,
+  mode,
   redirectTo,
+  signupHref,
 }: MemberAuthPanelProps) {
-  const [mode, setMode] = useState<MemberAuthMode>("login");
   const [values, setValues] = useState<MemberAuthValues>(defaultValues);
   const [errors, setErrors] = useState<MemberAuthErrors>({});
   const [isPending, setIsPending] = useState(false);
 
-  const helperCopy = useMemo(() => {
-    if (currentRole === "admin") {
-      return "You are currently using the mocked admin session. Continuing here will replace it with a mocked member session for borrowing flows.";
-    }
-
-    if (currentRole === "member") {
-      return `${currentUserName ?? "This mocked member account"} is already signed in. Submitting again will refresh member access for the requested destination.`;
-    }
-
-    return "Borrowing and account routes require a mocked member session for now. Public catalog browsing remains available without signing in.";
-  }, [currentRole, currentUserName]);
+  const currentAuthHref = mode === "login" ? loginHref : signupHref;
+  const heading = mode === "login" ? "Sign in to borrow" : "Create a member account";
+  const loginTabHref = `/auth/sign-in?redirectTo=${encodeURIComponent(redirectTo)}`;
+  const registerTabHref = `/auth/sign-in?redirectTo=${encodeURIComponent(redirectTo)}&mode=register`;
+  const helperCopy = !auth0Enabled
+    ? "Auth0 must be configured before members can continue through the shared sign-in experience."
+    : mode === "login"
+      ? "Continue on the secure Auth0 page to enter your credentials and complete member sign-in."
+      : "Share the member name you want attached to the account, then finish registration on the secure Auth0 page.";
 
   function updateValue(field: keyof MemberAuthValues, nextValue: string) {
     setValues((currentValues) => ({
@@ -85,40 +81,43 @@ export function MemberAuthPanel({
   }
 
   function validate(): MemberAuthErrors {
-    const nextErrors: MemberAuthErrors = {};
-    const trimmedEmail = values.email.trim();
-
-    if (mode === "register" && !values.fullName.trim()) {
-      nextErrors.fullName = "Enter the full name that should be attached to the member account.";
+    if (mode !== "register") {
+      return {};
     }
 
-    if (!trimmedEmail) {
-      nextErrors.email = "Enter an email address.";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-      nextErrors.email = "Enter a valid email address.";
-    }
+    return sanitizePendingMemberName(values.fullName)
+      ? {}
+      : {
+          fullName: "Enter the full name you want ready for post-signup profile completion.",
+        };
+  }
 
-    if (!values.password) {
-      nextErrors.password = "Enter a password.";
-    } else if (values.password.length < 8) {
-      nextErrors.password = "Use at least 8 characters for the mocked credential.";
-    }
+  function startNavigation(baseHref: string) {
+    setIsPending(true);
 
     if (mode === "register") {
-      if (!values.confirmPassword) {
-        nextErrors.confirmPassword = "Confirm the password to continue.";
-      } else if (values.confirmPassword !== values.password) {
-        nextErrors.confirmPassword = "The passwords do not match.";
+      const pendingName = sanitizePendingMemberName(values.fullName);
+
+      if (pendingName) {
+        // Preserve the member name across the Auth0 roundtrip so first app-user provisioning can reuse it.
+        document.cookie = `${MEMBER_AUTH_REGISTRATION_NAME_COOKIE}=${encodeURIComponent(pendingName)}; Max-Age=1800; Path=/; SameSite=Lax${window.location.protocol === "https:" ? "; Secure" : ""}`;
       }
     }
 
-    return nextErrors;
+    window.location.assign(baseHref);
   }
 
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (isPending) {
+      return;
+    }
+
+    if (!auth0Enabled) {
+      setErrors({
+        form: "Auth0 is not configured for this environment yet.",
+      });
       return;
     }
 
@@ -130,8 +129,7 @@ export function MemberAuthPanel({
     }
 
     setErrors({});
-    setIsPending(true);
-    window.location.assign(buildMockAuthorizeHref("member", redirectTo));
+    startNavigation(currentAuthHref);
   }
 
   return (
@@ -140,8 +138,10 @@ export function MemberAuthPanel({
         <div className="flex flex-wrap gap-2">
           {(["login", "register"] as const).map((option) => {
             const active = mode === option;
+            const href = option === "login" ? loginTabHref : registerTabHref;
             return (
-              <button
+              <Link
+                href={href}
                 key={option}
                 className={cn(
                   "rounded-pill text-label inline-flex h-10 items-center gap-2 border px-4 transition-colors",
@@ -149,11 +149,6 @@ export function MemberAuthPanel({
                     ? "border-border-strong bg-elevated text-foreground shadow-xs"
                     : "border-border-subtle bg-card text-text-secondary hover:border-border-strong hover:text-foreground",
                 )}
-                onClick={() => {
-                  setMode(option);
-                  setErrors({});
-                }}
-                type="button"
               >
                 {option === "login" ? (
                   <LogIn className="size-4" />
@@ -161,21 +156,28 @@ export function MemberAuthPanel({
                   <UserPlus className="size-4" />
                 )}
                 {option === "login" ? "Login" : "Register"}
-              </button>
+              </Link>
             );
           })}
         </div>
 
         <div>
-          <CardTitle>
-            {mode === "login" ? "Sign in to borrow" : "Create a member account"}
-          </CardTitle>
-          <CardDescription className="mt-2">{helperCopy}</CardDescription>
+          <CardTitle>{heading}</CardTitle>
+          <CardDescription className="mt-2 max-w-prose">{helperCopy}</CardDescription>
+          <p className="text-body-sm text-text-tertiary mt-3 break-all">
+            After Auth0 completes, you will return to {redirectTo}.
+          </p>
         </div>
       </CardHeader>
 
       <CardContent>
         <form className="grid gap-4" noValidate onSubmit={onSubmit}>
+          {errorMessage ? (
+            <div className="rounded-2xl border border-danger/20 bg-danger-surface px-4 py-3">
+              <p className="text-body-sm text-danger font-medium">{errorMessage}</p>
+            </div>
+          ) : null}
+
           {errors.form ? (
             <div className="rounded-2xl border border-danger/20 bg-danger-surface px-4 py-3">
               <p className="text-body-sm text-danger font-medium">{errors.form}</p>
@@ -198,101 +200,43 @@ export function MemberAuthPanel({
                 <span className="text-body-sm text-danger">{errors.fullName}</span>
               ) : (
                 <span className="text-body-sm text-text-tertiary">
-                  This mocked value is only used to mirror a future profile field.
+                  We keep this name in the app flow so the member record can be created cleanly after Auth0 finishes signup.
                 </span>
               )}
             </label>
           ) : null}
 
-          <label className="grid gap-2">
-            <span className="text-label text-foreground font-medium">Email</span>
-            <Input
-              aria-invalid={Boolean(errors.email)}
-              autoComplete="email"
-              disabled={isPending}
-              onChange={(event) => updateValue("email", event.target.value)}
-              placeholder="sara.chehab@library.test"
-              type="email"
-              value={values.email}
-            />
-            {errors.email ? (
-              <span className="text-body-sm text-danger">{errors.email}</span>
-            ) : (
-              <span className="text-body-sm text-text-tertiary">
-                Use any valid email format. Credentials are not verified against a real backend yet.
-              </span>
-            )}
-          </label>
-
-          <label className="grid gap-2">
-            <span className="text-label text-foreground font-medium">Password</span>
-            <Input
-              aria-invalid={Boolean(errors.password)}
-              autoComplete={mode === "login" ? "current-password" : "new-password"}
-              disabled={isPending}
-              onChange={(event) => updateValue("password", event.target.value)}
-              placeholder="At least 8 characters"
-              type="password"
-              value={values.password}
-            />
-            {errors.password ? (
-              <span className="text-body-sm text-danger">{errors.password}</span>
-            ) : (
-              <span className="text-body-sm text-text-tertiary">
-                Mocked credentials only. This field is present to keep the future Auth0-ready form structure realistic.
-              </span>
-            )}
-          </label>
-
-          {mode === "register" ? (
-            <label className="grid gap-2">
-              <span className="text-label text-foreground font-medium">Confirm password</span>
-              <Input
-                aria-invalid={Boolean(errors.confirmPassword)}
-                autoComplete="new-password"
-                disabled={isPending}
-                onChange={(event) => updateValue("confirmPassword", event.target.value)}
-                placeholder="Repeat the password"
-                type="password"
-                value={values.confirmPassword}
-              />
-              {errors.confirmPassword ? (
-                <span className="text-body-sm text-danger">{errors.confirmPassword}</span>
-              ) : (
-                <span className="text-body-sm text-text-tertiary">
-                  Matching passwords keep the mocked register flow aligned with a future production form.
-                </span>
-              )}
-            </label>
-          ) : null}
+          <div className="rounded-2xl border border-dashed border-black/5 p-4">
+            <p className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
+              Secure authentication
+            </p>
+            <p className="text-body-sm text-text-secondary mt-2">
+              {mode === "login"
+                ? "Credentials and any enabled social sign-in options are handled on the Auth0-hosted page."
+                : "Password setup, verification, and any enabled social signup options are completed on the Auth0-hosted page."}
+            </p>
+          </div>
 
           <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center">
-            <Button className="sm:min-w-44" disabled={isPending} type="submit">
-              {isPending ? <LoaderCircle className="size-4 animate-spin" /> : null}
-              {isPending
-                ? mode === "login"
-                  ? "Signing in..."
-                  : "Creating account..."
-                : mode === "login"
-                  ? "Login"
-                  : "Register"}
-            </Button>
+            {mode === "login" ? (
+              <Button asChild className="sm:min-w-44">
+                <a href={loginHref}>
+                  Continue to login
+                  <ArrowRight className="size-4" />
+                </a>
+              </Button>
+            ) : (
+              <Button className="sm:min-w-44" disabled={isPending} type="submit">
+                {isPending ? <LoaderCircle className="size-4 animate-spin" /> : null}
+                {isPending ? "Redirecting to register..." : "Continue to register"}
+                {!isPending ? <ArrowRight className="size-4" /> : null}
+              </Button>
+            )}
 
-            <Button asChild disabled={isPending} type="button" variant="ghost">
+            <Button asChild disabled={mode === "register" && isPending} type="button" variant="ghost">
               <Link href="/books">Keep browsing</Link>
             </Button>
           </div>
-
-          {auth0Enabled ? (
-            <div className="grid gap-3 border-t border-black/5 pt-4">
-              <p className="text-body-sm text-text-tertiary">
-                Prefer the Auth0-ready path? Continue with the parallel integration without replacing the mocked member flow yet.
-              </p>
-              <Button asChild disabled={isPending} type="button" variant="outline">
-                <a href={auth0Href}>Continue with Auth0</a>
-              </Button>
-            </div>
-          ) : null}
         </form>
       </CardContent>
     </Card>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, BookCopy, Clock3, ReceiptText } from "lucide-react";
 
@@ -19,6 +19,7 @@ import type { BorrowStatusBadgeTone } from "@/components/library";
 import { PageHeader } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { MEMBER_AUTH_REGISTRATION_NAME_COOKIE } from "@/lib/auth/member-auth-flow";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { BookCoverArt } from "@/modules/catalog/book-cover-art";
@@ -280,18 +281,31 @@ function BorrowingsDesktopTable({
 
 interface MyBorrowingsModuleProps {
   persistedRecords?: ReadonlyArray<BorrowingRecord>;
+  signupConfirmationName?: string | null;
 }
 
 function MyBorrowingsModule({
   persistedRecords,
+  signupConfirmationName,
 }: Readonly<MyBorrowingsModuleProps>) {
   const [activeTab, setActiveTab] = useState<MyBorrowingsTab>("active");
+  const [showSignupConfirmation, setShowSignupConfirmation] = useState(
+    Boolean(signupConfirmationName),
+  );
   const records = useMemo(
     () => persistedRecords ?? myBorrowingsRecords,
     [persistedRecords],
   );
   const visibleRecords = records.filter((record) => record.tab === activeTab);
   const totalRecords = records.length;
+
+  useEffect(() => {
+    if (!signupConfirmationName) {
+      return;
+    }
+
+    document.cookie = `${MEMBER_AUTH_REGISTRATION_NAME_COOKIE}=; Max-Age=0; Path=/; SameSite=Lax${window.location.protocol === "https:" ? "; Secure" : ""}`;
+  }, [signupConfirmationName]);
 
   return (
     <div className="gap-section flex flex-col">
@@ -306,6 +320,29 @@ function MyBorrowingsModule({
         }
       >
         <div className="rounded-card border-border-subtle bg-card grid gap-4 border p-4 shadow-xs sm:p-5">
+          {showSignupConfirmation && signupConfirmationName ? (
+            <div className="rounded-2xl border border-success-border bg-success-surface flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="space-y-1">
+                <p className="text-label text-success font-medium">
+                  Registration details saved
+                </p>
+                <p className="text-body-sm text-text-secondary max-w-2xl">
+                  Welcome, {signupConfirmationName}. Your Auth0 signup is complete, and this name is now ready for your local member profile.
+                </p>
+              </div>
+
+              <Button
+                className="shrink-0"
+                onClick={() => setShowSignupConfirmation(false)}
+                size="sm"
+                type="button"
+                variant="ghost"
+              >
+                Dismiss
+              </Button>
+            </div>
+          ) : null}
+
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-1">
               <p className="text-label text-foreground font-medium">
