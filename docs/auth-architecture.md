@@ -24,8 +24,11 @@ This document defines the current authentication and authorization architecture 
 
 - Resolve the authenticated identity to an app user record.
 - Determine application role:
-  - `member`
+  - `super_admin`
   - `admin`
+  - `employee`
+  - `financial`
+  - `member`
 - Determine account status:
   - `active`
   - `suspended`
@@ -78,6 +81,8 @@ Current shared helpers include:
 - `isAuthenticated()`
 - `isMember()`
 - `isAdmin()`
+- `isStaff()`
+- `hasAdminAccess()`
 
 Server-side access should go through the centralized server helpers rather than direct cookie or session inspection.
 
@@ -94,8 +99,11 @@ The current authorization model assumes an app user record with at least:
 
 ### Role values
 
-- `member`
+- `super_admin`
 - `admin`
+- `employee`
+- `financial`
+- `member`
 
 ### Status values
 
@@ -124,9 +132,11 @@ The current authorization model assumes an app user record with at least:
 ### Admin routes
 
 - Admin routes require an authenticated user.
-- The authenticated identity must resolve to an app user record with:
-  - role `admin`
-  - status `active`
+- The authenticated identity must resolve to an active app user record with a staff role:
+  - `super_admin`
+  - `admin`
+  - `employee`
+  - `financial`
 - Example routes:
   - `/admin`
   - `/admin/books`
@@ -186,5 +196,6 @@ Expected transition:
 - Auth0 handles identity.
 - App users handle authorization.
 - Roles are application data, not identity-provider data.
+- MongoDB-backed app users remain the source of truth for role assignment.
 - The current fallback is mock-backed.
 - MongoDB will later replace only the app user data source layer.

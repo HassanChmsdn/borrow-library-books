@@ -57,6 +57,7 @@ export type {
   DatabaseId,
   PaymentMethod,
   PaymentStatus,
+  StaffAppUserRole,
   UpdateBookCopyInput,
   UpdateBookInput,
   UpdateBorrowRequestInput,
@@ -67,6 +68,7 @@ export type {
 } from "./models";
 
 export {
+  APP_USER_ROLE_VALUES,
   AppUserRoleSchema,
   AppUserStatusSchema,
   BaseDocumentSchema,
@@ -86,8 +88,10 @@ export {
   CreateCategoryInputSchema,
   CreateUserInputSchema,
   DatabaseIdSchema,
+  MEMBER_APP_USER_ROLE,
   PaymentMethodSchema,
   PaymentStatusSchema,
+  STAFF_APP_USER_ROLE_VALUES,
   UpdateBookCopyInputSchema,
   UpdateBookInputSchema,
   UpdateBorrowRequestInputSchema,

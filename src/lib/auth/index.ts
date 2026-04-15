@@ -1,5 +1,6 @@
 export {
   MOCK_AUTH_COOKIE,
+  hasAdminAccess,
   buildSignOutHref,
   buildMockAuthorizeHref,
   buildMockSignInHref,
@@ -13,6 +14,7 @@ export {
   getCurrentUser,
   getDefaultRedirectForRole,
   getMockCurrentUser,
+  isStaff,
   isAdmin,
   isAuthenticated,
   isMember,
@@ -32,6 +34,17 @@ export {
   type MockAuthUser,
   type MockSession,
 } from "./mock-auth";
+
+export {
+  getAppRoleAccountLabel,
+  getAppRoleDisplayLabel,
+  getDefaultRedirectForAppRole,
+  hasAdminAccessRole,
+  isAppUserRole,
+  isMemberRole,
+  isStaffRole,
+  type AdminAccessRole,
+} from "./roles";
 
 export {
   getMockAppUserRecord,

@@ -4,12 +4,14 @@ import { createContext, useContext, type PropsWithChildren } from "react";
 
 import {
   createGuestAuthState,
+  hasAdminAccess,
   getCurrentRole,
   getCurrentStatus,
   getCurrentUser,
   isAdmin,
   isAuthenticated,
   isMember,
+  isStaff,
   isSuspended,
   type AppAuthState,
 } from "./index";
@@ -39,9 +41,11 @@ export function useMockAuth() {
     currentUser: getCurrentUser(authState),
     currentRole: getCurrentRole(authState),
     currentStatus: getCurrentStatus(authState),
+    hasAdminAccess: hasAdminAccess(authState),
     isAuthenticated: isAuthenticated(authState),
     isMember: isMember(authState),
     isAdmin: isAdmin(authState),
+    isStaff: isStaff(authState),
     isSuspended: isSuspended(authState),
   };
 }
@@ -64,6 +68,14 @@ export function useIsMember() {
 
 export function useIsAdmin() {
   return useMockAuth().isAdmin;
+}
+
+export function useHasAdminAccess() {
+  return useMockAuth().hasAdminAccess;
+}
+
+export function useIsStaff() {
+  return useMockAuth().isStaff;
 }
 
 export function useIsSuspended() {

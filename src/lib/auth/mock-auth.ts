@@ -1,18 +1,29 @@
 import {
+  APP_USER_ROLE_VALUES,
+  type AppUserRole,
+  type AppUserStatus,
+} from "./app-user-model";
+
+import {
   getMockAppUserRecord,
   type AppUserRecord,
-  type AppUserStatus,
 } from "./app-users";
+import {
+  getDefaultRedirectForAppRole,
+  hasAdminAccessRole,
+  isAppUserRole,
+  isMemberRole,
+} from "./roles";
 
 export const MOCK_AUTH_COOKIE = "borrow-library-mock-role";
 
-export const mockAuthenticatedRoles = ["member", "admin"] as const;
+export const mockAuthenticatedRoles = APP_USER_ROLE_VALUES;
 
-export type AppAuthenticatedRole = (typeof mockAuthenticatedRoles)[number];
+export type AppAuthenticatedRole = AppUserRole;
 export type AppAuthRole = "guest" | AppAuthenticatedRole;
 export type AppAuthSource = "none" | "mock" | "auth0";
 
-export type MockAuthenticatedRole = AppAuthenticatedRole;
+export type MockAuthenticatedRole = (typeof mockAuthenticatedRoles)[number];
 export type MockAuthRole = AppAuthRole;
 
 export interface AppAuthUser {
@@ -30,7 +41,9 @@ export interface AppAuthState {
   currentUser: AppAuthUser | null;
   currentRole: AppAuthRole;
   currentStatus: AppUserStatus | "guest";
+  hasAdminAccess: boolean;
   isAuthenticated: boolean;
+  isStaff: boolean;
   isGuest: boolean;
   isMember: boolean;
   isAdmin: boolean;
@@ -61,11 +74,8 @@ function getInitials(fullName: string, email: string) {
 
 export function isMockAuthenticatedRole(
   value: unknown,
-): value is AppAuthenticatedRole {
-  return (
-    typeof value === "string" &&
-    mockAuthenticatedRoles.includes(value as AppAuthenticatedRole)
-  );
+): value is MockAuthenticatedRole {
+  return isAppUserRole(value);
 }
 
 export const isMockAuthRole = isMockAuthenticatedRole;
@@ -91,7 +101,9 @@ export function createGuestAuthState(): AppAuthState {
     currentUser: null,
     currentRole: "guest",
     currentStatus: "guest",
+    hasAdminAccess: false,
     isAuthenticated: false,
+    isStaff: false,
     isGuest: true,
     isMember: false,
     isAdmin: false,
@@ -106,6 +118,7 @@ export function createAuthenticatedAuthState(
   authSource: AppAuthSource,
 ): AppAuthState {
   const isActive = currentUser.status === "active";
+  const isStaff = hasAdminAccessRole(role) && isActive;
 
   return {
     currentUser: {
@@ -115,10 +128,12 @@ export function createAuthenticatedAuthState(
     },
     currentRole: role,
     currentStatus: currentUser.status,
+    hasAdminAccess: isStaff,
     isAuthenticated: true,
+    isStaff,
     isGuest: false,
-    isMember: role === "member" && isActive,
-    isAdmin: role === "admin" && isActive,
+    isMember: isMemberRole(role) && isActive,
+    isAdmin: isStaff,
     isSuspended: !isActive,
     authSource,
   };
@@ -176,12 +191,20 @@ export function isAdmin(authState: AppAuthState) {
   return authState.isAdmin;
 }
 
+export function hasAdminAccess(authState: AppAuthState) {
+  return authState.hasAdminAccess;
+}
+
+export function isStaff(authState: AppAuthState) {
+  return authState.isStaff;
+}
+
 export function isSuspended(authState: AppAuthState) {
   return authState.isSuspended;
 }
 
 export function getDefaultRedirectForRole(role: AppAuthenticatedRole) {
-  return role === "admin" ? "/admin" : "/account/borrowings";
+  return getDefaultRedirectForAppRole(role);
 }
 
 export function sanitizeRedirectTo(
@@ -200,7 +223,7 @@ export function buildMockSignInHref(options?: {
   redirectTo?: string;
 }) {
   const params = new URLSearchParams();
-  const isAdminRoute = options?.role === "admin";
+  const isAdminRoute = hasAdminAccessRole(options?.role);
 
   if (options?.role && !isAdminRoute) {
     params.set("role", options.role);

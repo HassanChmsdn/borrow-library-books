@@ -11,6 +11,11 @@ import {
   isMongoConfigured,
   type BorrowRequestDocument,
 } from "@/lib/db";
+import {
+  getAppRoleAccountLabel,
+  getAppRoleDisplayLabel,
+  hasAdminAccessRole,
+} from "@/lib/auth/roles";
 import type {
   AdminSharedDurationPreset,
   AdminSharedMarkerTone,
@@ -138,12 +143,12 @@ function deriveCoverTone(slug: string, name: string): BookRepositoryRecord["cove
 }
 
 function deriveMembershipLabel(role: UserRepositoryRecord["role"]) {
-  return role === "admin" ? "Administrator" : "Member account";
+  return getAppRoleAccountLabel(role);
 }
 
 function deriveProfileNote(record: UserRepositoryRecord) {
-  if (record.role === "admin") {
-    return "Administrator account available for staff operations and account review.";
+  if (hasAdminAccessRole(record.role)) {
+    return `${getAppRoleDisplayLabel(record.role)} account available for staff operations and account review.`;
   }
 
   if (record.status === "suspended") {
@@ -295,7 +300,7 @@ export const getLibrarySnapshot = cache(async (): Promise<LibrarySnapshot> => {
 
     const users: UserRepositoryRecord[] = userDocs.map((user) => {
       const role = user.role;
-      const managementRole = role === "admin" ? "admin" : "user";
+      const managementRole = hasAdminAccessRole(role) ? "admin" : "user";
       const joinedOn = (user.createdAt ?? user.lastLoginAt ?? new Date()).toISOString();
       const membershipLabel = deriveMembershipLabel(role);
 

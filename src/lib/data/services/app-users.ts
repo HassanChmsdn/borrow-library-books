@@ -8,6 +8,7 @@ import type {
   UserDocument,
 } from "@/lib/db";
 import { getUsersCollection, isMongoConfigured } from "@/lib/db";
+import { getAppRoleAccountLabel } from "@/lib/auth/roles";
 
 import {
   findUserRecordByAuth0Subject,
@@ -25,7 +26,7 @@ export interface AppUserLookupRecord {
 }
 
 function createDefaultSubtitle(role: AppUserRole) {
-  return role === "admin" ? "Admin account" : "Library member";
+  return getAppRoleAccountLabel(role);
 }
 
 function createFallbackEmail(subject: string) {

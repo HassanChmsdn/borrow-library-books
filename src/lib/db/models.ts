@@ -1,11 +1,29 @@
 import { ObjectId } from "mongodb";
 import { z } from "zod";
 
-export const AppUserRoleSchema = z.enum(["member", "admin"]);
-export type AppUserRole = z.infer<typeof AppUserRoleSchema>;
+import {
+  APP_USER_ROLE_VALUES,
+  AppUserRoleSchema,
+  APP_USER_STATUS_VALUES,
+  AppUserStatusSchema,
+  MEMBER_APP_USER_ROLE,
+  STAFF_APP_USER_ROLE_VALUES,
+  type AppUserRole,
+  type AppUserStatus,
+  type StaffAppUserRole,
+} from "../auth/app-user-model";
 
-export const AppUserStatusSchema = z.enum(["active", "suspended"]);
-export type AppUserStatus = z.infer<typeof AppUserStatusSchema>;
+export {
+  APP_USER_ROLE_VALUES,
+  AppUserRoleSchema,
+  APP_USER_STATUS_VALUES,
+  AppUserStatusSchema,
+  MEMBER_APP_USER_ROLE,
+  STAFF_APP_USER_ROLE_VALUES,
+  type AppUserRole,
+  type AppUserStatus,
+  type StaffAppUserRole,
+};
 
 export const BookStatusSchema = z.enum(["active", "inactive"]);
 export type BookStatus = z.infer<typeof BookStatusSchema>;

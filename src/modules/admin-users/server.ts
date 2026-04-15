@@ -12,6 +12,7 @@ import {
   formatAdminJoinedDate,
   formatAdminShortDate,
 } from "@/modules/admin-shared/mock-data";
+import { hasAdminAccessRole } from "@/lib/auth/roles";
 
 import type {
   AdminUserBorrowingRecord,
@@ -24,8 +25,8 @@ function getBorrowingFeeLabel(feeCents: number) {
   return feeCents === 0 ? "Free" : `${formatAdminCurrency(feeCents)} cash`;
 }
 
-function toAdminRole(role: "member" | "admin") {
-  return role === "admin" ? "admin" : "user";
+function toAdminRole(role: Parameters<typeof hasAdminAccessRole>[0]) {
+  return hasAdminAccessRole(role) ? "admin" : "user";
 }
 
 function toAdminPaymentStatus(status: "cash-due" | "cash-settled" | "not-required") {

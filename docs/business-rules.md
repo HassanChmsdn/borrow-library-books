@@ -95,11 +95,17 @@ This document defines the current backend-ready business rules for the library b
 - May access personal account pages such as borrowings and profile.
 - May not access admin-only management pages unless explicitly granted admin rights.
 
-### Admin
+### Staff roles
 
-- Has full management access to admin routes and operational tools.
-- May manage books, categories, borrowings, inventory, users, and dashboard workflows.
-- Admin access must be enforced separately from member access.
+- `super_admin`, `admin`, `employee`, and `financial` are application-defined staff roles.
+- Staff roles may access admin routes and operational tools according to application authorization rules.
+- Staff access must be enforced separately from member access.
+- Staff authorization must come from the application user record rather than Auth0 RBAC roles.
+
+### Super admin
+
+- `super_admin` is reserved for manually provisioned staff accounts that exist in Auth0 for identity and in MongoDB for application authorization.
+- The role model must allow `super_admin` to be created manually without changing the core auth flow.
 
 ## 5. Borrow Lifecycle
 

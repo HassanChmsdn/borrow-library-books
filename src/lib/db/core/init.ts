@@ -1,5 +1,6 @@
 import type { CreateCollectionOptions, Document, IndexDescription } from "mongodb";
 
+import { APP_USER_ROLE_VALUES } from "../../auth/app-user-model";
 import { COLLECTIONS, type CollectionName } from "./collections";
 import { getMongoClient, getMongoDatabaseName } from "./client";
 
@@ -60,7 +61,7 @@ const collectionDefinitions: Record<CollectionName, CollectionInitDefinition> = 
             email: { bsonType: "string" },
             lastLoginAt: { bsonType: "date" },
             name: { bsonType: "string" },
-            role: { enum: ["member", "admin"] },
+            role: { enum: [...APP_USER_ROLE_VALUES] },
             status: { enum: ["active", "suspended"] },
           },
         },

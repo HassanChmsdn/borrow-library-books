@@ -1,15 +1,12 @@
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 
 import {
-  buildMockAuthorizeHref,
-  buildSignOutHref,
-  getCurrentRole,
-  getCurrentUser,
-  isAuthenticated,
+  isAdmin,
   sanitizeRedirectTo,
 } from "@/lib/auth";
-import { ShellBrand } from "@/components/layout";
+import { PageHeader, ShellBrand } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -35,109 +32,77 @@ export default async function AdminAccessPage({ searchParams }: AdminAccessPageP
   const params = await searchParams;
   const redirectTo = sanitizeRedirectTo(params.redirectTo, "/admin");
   const session = await getCurrentSession();
-  const currentUser = getCurrentUser(session);
-  const currentRole = getCurrentRole(session);
-  const authenticated = isAuthenticated(session);
   const auth0Enabled = isAuth0Configured();
+
+  if (isAdmin(session)) {
+    redirect(redirectTo);
+  }
 
   return (
     <main className="bg-background min-h-screen">
-      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-5 py-8 sm:px-8 lg:grid lg:grid-cols-[22rem_minmax(0,1fr)] lg:items-start lg:gap-10 lg:px-10 lg:py-10">
-        <section className="bg-secondary/35 rounded-card border-border-subtle flex h-full flex-col justify-between border p-6 shadow-xs lg:min-h-[40rem] lg:p-8">
-          <div className="space-y-6">
-            <ShellBrand
-              href="/books"
-              monogram="BL"
-              subtitle="Admin Console"
-              title="Borrow Library Books"
-            />
+      <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-8 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
+        <div className="flex items-start justify-between gap-6">
+          <ShellBrand
+            href="/books"
+            monogram="BL"
+            subtitle="Admin Console"
+            title="Borrow Library Books"
+          />
+        </div>
 
-            <div className="space-y-3">
-              <p className="text-caption text-text-tertiary font-medium tracking-[0.24em] uppercase">
-                Restricted access
-              </p>
-              <h1 className="font-heading text-display-sm text-foreground max-w-xs text-balance font-semibold">
-                Continue to the admin workspace.
-              </h1>
-              <p className="text-body text-text-secondary max-w-md text-pretty">
-                Admin authentication now lives only under admin routes. This mocked screen protects the operations workspace while staying ready for future role-aware Auth0 integration.
-              </p>
-            </div>
-          </div>
+        <div className="gap-section flex flex-col">
+          <PageHeader
+            eyebrow="Restricted Access"
+            title="Admin sign in"
+            description="Continue with an authorized admin identity to open the operations workspace and protected management routes."
+          />
 
-          <div className="grid gap-3">
-            <div className="rounded-2xl border border-dashed border-black/5 bg-background/80 p-4">
-              <p className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-                Requested destination
-              </p>
-              <p className="text-body text-foreground mt-2 font-medium break-all">
-                {redirectTo}
-              </p>
-            </div>
-            <p className="text-body-sm text-text-tertiary">
-              Guests are redirected here from protected admin routes. Member sign-in remains separate and public under the member auth flow.
-            </p>
-          </div>
-        </section>
-
-        <section className="grid gap-5 lg:pt-8">
+          <section style={{ maxWidth: "var(--layout-reading-max-width)" }}>
           <Card>
             <CardHeader>
               <div className="bg-secondary text-primary flex size-11 items-center justify-center rounded-2xl">
                 <ShieldCheck className="size-5" />
               </div>
-              <CardTitle>Mocked admin access</CardTitle>
+              <CardTitle>Admin workspace access</CardTitle>
               <CardDescription>
-                Continue with a mocked admin session to enter the operations workspace and all nested management routes.
+                Authentication is completed on the secure Auth0 page. Only users with an authorized admin role can enter this workspace.
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
               <div className="rounded-2xl border border-dashed border-black/5 p-4">
                 <p className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-                  Current session
+                  Requested destination
                 </p>
-                <p className="text-body text-foreground mt-2 font-medium">
-                  {currentUser
-                    ? `${currentUser.fullName} (${currentRole})`
-                    : "Guest"}
+                <p className="text-body text-foreground mt-2 font-medium break-all">
+                  {redirectTo}
                 </p>
                 <p className="text-body-sm text-text-secondary mt-2">
-                  Continuing here will replace any existing mocked session with the admin role.
+                  If you are redirected here from a protected admin route, sign in with the admin account that should access that destination.
                 </p>
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Button asChild className="sm:min-w-52">
-                  <a href={buildMockAuthorizeHref("admin", redirectTo)}>
-                    Continue as admin
+                  <a href={buildAuth0LoginHref(redirectTo)}>
+                    Continue to admin login
                   </a>
                 </Button>
-                {auth0Enabled ? (
-                  <Button asChild className="sm:min-w-52" variant="outline">
-                    <a href={buildAuth0LoginHref(redirectTo)}>
-                      Continue with Auth0
-                    </a>
-                  </Button>
-                ) : null}
                 <Button asChild variant="outline">
                   <Link href="/books">Back to catalog</Link>
                 </Button>
-                {authenticated ? (
-                  <Button asChild variant="ghost">
-                    <a
-                      href={buildSignOutHref(
-                        session,
-                        `/admin/auth?redirectTo=${encodeURIComponent(redirectTo)}`,
-                      )}
-                    >
-                      Clear mock session
-                    </a>
-                  </Button>
-                ) : null}
               </div>
+
+              {!auth0Enabled ? (
+                <div className="rounded-2xl border border-danger/20 bg-danger-surface px-4 py-3">
+                  <p className="text-body-sm text-danger font-medium">
+                    Admin authentication is unavailable until Auth0 is configured for this environment.
+                  </p>
+                </div>
+              ) : null}
             </CardContent>
           </Card>
-        </section>
+          </section>
+        </div>
       </div>
     </main>
   );

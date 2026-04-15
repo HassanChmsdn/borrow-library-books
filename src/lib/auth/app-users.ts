@@ -1,7 +1,7 @@
-import type { AppUserRole, AppUserStatus } from "@/lib/db";
+import type { AppUserRole, AppUserStatus } from "./app-user-model";
 import { findUserRecordByMockRole } from "@/lib/data/repositories/users";
 
-export type { AppUserRole, AppUserStatus } from "@/lib/db";
+export type { AppUserRole, AppUserStatus } from "./app-user-model";
 
 export interface AppUserRecord {
   id: string;

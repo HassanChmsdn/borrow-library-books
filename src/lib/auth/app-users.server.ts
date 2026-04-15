@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { AppUserRole, AppUserStatus } from "@/lib/db";
+import type { AppUserRole, AppUserStatus } from "./app-user-model";
 import {
   ensureAppUserForAuth0Identity,
   lookupAppUserByAuth0Identity,
@@ -8,7 +8,7 @@ import {
 
 import { getMockAppUserRecord, type AppUserRecord } from "./app-users";
 
-export type { AppUserRole, AppUserStatus } from "@/lib/db";
+export type { AppUserRole, AppUserStatus } from "./app-user-model";
 export type { AppUserRecord } from "./app-users";
 
 function toAppUserRecord(
