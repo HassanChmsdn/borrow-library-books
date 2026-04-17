@@ -12,6 +12,10 @@ npm run typecheck
 npm run format
 npm run format:check
 npm run build
+npm run db:init
+npm run db:seed
+npm run db:seed:reset
+npm run db:provision-user -- --auth0-user-id=auth0|example --email=admin@example.com --name="Admin User" --role=super_admin
 ```
 
 ## Environment variables
@@ -25,6 +29,8 @@ cp .env.example .env.local
 ```
 
 MongoDB integration lives under `src/lib/db`. Set `MONGODB_URI` and, optionally, `MONGODB_DB_NAME` when you are ready to connect a database.
+
+For manually provisioned staff accounts such as `super_admin`, create the Auth0 user first and then provision the matching MongoDB app-user record with `npm run db:provision-user`. The script intentionally stores authorization only in MongoDB.
 
 ## Source structure
 

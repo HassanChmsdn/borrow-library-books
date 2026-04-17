@@ -191,6 +191,14 @@ Expected transition:
 - Route and layout protection should call centralized helpers only.
 - UI components should consume normalized auth state rather than raw provider session objects.
 
+## Manual Super Admin Provisioning
+
+- `super_admin` is intended to be created manually in Auth0 for identity and manually in MongoDB for application authorization.
+- The supported CLI path is `npm run db:provision-user -- --auth0-user-id=<auth0-subject> --email=<email> --name="Full Name" --role=super_admin`.
+- The Auth0 user must already exist before the script runs.
+- The Auth0 subject passed to the script must match the Auth0 user exactly.
+- Do not assign Auth0 RBAC roles for this flow. The MongoDB users collection remains the authorization source of truth.
+
 ## Summary
 
 - Auth0 handles identity.
