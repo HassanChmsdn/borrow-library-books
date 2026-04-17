@@ -11,7 +11,9 @@ import {
 } from "./app-users";
 import {
   createEmptyResolvedAdminSectionPermissions,
+  getRouteAccessPolicy,
   getResolvedAdminSectionPermissions,
+  type AppRouteAccessPolicy,
   type ResolvedAppSectionPermissions,
 } from "./permissions";
 import {
@@ -76,6 +78,12 @@ export interface AppAuthState {
 export type MockAuthUser = AppAuthUser;
 export type MockAuthState = AppAuthState;
 export type MockSession = AppAuthState;
+
+export interface AppRouteAuthorizationResult {
+  denialReason: "admin" | "member" | "section" | null;
+  isAllowed: boolean;
+  policy: AppRouteAccessPolicy | null;
+}
 
 function getInitials(fullName: string, email: string) {
   const nameParts = fullName
@@ -305,6 +313,60 @@ export function canManageAdminSection(
   section: AppAdminSection,
 ) {
   return getAdminSectionAccess(authState, section).canManage;
+}
+
+export function getRouteAuthorization(
+  authState: AppAuthState,
+  pathname: string,
+): AppRouteAuthorizationResult {
+  const policy = getRouteAccessPolicy(pathname);
+
+  if (!policy || policy.audience === "public") {
+    return {
+      denialReason: null,
+      isAllowed: true,
+      policy,
+    };
+  }
+
+  if (policy.audience === "member") {
+    return {
+      denialReason: isMember(authState) ? null : "member",
+      isAllowed: isMember(authState),
+      policy,
+    };
+  }
+
+  if (!hasAdminAccess(authState)) {
+    return {
+      denialReason: "admin",
+      isAllowed: false,
+      policy,
+    };
+  }
+
+  if (!policy.section) {
+    return {
+      denialReason: null,
+      isAllowed: true,
+      policy,
+    };
+  }
+
+  const isAllowed =
+    policy.level === "manage"
+      ? canManageAdminSection(authState, policy.section)
+      : canAccessAdminSection(authState, policy.section);
+
+  return {
+    denialReason: isAllowed ? null : "section",
+    isAllowed,
+    policy,
+  };
+}
+
+export function canAccessRoute(authState: AppAuthState, pathname: string) {
+  return getRouteAuthorization(authState, pathname).isAllowed;
 }
 
 export function getDefaultRedirectForRole(role: AppAuthenticatedRole) {

@@ -1,5 +1,5 @@
 import { AdminInventoryModule } from "@/modules/admin-inventory";
-import { requireAdminSectionAccess } from "@/lib/auth/server";
+import { requireAuthorizedRoute } from "@/lib/auth/server";
 import {
   listAdminInventoryBookOptions,
   listAdminInventoryRecords,
@@ -10,7 +10,7 @@ export const metadata = {
 };
 
 export default async function AdminInventoryPage() {
-  await requireAdminSectionAccess("inventory", "/admin/inventory");
+  await requireAuthorizedRoute("/admin/inventory");
   const [records, bookOptions] = await Promise.all([
     listAdminInventoryRecords(),
     listAdminInventoryBookOptions(),

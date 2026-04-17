@@ -9,6 +9,7 @@ import {
 } from "@/components/admin";
 import { LoadingSkeleton } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
+import { useCanManageAdminSection } from "@/lib/auth/react";
 
 import {
   UserFormDialog,
@@ -25,6 +26,7 @@ function AdminUsersModule({
   isLoading = false,
   records = adminUserRecords,
 }: Readonly<AdminUsersModuleProps>) {
+  const canManageUsers = useCanManageAdminSection("users");
   const {
     clearFilters,
     createFeedback,
@@ -66,6 +68,7 @@ function AdminUsersModule({
             roleOptions={roleOptions}
             onRoleChange={setRoleFilter}
             action={
+              canManageUsers ? (
               <Button
                 type="button"
                 onClick={() => {
@@ -76,6 +79,7 @@ function AdminUsersModule({
                 <Plus aria-hidden="true" className="size-4" />
                 Add account
               </Button>
+              ) : undefined
             }
           />
         }
@@ -125,25 +129,27 @@ function AdminUsersModule({
           />
         ) : (
           <>
-            <UsersCardList users={filteredRecords} />
-            <UsersTable users={filteredRecords} />
+            <UsersCardList canManage={canManageUsers} users={filteredRecords} />
+            <UsersTable canManage={canManageUsers} users={filteredRecords} />
           </>
         )}
       </AdminDataTable>
 
-      <UserFormDialog
-        initialValues={adminUserFormDefaults}
-        isSubmitting={isCreatingUser}
-        onOpenChange={(open) => {
-          setCreateDialogOpen(open);
-          if (!open && submissionError) {
-            dismissCreateFeedback();
-          }
-        }}
-        onSubmit={submitCreateUser}
-        open={isCreateDialogOpen}
-        submissionError={submissionError}
-      />
+      {canManageUsers ? (
+        <UserFormDialog
+          initialValues={adminUserFormDefaults}
+          isSubmitting={isCreatingUser}
+          onOpenChange={(open) => {
+            setCreateDialogOpen(open);
+            if (!open && submissionError) {
+              dismissCreateFeedback();
+            }
+          }}
+          onSubmit={submitCreateUser}
+          open={isCreateDialogOpen}
+          submissionError={submissionError}
+        />
+      ) : null}
     </div>
   );
 }

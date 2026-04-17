@@ -9,6 +9,7 @@ import {
 } from "@/components/admin";
 import { LoadingSkeleton } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
+import { useCanManageAdminSection } from "@/lib/auth/react";
 
 import {
   InventoryCardList,
@@ -26,6 +27,7 @@ function AdminInventoryModule({
   onSaveCopy,
   records,
 }: Readonly<AdminInventoryModuleProps>) {
+  const canManageInventory = useCanManageAdminSection("inventory");
   const {
     clearFilters,
     filteredRecords,
@@ -68,10 +70,12 @@ function AdminInventoryModule({
                 statusOptions={statusOptions}
                 onStatusChange={setStatusFilter}
               />
-              <Button type="button" size="lg" onClick={openCreateForm}>
-                <Plus aria-hidden="true" className="size-4" />
-                Add copy
-              </Button>
+              {canManageInventory ? (
+                <Button type="button" size="lg" onClick={openCreateForm}>
+                  <Plus aria-hidden="true" className="size-4" />
+                  Add copy
+                </Button>
+              ) : null}
             </div>
           }
         />
@@ -92,10 +96,12 @@ function AdminInventoryModule({
               title="No inventory copies yet"
               description="Add the first physical copy to start tracking copy condition, status, and circulation readiness."
               action={
-                <Button type="button" size="sm" onClick={openCreateForm}>
-                  <Plus aria-hidden="true" className="size-4" />
-                  Add first copy
-                </Button>
+                canManageInventory ? (
+                  <Button type="button" size="sm" onClick={openCreateForm}>
+                    <Plus aria-hidden="true" className="size-4" />
+                    Add first copy
+                  </Button>
+                ) : null
               }
             />
           ) : isNoResults ? (
@@ -110,21 +116,29 @@ function AdminInventoryModule({
             />
           ) : (
             <>
-              <InventoryCardList records={filteredRecords} onEditCopy={openEditForm} />
-              <InventoryTable records={filteredRecords} onEditCopy={openEditForm} />
+              <InventoryCardList
+                records={filteredRecords}
+                onEditCopy={canManageInventory ? openEditForm : undefined}
+              />
+              <InventoryTable
+                records={filteredRecords}
+                onEditCopy={canManageInventory ? openEditForm : undefined}
+              />
             </>
           )}
         </AdminDataTable>
       </div>
 
-      <InventoryForm
-        bookOptions={bookOptions}
-        open={isFormOpen}
-        onOpenChange={setIsFormOpen}
-        mode={formMode}
-        initialValues={inventoryFormInitialValues}
-        onSubmit={saveCopy}
-      />
+      {canManageInventory ? (
+        <InventoryForm
+          bookOptions={bookOptions}
+          open={isFormOpen}
+          onOpenChange={setIsFormOpen}
+          mode={formMode}
+          initialValues={inventoryFormInitialValues}
+          onSubmit={saveCopy}
+        />
+      ) : null}
     </>
   );
 }

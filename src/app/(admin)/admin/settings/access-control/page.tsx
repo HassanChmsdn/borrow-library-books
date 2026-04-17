@@ -7,7 +7,7 @@ import {
   getCurrentUser,
   roleAdminSectionDefaults,
 } from "@/lib/auth";
-import { requireAdminSectionManagement } from "@/lib/auth/server";
+import { requireAuthorizedRoute } from "@/lib/auth/server";
 import {
   AdminAccessControlOverridesModule,
   listAdminAccessControlUserRecords,
@@ -33,10 +33,7 @@ function formatPermissionSummary(options: {
 }
 
 export default async function AdminAccessControlPage() {
-  const session = await requireAdminSectionManagement(
-    "accessControl",
-    "/admin/settings/access-control",
-  );
+  const session = await requireAuthorizedRoute("/admin/settings/access-control");
   const currentUser = getCurrentUser(session);
   const staffUsers = await listAdminAccessControlUserRecords();
 

@@ -11,10 +11,11 @@ import { UserTableRow } from "./UserTableRow";
 import type { AdminUserRecord } from "../types";
 
 interface UsersTableProps {
+  canManage: boolean;
   users: ReadonlyArray<AdminUserRecord>;
 }
 
-function UsersTable({ users }: Readonly<UsersTableProps>) {
+function UsersTable({ canManage, users }: Readonly<UsersTableProps>) {
   return (
     <div className="hidden lg:block">
       <AdminTable>
@@ -25,12 +26,14 @@ function UsersTable({ users }: Readonly<UsersTableProps>) {
             <AdminTableHead>Status</AdminTableHead>
             <AdminTableHead>Joined</AdminTableHead>
             <AdminTableHead>Borrowing summary</AdminTableHead>
-            <AdminTableHead className="text-right">Action</AdminTableHead>
+            <AdminTableHead className="text-right">
+              {canManage ? "Action" : "Access"}
+            </AdminTableHead>
           </AdminTableRow>
         </AdminTableHeader>
         <AdminTableBody>
           {users.map((user) => (
-            <UserTableRow key={user.id} user={user} />
+            <UserTableRow key={user.id} canManage={canManage} user={user} />
           ))}
         </AdminTableBody>
       </AdminTable>

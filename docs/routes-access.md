@@ -39,16 +39,16 @@ These routes require authenticated staff access.
 | --- | --- | --- |
 | `/admin/auth` | Public | Admin login route for guest admin access attempts. |
 | `/admin` | Staff only | Admin dashboard. |
-| `/admin/books` | Staff only | Books management page. |
-| `/admin/books/new` | Staff only | Create new book flow. |
-| `/admin/books/[id]` | Staff only | Edit/view book details management flow. |
-| `/admin/categories` | Staff only | Categories management page. |
+| `/admin/books` | Staff only | Books list is section-gated; list access can be read-only when only access permission is granted. |
+| `/admin/books/new` | Staff only | Requires `books` manage permission. |
+| `/admin/books/[id]` | Staff only | Requires `books` manage permission for the edit/details workspace. |
+| `/admin/categories` | Staff only | Category list is section-gated; create and edit controls require `categories` manage permission. |
 | `/admin/borrowings` | Staff only | Borrowings management page. |
 | `/admin/financial` | Staff only | Financial operations page. |
-| `/admin/inventory` | Staff only | Inventory copies management page. |
-| `/admin/settings/access-control` | Staff only | Access-control policy page for authorized staff. |
-| `/admin/users` | Staff only | Users management page. |
-| `/admin/users/[id]` | Staff only | Admin user profile/details page. |
+| `/admin/inventory` | Staff only | Inventory list is section-gated; create and edit controls require `inventory` manage permission. |
+| `/admin/settings/access-control` | Staff only | Requires `accessControl` manage permission. |
+| `/admin/users` | Staff only | Users list is section-gated; create account and profile links require `users` manage permission. |
+| `/admin/users/[id]` | Staff only | Requires `users` manage permission. |
 | `/admin/profile` | Staff only | Current authenticated admin profile page. |
 
 ## Access Rules
@@ -70,16 +70,20 @@ These routes require authenticated staff access.
 ### Staff
 
 - Can access public routes.
-- Can access admin routes under `/admin/*`.
+- Can access admin routes under `/admin/*` only when the matched route policy and section permission allow it.
 - Staff roles currently include `super_admin`, `admin`, `employee`, and `financial`.
 - Section access inside `/admin/*` now resolves from role defaults plus optional per-user overrides stored on the app-user access model.
+- `super_admin` and `admin` resolve to full operational access by default.
+- `employee` resolves to assigned operational sections only.
+- `financial` resolves to the financial section by default and any explicitly granted sections beyond that.
 - Under the current mocked model, staff and member are separate roles. Staff access does not automatically imply member account access unless the auth model is expanded later.
 
 ## Current Guard Behavior
 
 - `/account/*` is protected by mocked member-only access checks.
-- `/admin/*` is protected first by staff-access checks, then by section-level permissions for route groups such as books, users, financial, and access control.
-- Route protection is enforced in both middleware and server-side layout guards.
+- `/admin/*` is protected first by staff-access checks, then by centralized route-policy evaluation that can require either section access or section management depending on the path.
+- The same route policy is used in both middleware and server-side route guards so optimistic redirects and authoritative page checks stay aligned.
+- List pages can remain visible with section access while manage-only controls are hidden in the client through the shared auth hooks.
 - The current mocked auth layer is temporary and structured to be replaced later by Auth0 and MongoDB-backed user/session logic.
 
 ## Canonical Route Summary

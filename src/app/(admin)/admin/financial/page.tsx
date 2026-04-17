@@ -1,12 +1,12 @@
 import { AdminPageHeader, AdminSectionCard } from "@/components/admin";
-import { requireAdminSectionAccess } from "@/lib/auth/server";
+import { requireAuthorizedRoute } from "@/lib/auth/server";
 
 export const metadata = {
   title: "Admin Financial",
 };
 
 export default async function AdminFinancialPage() {
-  await requireAdminSectionAccess("financial", "/admin/financial");
+  await requireAuthorizedRoute("/admin/financial");
 
   return (
     <div className="gap-section flex flex-col">

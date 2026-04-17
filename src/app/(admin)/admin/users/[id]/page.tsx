@@ -2,7 +2,7 @@ import {
   AdminUserProfileEmptyState,
   AdminUserProfileModule,
 } from "@/modules/admin-users";
-import { requireAdminSectionAccess } from "@/lib/auth/server";
+import { requireAuthorizedRoute } from "@/lib/auth/server";
 import {
   getAdminUserProfileRecordByIdFromStore,
   listAdminUserProfileRecords,
@@ -32,8 +32,8 @@ export async function generateStaticParams() {
 export default async function AdminUserProfilePage(
   props: AdminUserProfilePageProps,
 ) {
-  await requireAdminSectionAccess("users", "/admin/users");
   const { id } = await props.params;
+  await requireAuthorizedRoute(`/admin/users/${id}`);
   const user = await getAdminUserProfileRecordByIdFromStore(id);
 
   if (!user) {

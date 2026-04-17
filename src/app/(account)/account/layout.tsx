@@ -4,7 +4,7 @@ import { buildSignOutHref, getCurrentUser } from "@/lib/auth";
 import { MockAuthProvider } from "@/lib/auth/react";
 import { PublicShell, ShellBrand } from "@/components/layout";
 import { Button } from "@/components/ui/button";
-import { requireMemberSession } from "@/lib/auth/server";
+import { requireAuthorizedRoute } from "@/lib/auth/server";
 
 const accountNavigationItems = [
   {
@@ -39,7 +39,7 @@ export default async function AccountSectionLayout({
 }: Readonly<{
   children: ReactNode;
 }>) {
-  const session = await requireMemberSession();
+  const session = await requireAuthorizedRoute("/account");
   const currentUser = getCurrentUser(session);
 
   return (

@@ -23,6 +23,7 @@ import type { AdminBookRecord } from "../types";
 
 interface BooksTableProps {
   books: ReadonlyArray<AdminBookRecord>;
+  canManage: boolean;
   hasActiveFilters: boolean;
   onAddBook?: () => void;
   onClearFilters?: () => void;
@@ -33,10 +34,12 @@ interface BooksTableProps {
 
 function MobileBookCard({
   book,
+  canManage,
   onDeleteBook,
   onEditBook,
 }: Readonly<{
   book: AdminBookRecord;
+  canManage: boolean;
   onDeleteBook?: (book: AdminBookRecord) => void;
   onEditBook?: (book: AdminBookRecord) => void;
 }>) {
@@ -87,34 +90,38 @@ function MobileBookCard({
           </div>
         </div>
 
-        <AdminRowActions
-          align="end"
-          actions={[
-            onEditBook
-              ? {
-                  label: "Edit",
-                  variant: "ghost",
-                  onAction: () => onEditBook(book),
-                }
-              : {
-                  label: "Edit",
-                  variant: "ghost",
-                  href: `/admin/books/${book.id}`,
+        {canManage ? (
+          <AdminRowActions
+            align="end"
+            actions={[
+              onEditBook
+                ? {
+                    label: "Edit",
+                    variant: "ghost",
+                    onAction: () => onEditBook(book),
+                  }
+                : {
+                    label: "Edit",
+                    variant: "ghost",
+                    href: `/admin/books/${book.id}`,
+                  },
+              {
+                label: "Delete",
+                variant: "ghost",
+                confirm: {
+                  title: `Delete ${book.title}?`,
+                  description:
+                    "This is a mock confirmation flow for future API integration. No backend delete action has been wired yet.",
+                  confirmLabel: "Delete book",
+                  tone: "danger",
                 },
-            {
-              label: "Delete",
-              variant: "ghost",
-              confirm: {
-                title: `Delete ${book.title}?`,
-                description:
-                  "This is a mock confirmation flow for future API integration. No backend delete action has been wired yet.",
-                confirmLabel: "Delete book",
-                tone: "danger",
+                onAction: onDeleteBook ? () => onDeleteBook(book) : undefined,
               },
-              onAction: onDeleteBook ? () => onDeleteBook(book) : undefined,
-            },
-          ]}
-        />
+            ]}
+          />
+        ) : (
+          <p className="text-body-sm text-text-tertiary text-right">View only</p>
+        )}
       </CardContent>
     </Card>
   );
@@ -122,6 +129,7 @@ function MobileBookCard({
 
 function BooksTable({
   books,
+  canManage,
   hasActiveFilters,
   onAddBook,
   onClearFilters,
@@ -135,9 +143,11 @@ function BooksTable({
         title="No books in the catalog yet"
         description="Start the catalog with your first title. New books created here are stored in MongoDB and appear in both admin and public views."
         action={
+          canManage ? (
           <Button type="button" size="sm" onClick={onAddBook}>
             Add book
           </Button>
+          ) : null
         }
       />
     );
@@ -166,6 +176,7 @@ function BooksTable({
           <MobileBookCard
             key={book.id}
             book={book}
+            canManage={canManage}
             onDeleteBook={onDeleteBook}
             onEditBook={onEditBook}
           />
@@ -181,7 +192,9 @@ function BooksTable({
               <AdminTableHead>Fee</AdminTableHead>
               <AdminTableHead>Copies</AdminTableHead>
               <AdminTableHead>Status</AdminTableHead>
-              <AdminTableHead className="text-right">Actions</AdminTableHead>
+              <AdminTableHead className="text-right">
+                {canManage ? "Actions" : "Access"}
+              </AdminTableHead>
             </AdminTableRow>
           </AdminTableHeader>
           <AdminTableBody>
@@ -189,6 +202,7 @@ function BooksTable({
               <BookTableRow
                 key={book.id}
                 book={book}
+                canManage={canManage}
                 onDeleteBook={onDeleteBook}
                 onEditBook={onEditBook}
               />

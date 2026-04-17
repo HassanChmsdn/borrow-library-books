@@ -1,5 +1,5 @@
 import { AdminBooksModule } from "@/modules/admin-books";
-import { requireAdminSectionAccess } from "@/lib/auth/server";
+import { requireAuthorizedRoute } from "@/lib/auth/server";
 import { listAdminBookRecords } from "@/modules/admin-books/server";
 
 export const metadata = {
@@ -7,7 +7,7 @@ export const metadata = {
 };
 
 export default async function AdminBooksPage() {
-  await requireAdminSectionAccess("books", "/admin/books");
+  await requireAuthorizedRoute("/admin/books");
   const records = await listAdminBookRecords();
 
   return <AdminBooksModule records={records} />;

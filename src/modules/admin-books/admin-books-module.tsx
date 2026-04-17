@@ -8,6 +8,7 @@ import {
 } from "@/components/admin";
 import { LoadingSkeleton } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
+import { useCanManageAdminSection } from "@/lib/auth/react";
 
 import {
   BooksTable,
@@ -23,6 +24,7 @@ function AdminBooksModule({
   onEditBook,
   records,
 }: AdminBooksModuleProps) {
+  const canManageBooks = useCanManageAdminSection("books");
   const {
     allRecordsCount,
     books,
@@ -46,15 +48,17 @@ function AdminBooksModule({
         title="Book management"
         description="Manage titles, copy availability, and borrowing fees in a dense but readable catalog workspace prepared for future backend workflows."
         actions={
-          onAddBook ? (
-            <Button size="sm" type="button" onClick={onAddBook}>
-              Add book
-            </Button>
-          ) : (
-            <Button asChild size="sm">
-              <Link href="/admin/books/new">Add book</Link>
-            </Button>
-          )
+          canManageBooks
+            ? onAddBook ? (
+                <Button size="sm" type="button" onClick={onAddBook}>
+                  Add book
+                </Button>
+              ) : (
+                <Button asChild size="sm">
+                  <Link href="/admin/books/new">Add book</Link>
+                </Button>
+              )
+            : undefined
         }
         controls={
           <BooksToolbar
@@ -87,11 +91,12 @@ function AdminBooksModule({
       >
         <BooksTable
           books={books}
+          canManage={canManageBooks}
           hasActiveFilters={hasActiveFilters}
-          onAddBook={onAddBook}
+          onAddBook={canManageBooks ? onAddBook : undefined}
           onClearFilters={clearFilters}
-          onDeleteBook={onDeleteBook}
-          onEditBook={onEditBook}
+          onDeleteBook={canManageBooks ? onDeleteBook : undefined}
+          onEditBook={canManageBooks ? onEditBook : undefined}
           totalRecords={allRecordsCount}
         />
       </AdminDataTable>

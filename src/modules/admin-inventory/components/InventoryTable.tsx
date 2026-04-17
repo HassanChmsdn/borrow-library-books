@@ -31,7 +31,9 @@ function InventoryTable({
             <AdminTableHead>Book</AdminTableHead>
             <AdminTableHead>Condition</AdminTableHead>
             <AdminTableHead>Status</AdminTableHead>
-            <AdminTableHead className="text-right">Actions</AdminTableHead>
+            <AdminTableHead className="text-right">
+              {onEditCopy ? "Actions" : "Access"}
+            </AdminTableHead>
           </AdminTableRow>
         </AdminTableHeader>
         <AdminTableBody>
@@ -64,18 +66,20 @@ function InventoryTable({
                 <InventoryStatusBadge status={record.status} />
               </AdminTableCell>
               <AdminTableCell className="text-right">
-                <AdminRowActions
-                  align="end"
-                  actions={[
-                    {
-                      label: "Edit",
-                      onAction: onEditCopy
-                        ? () => onEditCopy(record)
-                        : undefined,
-                      variant: "outline",
-                    },
-                  ]}
-                />
+                {onEditCopy ? (
+                  <AdminRowActions
+                    align="end"
+                    actions={[
+                      {
+                        label: "Edit",
+                        onAction: () => onEditCopy(record),
+                        variant: "outline",
+                      },
+                    ]}
+                  />
+                ) : (
+                  <p className="text-body-sm text-text-tertiary">View only</p>
+                )}
               </AdminTableCell>
             </AdminTableRow>
           ))}

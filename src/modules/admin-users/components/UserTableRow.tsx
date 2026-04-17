@@ -11,11 +11,12 @@ import { UserStatusBadge } from "./UserStatusBadge";
 import type { AdminUserRecord } from "../types";
 
 interface UserTableRowProps {
+  canManage: boolean;
   user: AdminUserRecord;
 }
 
-function UserTableRow({ user }: Readonly<UserTableRowProps>) {
-  const actions = user.profileHref
+function UserTableRow({ canManage, user }: Readonly<UserTableRowProps>) {
+  const actions = canManage && user.profileHref
     ? [
         {
           label: "Open profile",
@@ -23,13 +24,13 @@ function UserTableRow({ user }: Readonly<UserTableRowProps>) {
           variant: "ghost" as const,
         },
       ]
-    : [
+    : canManage ? [
         {
           label: "Profile pending",
           disabled: true,
           variant: "ghost" as const,
         },
-      ];
+      ] : [];
 
   return (
     <AdminTableRow>
@@ -60,7 +61,11 @@ function UserTableRow({ user }: Readonly<UserTableRowProps>) {
         </div>
       </AdminTableCell>
       <AdminTableCell className="text-right">
-        <AdminRowActions align="end" actions={actions} />
+        {canManage ? (
+          <AdminRowActions align="end" actions={actions} />
+        ) : (
+          <p className="text-body-sm text-text-tertiary">View only</p>
+        )}
       </AdminTableCell>
     </AdminTableRow>
   );

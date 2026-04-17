@@ -16,6 +16,17 @@ export type ResolvedAppSectionPermissions = Record<
   ResolvedAppSectionPermission
 >;
 
+export type AppRouteAccessAudience = "public" | "member" | "admin";
+export type AppRouteAccessLevel = "access" | "manage";
+
+export interface AppRouteAccessPolicy {
+  audience: AppRouteAccessAudience;
+  level?: AppRouteAccessLevel;
+  matchStrategy: "exact" | "prefix";
+  pathname: string;
+  section?: AppAdminSection;
+}
+
 function createResolvedSectionPermission(
   canAccess = false,
   canManage = false,
@@ -271,34 +282,122 @@ export function getAdminSectionRoute(section: AppAdminSection) {
   }
 }
 
+export const APP_ROUTE_ACCESS_POLICIES: ReadonlyArray<AppRouteAccessPolicy> = [
+  {
+    audience: "public",
+    matchStrategy: "exact",
+    pathname: "/admin/auth",
+  },
+  {
+    audience: "member",
+    matchStrategy: "prefix",
+    pathname: "/account",
+  },
+  {
+    audience: "admin",
+    level: "manage",
+    matchStrategy: "prefix",
+    pathname: "/admin/settings/access-control",
+    section: "accessControl",
+  },
+  {
+    audience: "admin",
+    level: "manage",
+    matchStrategy: "prefix",
+    pathname: "/admin/books/",
+    section: "books",
+  },
+  {
+    audience: "admin",
+    level: "manage",
+    matchStrategy: "prefix",
+    pathname: "/admin/users/",
+    section: "users",
+  },
+  {
+    audience: "admin",
+    level: "access",
+    matchStrategy: "exact",
+    pathname: "/admin/books",
+    section: "books",
+  },
+  {
+    audience: "admin",
+    level: "access",
+    matchStrategy: "exact",
+    pathname: "/admin/borrowings",
+    section: "borrowings",
+  },
+  {
+    audience: "admin",
+    level: "access",
+    matchStrategy: "exact",
+    pathname: "/admin/categories",
+    section: "categories",
+  },
+  {
+    audience: "admin",
+    level: "access",
+    matchStrategy: "exact",
+    pathname: "/admin/inventory",
+    section: "inventory",
+  },
+  {
+    audience: "admin",
+    level: "access",
+    matchStrategy: "exact",
+    pathname: "/admin/users",
+    section: "users",
+  },
+  {
+    audience: "admin",
+    level: "access",
+    matchStrategy: "prefix",
+    pathname: "/admin/financial",
+    section: "financial",
+  },
+  {
+    audience: "admin",
+    matchStrategy: "exact",
+    pathname: "/admin/profile",
+  },
+  {
+    audience: "admin",
+    matchStrategy: "exact",
+    pathname: "/admin",
+  },
+];
+
+function normalizeRoutePathname(pathname: string) {
+  if (!pathname || pathname === "/") {
+    return "/";
+  }
+
+  return pathname.replace(/\/+$/, "") || "/";
+}
+
+function matchesRoutePolicy(pathname: string, policy: AppRouteAccessPolicy) {
+  if (policy.matchStrategy === "exact") {
+    return pathname === policy.pathname;
+  }
+
+  if (policy.pathname.endsWith("/")) {
+    return pathname.startsWith(policy.pathname);
+  }
+
+  return pathname === policy.pathname || pathname.startsWith(`${policy.pathname}/`);
+}
+
+export function getRouteAccessPolicy(pathname: string) {
+  const normalizedPathname = normalizeRoutePathname(pathname);
+
+  return (
+    APP_ROUTE_ACCESS_POLICIES.find((policy) =>
+      matchesRoutePolicy(normalizedPathname, policy),
+    ) ?? null
+  );
+}
+
 export function getAdminSectionFromPathname(pathname: string) {
-  if (pathname.startsWith("/admin/settings/access-control")) {
-    return "accessControl" as const;
-  }
-
-  if (pathname.startsWith("/admin/financial")) {
-    return "financial" as const;
-  }
-
-  if (pathname.startsWith("/admin/books")) {
-    return "books" as const;
-  }
-
-  if (pathname.startsWith("/admin/borrowings")) {
-    return "borrowings" as const;
-  }
-
-  if (pathname.startsWith("/admin/categories")) {
-    return "categories" as const;
-  }
-
-  if (pathname.startsWith("/admin/inventory")) {
-    return "inventory" as const;
-  }
-
-  if (pathname.startsWith("/admin/users")) {
-    return "users" as const;
-  }
-
-  return null;
+  return getRouteAccessPolicy(pathname)?.section ?? null;
 }

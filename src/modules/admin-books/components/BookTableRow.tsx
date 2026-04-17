@@ -16,6 +16,7 @@ import type { AdminBookRecord } from "../types";
 
 interface BookTableRowProps {
   book: AdminBookRecord;
+  canManage: boolean;
   onDeleteBook?: (book: AdminBookRecord) => void;
   onEditBook?: (book: AdminBookRecord) => void;
 }
@@ -44,6 +45,7 @@ function CategoryBadge({
 
 function BookTableRow({
   book,
+  canManage,
   onDeleteBook,
   onEditBook,
 }: BookTableRowProps) {
@@ -93,34 +95,38 @@ function BookTableRow({
         <AdminStatusBadge label={book.statusLabel} tone={book.statusTone} />
       </AdminTableCell>
       <AdminTableCell className="text-right">
-        <AdminRowActions
-          align="end"
-          actions={[
-            onEditBook
-              ? {
-                  label: "Edit",
-                  variant: "ghost",
-                  onAction: () => onEditBook(book),
-                }
-              : {
-                  label: "Edit",
-                  variant: "ghost",
-                  href: `/admin/books/${book.id}`,
+        {canManage ? (
+          <AdminRowActions
+            align="end"
+            actions={[
+              onEditBook
+                ? {
+                    label: "Edit",
+                    variant: "ghost",
+                    onAction: () => onEditBook(book),
+                  }
+                : {
+                    label: "Edit",
+                    variant: "ghost",
+                    href: `/admin/books/${book.id}`,
+                  },
+              {
+                label: "Delete",
+                variant: "ghost",
+                confirm: {
+                  title: `Delete ${book.title}?`,
+                  description:
+                    "Delete this catalog title. Books with borrowing history remain protected from destructive removal.",
+                  confirmLabel: "Delete book",
+                  tone: "danger",
                 },
-            {
-              label: "Delete",
-              variant: "ghost",
-              confirm: {
-                title: `Delete ${book.title}?`,
-                description:
-                  "Delete this catalog title. Books with borrowing history remain protected from destructive removal.",
-                confirmLabel: "Delete book",
-                tone: "danger",
+                onAction: onDeleteBook ? () => onDeleteBook(book) : undefined,
               },
-              onAction: onDeleteBook ? () => onDeleteBook(book) : undefined,
-            },
-          ]}
-        />
+            ]}
+          />
+        ) : (
+          <p className="text-body-sm text-text-tertiary">View only</p>
+        )}
       </AdminTableCell>
     </AdminTableRow>
   );

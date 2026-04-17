@@ -1,4 +1,5 @@
 export {
+  canAccessRoute,
   MOCK_AUTH_COOKIE,
   canAccessAdminSection,
   canManageAdminSection,
@@ -22,6 +23,7 @@ export {
   getCurrentUser,
   getDefaultRedirectForRole,
   getMockCurrentUser,
+  getRouteAuthorization,
   isSuperAdmin,
   isStaff,
   isAdmin,
@@ -39,6 +41,7 @@ export {
   type AppAuthSource,
   type AppAuthState,
   type AppAuthUser,
+  type AppRouteAuthorizationResult,
   type MockAuthenticatedRole,
   type MockAuthRole,
   type MockAuthState,
@@ -47,6 +50,7 @@ export {
 } from "./mock-auth";
 
 export {
+  APP_ROUTE_ACCESS_POLICIES,
   canAccessAdminSectionRole,
   canManageAccessControlRole,
   canManageAdminSectionRole,
@@ -60,8 +64,12 @@ export {
   getAdminSectionFromPathname,
   getAdminSectionLabel,
   getAdminSectionRoute,
+  getRouteAccessPolicy,
   getResolvedAdminSectionPermissions,
   roleAdminSectionDefaults,
+  type AppRouteAccessAudience,
+  type AppRouteAccessLevel,
+  type AppRouteAccessPolicy,
   type ResolvedAppSectionPermission,
   type ResolvedAppSectionPermissions,
 } from "./permissions";

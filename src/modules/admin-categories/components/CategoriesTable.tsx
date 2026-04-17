@@ -15,11 +15,12 @@ import type { AdminCategoryRecord } from "../types";
 
 interface CategoriesTableProps {
   categories: ReadonlyArray<AdminCategoryRecord>;
+  canManage: boolean;
   hasActiveFilters: boolean;
-  onAddCategory: () => void;
+  onAddCategory?: () => void;
   onClearFilters: () => void;
-  onDeleteCategory: (category: AdminCategoryRecord) => void;
-  onEditCategory: (category: AdminCategoryRecord) => void;
+  onDeleteCategory?: (category: AdminCategoryRecord) => void;
+  onEditCategory?: (category: AdminCategoryRecord) => void;
   totalRecords: number;
 }
 
@@ -33,12 +34,14 @@ function CategoryBookCountBadge({ count }: Readonly<{ count: number }>) {
 
 function MobileCategoryCard({
   category,
+  canManage,
   onDeleteCategory,
   onEditCategory,
 }: Readonly<{
   category: AdminCategoryRecord;
-  onDeleteCategory: (category: AdminCategoryRecord) => void;
-  onEditCategory: (category: AdminCategoryRecord) => void;
+  canManage: boolean;
+  onDeleteCategory?: (category: AdminCategoryRecord) => void;
+  onEditCategory?: (category: AdminCategoryRecord) => void;
 }>) {
   return (
     <Card>
@@ -61,27 +64,31 @@ function MobileCategoryCard({
           <CategoryBookCountBadge count={category.bookCount} />
         </div>
 
-        <AdminRowActions
-          align="end"
-          actions={[
-            {
-              label: "Edit",
-              onAction: () => onEditCategory(category),
-            },
-            {
-              label: "Delete",
-              onAction: () => onDeleteCategory(category),
-              confirm: {
-                title: `Delete ${category.name}?`,
-                description:
-                  "This is still a mock delete flow. Later it can be connected to a real category removal request.",
-                confirmLabel: "Delete category",
-                tone: "danger",
+        {canManage ? (
+          <AdminRowActions
+            align="end"
+            actions={[
+              {
+                label: "Edit",
+                onAction: onEditCategory ? () => onEditCategory(category) : undefined,
               },
-              variant: "destructive",
-            },
-          ]}
-        />
+              {
+                label: "Delete",
+                onAction: onDeleteCategory ? () => onDeleteCategory(category) : undefined,
+                confirm: {
+                  title: `Delete ${category.name}?`,
+                  description:
+                    "This is still a mock delete flow. Later it can be connected to a real category removal request.",
+                  confirmLabel: "Delete category",
+                  tone: "danger",
+                },
+                variant: "destructive",
+              },
+            ]}
+          />
+        ) : (
+          <p className="text-body-sm text-text-tertiary text-right">View only</p>
+        )}
       </CardContent>
     </Card>
   );
@@ -89,6 +96,7 @@ function MobileCategoryCard({
 
 function CategoriesTable({
   categories,
+  canManage,
   hasActiveFilters,
   onAddCategory,
   onClearFilters,
@@ -102,9 +110,11 @@ function CategoriesTable({
         title="No categories yet"
         description="Create the first category to organize public browsing groups and future catalog workflows."
         action={
-          <Button size="sm" type="button" onClick={onAddCategory}>
-            Add category
-          </Button>
+          canManage ? (
+            <Button size="sm" type="button" onClick={onAddCategory}>
+              Add category
+            </Button>
+          ) : null
         }
       />
     );
@@ -133,6 +143,7 @@ function CategoriesTable({
           <MobileCategoryCard
             key={category.id}
             category={category}
+            canManage={canManage}
             onDeleteCategory={onDeleteCategory}
             onEditCategory={onEditCategory}
           />
@@ -146,7 +157,9 @@ function CategoriesTable({
               <AdminTableHead>Category name</AdminTableHead>
               <AdminTableHead>Description</AdminTableHead>
               <AdminTableHead>Book count</AdminTableHead>
-              <AdminTableHead className="text-right">Actions</AdminTableHead>
+              <AdminTableHead className="text-right">
+                {canManage ? "Actions" : "Access"}
+              </AdminTableHead>
             </AdminTableRow>
           </AdminTableHeader>
           <AdminTableBody>
@@ -166,27 +179,31 @@ function CategoriesTable({
                   <CategoryBookCountBadge count={category.bookCount} />
                 </AdminTableCell>
                 <AdminTableCell className="text-right">
-                  <AdminRowActions
-                    align="end"
-                    actions={[
-                      {
-                        label: "Edit",
-                        onAction: () => onEditCategory(category),
-                      },
-                      {
-                        label: "Delete",
-                        onAction: () => onDeleteCategory(category),
-                        confirm: {
-                          title: `Delete ${category.name}?`,
-                          description:
-                            "This is still a mock delete flow. Later it can be connected to a real category removal request.",
-                          confirmLabel: "Delete category",
-                          tone: "danger",
+                  {canManage ? (
+                    <AdminRowActions
+                      align="end"
+                      actions={[
+                        {
+                          label: "Edit",
+                          onAction: onEditCategory ? () => onEditCategory(category) : undefined,
                         },
-                        variant: "destructive",
-                      },
-                    ]}
-                  />
+                        {
+                          label: "Delete",
+                          onAction: onDeleteCategory ? () => onDeleteCategory(category) : undefined,
+                          confirm: {
+                            title: `Delete ${category.name}?`,
+                            description:
+                              "This is still a mock delete flow. Later it can be connected to a real category removal request.",
+                            confirmLabel: "Delete category",
+                            tone: "danger",
+                          },
+                          variant: "destructive",
+                        },
+                      ]}
+                    />
+                  ) : (
+                    <p className="text-body-sm text-text-tertiary">View only</p>
+                  )}
                 </AdminTableCell>
               </AdminTableRow>
             ))}

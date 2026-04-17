@@ -2,13 +2,10 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import {
-  canAccessAdminSection,
   buildMockSignInHref,
   createGuestAuthState,
   createMockAuthState,
-  getAdminSectionFromPathname,
-  hasAdminAccess,
-  isMember,
+  getRouteAuthorization,
   MOCK_AUTH_COOKIE,
 } from "@/lib/auth";
 import { createAuth0AuthState, getAuth0SessionForRequest } from "@/lib/auth/auth0";
@@ -22,12 +19,19 @@ export async function middleware(request: NextRequest) {
     : createMockAuthState(request.cookies.get(MOCK_AUTH_COOKIE)?.value);
   const redirectTo = `${pathname}${request.nextUrl.search}`;
 
-  if (pathname === "/admin/auth") {
-    return NextResponse.next();
-  }
+  const authorization = getRouteAuthorization(authState, pathname);
 
-  if (pathname.startsWith("/admin")) {
-    if (!hasAdminAccess(authState)) {
+  if (!authorization.isAllowed) {
+    if (authorization.denialReason === "member") {
+      return NextResponse.redirect(
+        new URL(
+          buildMockSignInHref({ role: "member", redirectTo }),
+          request.url,
+        ),
+      );
+    }
+
+    if (authorization.denialReason === "admin") {
       return NextResponse.redirect(
         new URL(
           buildMockSignInHref({ role: "admin", redirectTo }),
@@ -36,20 +40,7 @@ export async function middleware(request: NextRequest) {
       );
     }
 
-    const section = getAdminSectionFromPathname(pathname);
-
-    if (section && !canAccessAdminSection(authState, section)) {
-      return NextResponse.redirect(new URL("/admin", request.url));
-    }
-  }
-
-  if (pathname.startsWith("/account") && !isMember(authState)) {
-    return NextResponse.redirect(
-      new URL(
-        buildMockSignInHref({ role: "member", redirectTo }),
-        request.url,
-      ),
-    );
+    return NextResponse.redirect(new URL("/admin", request.url));
   }
 
   return NextResponse.next();

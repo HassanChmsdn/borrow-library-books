@@ -6,6 +6,7 @@ import {
 } from "@/components/admin";
 import { LoadingSkeleton } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
+import { useCanManageAdminSection } from "@/lib/auth/react";
 
 import { CategoriesTable, CategoriesToolbar, CategoryFormDialog } from "./components";
 import { getAdminCategoryDefaultValues } from "./mock-data";
@@ -20,6 +21,7 @@ function AdminCategoriesModule({
   onUpdateCategory,
   searchQuery,
 }: AdminCategoriesModuleProps) {
+  const canManageCategories = useCanManageAdminSection("categories");
   const {
     deleteCategory,
     dialogState,
@@ -52,9 +54,11 @@ function AdminCategoriesModule({
         title="Category management"
         description="Organize browse groupings, keep collection descriptions consistent, and prepare category records for future CRUD-backed staff workflows."
         actions={
-          <Button size="sm" type="button" onClick={openCreateDialog}>
-            Add category
-          </Button>
+          canManageCategories ? (
+            <Button size="sm" type="button" onClick={openCreateDialog}>
+              Add category
+            </Button>
+          ) : undefined
         }
         controls={
           <CategoriesToolbar
@@ -84,16 +88,17 @@ function AdminCategoriesModule({
       >
         <CategoriesTable
           categories={filteredRecords}
+          canManage={canManageCategories}
           hasActiveFilters={searchValue.trim().length > 0}
-          onAddCategory={openCreateDialog}
+          onAddCategory={canManageCategories ? openCreateDialog : undefined}
           onClearFilters={() => setSearchValue("")}
-          onDeleteCategory={deleteCategory}
-          onEditCategory={openEditDialog}
+          onDeleteCategory={canManageCategories ? deleteCategory : undefined}
+          onEditCategory={canManageCategories ? openEditDialog : undefined}
           totalRecords={records.length}
         />
       </AdminDataTable>
 
-      {dialogState ? (
+      {canManageCategories && dialogState ? (
         <CategoryFormDialog
           open
           mode={dialogState.mode}

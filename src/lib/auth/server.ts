@@ -10,6 +10,7 @@ import {
   createGuestAuthState,
   createMockAuthState,
   getCurrentRole,
+  getRouteAuthorization,
   getCurrentUser,
   isAdmin,
   isAuthenticated,
@@ -60,6 +61,35 @@ export async function getCurrentUserSession() {
 
 export async function getCurrentSessionRole() {
   return getCurrentRole(await getCurrentSession());
+}
+
+export async function requireAuthorizedRoute(pathname: string) {
+  const session = await getCurrentSession();
+  const authorization = getRouteAuthorization(session, pathname);
+
+  if (authorization.isAllowed) {
+    return session;
+  }
+
+  if (authorization.denialReason === "member") {
+    redirect(
+      buildMockSignInHref({
+        role: "member",
+        redirectTo: pathname,
+      }),
+    );
+  }
+
+  if (authorization.denialReason === "admin") {
+    redirect(
+      buildMockSignInHref({
+        role: "admin",
+        redirectTo: pathname,
+      }),
+    );
+  }
+
+  redirect("/admin");
 }
 
 export async function getMockAuthFlags() {

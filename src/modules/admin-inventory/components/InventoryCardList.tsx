@@ -46,16 +46,20 @@ function InventoryCardList({
             <InventoryConditionBadge condition={record.condition} />
           </div>
 
-          <AdminRowActions
-            align="end"
-            actions={[
-              {
-                label: "Edit",
-                onAction: onEditCopy ? () => onEditCopy(record) : undefined,
-                variant: "outline",
-              },
-            ]}
-          />
+          {onEditCopy ? (
+            <AdminRowActions
+              align="end"
+              actions={[
+                {
+                  label: "Edit",
+                  onAction: () => onEditCopy(record),
+                  variant: "outline",
+                },
+              ]}
+            />
+          ) : (
+            <p className="text-body-sm text-text-tertiary text-right">View only</p>
+          )}
         </AdminSectionCard>
       ))}
     </div>

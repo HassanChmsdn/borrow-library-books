@@ -11,14 +11,15 @@ import { UserStatusBadge } from "./UserStatusBadge";
 import type { AdminUserRecord } from "../types";
 
 interface UsersCardListProps {
+  canManage: boolean;
   users: ReadonlyArray<AdminUserRecord>;
 }
 
-function UsersCardList({ users }: Readonly<UsersCardListProps>) {
+function UsersCardList({ canManage, users }: Readonly<UsersCardListProps>) {
   return (
     <div className="grid gap-3 lg:hidden">
       {users.map((user) => {
-        const actions = user.profileHref
+        const actions = canManage && user.profileHref
           ? [
               {
                 label: "Open profile",
@@ -26,13 +27,13 @@ function UsersCardList({ users }: Readonly<UsersCardListProps>) {
                 variant: "ghost" as const,
               },
             ]
-          : [
+          : canManage ? [
               {
                 label: "Profile pending",
                 disabled: true,
                 variant: "ghost" as const,
               },
-            ];
+            ] : [];
 
         return (
           <Card key={user.id}>
@@ -64,7 +65,11 @@ function UsersCardList({ users }: Readonly<UsersCardListProps>) {
                 ]}
               />
 
-              <AdminRowActions align="end" actions={actions} />
+              {canManage ? (
+                <AdminRowActions align="end" actions={actions} />
+              ) : (
+                <p className="text-body-sm text-text-tertiary text-right">View only</p>
+              )}
             </CardContent>
           </Card>
         );
