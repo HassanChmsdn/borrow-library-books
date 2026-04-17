@@ -2,6 +2,7 @@ import { ObjectId } from "mongodb";
 import { z } from "zod";
 
 import {
+  AppAdminSectionAccessSchema,
   AppUserAccessConfigSchema,
   APP_USER_ROLE_VALUES,
   AppUserRoleSchema,
@@ -59,7 +60,12 @@ export type BorrowRequestStatus = z.infer<typeof BorrowRequestStatusSchema>;
 export const PaymentMethodSchema = z.enum(["onsite-cash"]);
 export type PaymentMethod = z.infer<typeof PaymentMethodSchema>;
 
-export const PaymentStatusSchema = z.enum(["unpaid", "pending", "paid", "waived"]);
+export const PaymentStatusSchema = z.enum([
+  "unpaid",
+  "pending",
+  "paid",
+  "waived",
+]);
 export type PaymentStatus = z.infer<typeof PaymentStatusSchema>;
 
 export type DatabaseId = ObjectId | string;
@@ -95,6 +101,13 @@ export const UserDocumentSchema = BaseDocumentSchema.extend({
 });
 
 export type UserDocument = z.infer<typeof UserDocumentSchema>;
+
+export const AccessPolicyDocumentSchema = BaseDocumentSchema.extend({
+  role: AppUserRoleSchema,
+  sections: AppAdminSectionAccessSchema.optional(),
+});
+
+export type AccessPolicyDocument = z.infer<typeof AccessPolicyDocumentSchema>;
 
 export const CreateUserInputSchema = UserDocumentSchema.omit({
   _id: true,
@@ -134,7 +147,9 @@ export const BookPublicationMetadataSchema = z
   })
   .partial();
 
-export type BookPublicationMetadata = z.infer<typeof BookPublicationMetadataSchema>;
+export type BookPublicationMetadata = z.infer<
+  typeof BookPublicationMetadataSchema
+>;
 
 export const BookDocumentSchema = BaseDocumentSchema.extend({
   allowCustomDuration: z.boolean(),
@@ -224,7 +239,9 @@ export const CreateBorrowRequestInputSchema = BorrowRequestDocumentSchema.omit({
   requestedAt: z.date().optional(),
   status: BorrowRequestStatusSchema.default("pending"),
 });
-export type CreateBorrowRequestInput = z.infer<typeof CreateBorrowRequestInputSchema>;
+export type CreateBorrowRequestInput = z.infer<
+  typeof CreateBorrowRequestInputSchema
+>;
 
 export const UpdateBorrowRequestInputSchema = BorrowRequestDocumentSchema.omit({
   _id: true,
@@ -235,4 +252,6 @@ export const UpdateBorrowRequestInputSchema = BorrowRequestDocumentSchema.omit({
   bookId: true,
   bookCopyId: true,
 }).partial();
-export type UpdateBorrowRequestInput = z.infer<typeof UpdateBorrowRequestInputSchema>;
+export type UpdateBorrowRequestInput = z.infer<
+  typeof UpdateBorrowRequestInputSchema
+>;

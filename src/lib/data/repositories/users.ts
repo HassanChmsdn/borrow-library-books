@@ -1,12 +1,5 @@
-import type {
-  AppUserAccessConfig,
-  AppUserRole,
-  AppUserStatus,
-} from "@/lib/db";
-import {
-  getAppRoleAccountLabel,
-  hasAdminAccessRole,
-} from "@/lib/auth/roles";
+import type { AppUserAccessConfig, AppUserRole, AppUserStatus } from "@/lib/db";
+import { getAppRoleAccountLabel, hasAdminAccessRole } from "@/lib/auth/roles";
 import { adminSharedUsers } from "@/modules/admin-shared/mock-data";
 
 type UserManagementRole = "user" | "admin";
@@ -36,8 +29,8 @@ function toUserManagementRole(role: AppUserRole): UserManagementRole {
   return hasAdminAccessRole(role) ? "admin" : "user";
 }
 
-const visibleUserRecords: ReadonlyArray<UserRepositoryRecord> = adminSharedUsers.map(
-  (user) => ({
+const visibleUserRecords: ReadonlyArray<UserRepositoryRecord> =
+  adminSharedUsers.map((user) => ({
     auth0UserId:
       user.id === "sara-chehab"
         ? "auth0|member-sara-chehab"
@@ -56,8 +49,7 @@ const visibleUserRecords: ReadonlyArray<UserRepositoryRecord> = adminSharedUsers
     subtitle: user.membershipLabel,
     visibleInAdminDirectory: true,
     ...(user.id === "sara-chehab" ? { mockRole: "member" as const } : {}),
-  }),
-);
+  }));
 
 const hiddenAuthUsers: ReadonlyArray<UserRepositoryRecord> = [
   {
@@ -129,16 +121,35 @@ const hiddenAuthUsers: ReadonlyArray<UserRepositoryRecord> = [
 const userRecords = [...visibleUserRecords, ...hiddenAuthUsers] as const;
 
 const mockUserAccessOverrides = new Map<string, AppUserAccessConfig | null>();
+const mockUserRoleOverrides = new Map<string, AppUserRole>();
+
+function applyMockUserRoleOverride(record: UserRepositoryRecord) {
+  if (!mockUserRoleOverrides.has(record.id)) {
+    return record;
+  }
+
+  const role = mockUserRoleOverrides.get(record.id) ?? record.role;
+
+  return {
+    ...record,
+    managementRole: toUserManagementRole(role),
+    membershipLabel: getAppRoleAccountLabel(role),
+    role,
+    subtitle: getAppRoleAccountLabel(role),
+  } satisfies UserRepositoryRecord;
+}
 
 function applyMockUserAccessOverride(record: UserRepositoryRecord) {
+  const roleAdjustedRecord = applyMockUserRoleOverride(record);
+
   if (!mockUserAccessOverrides.has(record.id)) {
-    return record;
+    return roleAdjustedRecord;
   }
 
   const access = mockUserAccessOverrides.get(record.id) ?? undefined;
 
   return {
-    ...record,
+    ...roleAdjustedRecord,
     access,
   } satisfies UserRepositoryRecord;
 }
@@ -184,6 +195,18 @@ export function setMockUserAccessConfig(
   } else {
     mockUserAccessOverrides.set(userId, null);
   }
+
+  return applyMockUserAccessOverride(record);
+}
+
+export function setMockUserRole(userId: string, role: AppUserRole) {
+  const record = userRecords.find((user) => user.id === userId);
+
+  if (!record) {
+    return null;
+  }
+
+  mockUserRoleOverrides.set(userId, role);
 
   return applyMockUserAccessOverride(record);
 }

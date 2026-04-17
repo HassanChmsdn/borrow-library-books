@@ -12,8 +12,13 @@ import {
 import {
   createAppAuthUser,
   createAuthenticatedAuthState,
+  type AppAuthenticatedRole,
   type AppAuthState,
 } from "./mock-auth";
+import {
+  roleAdminSectionDefaults,
+  type ResolvedAppSectionPermissions,
+} from "./permissions";
 
 export interface Auth0LoginHrefOptions {
   connection?: string;
@@ -70,9 +75,9 @@ let auth0Client: Auth0Client | null | undefined;
 export function isAuth0Configured() {
   return Boolean(
     env.AUTH0_DOMAIN &&
-      env.AUTH0_CLIENT_ID &&
-      env.AUTH0_CLIENT_SECRET &&
-      env.AUTH0_SECRET,
+    env.AUTH0_CLIENT_ID &&
+    env.AUTH0_CLIENT_SECRET &&
+    env.AUTH0_SECRET,
   );
 }
 
@@ -132,7 +137,9 @@ async function getPendingMemberRegistrationName() {
   );
 }
 
-async function resolveAuth0AppUser(user: Record<string, unknown> | null | undefined) {
+async function resolveAuth0AppUser(
+  user: Record<string, unknown> | null | undefined,
+) {
   const subject = typeof user?.sub === "string" ? user.sub : null;
 
   if (!subject) {
@@ -140,7 +147,9 @@ async function resolveAuth0AppUser(user: Record<string, unknown> | null | undefi
   }
 
   const auth0Name =
-    typeof user?.name === "string" ? sanitizePendingMemberName(user.name) : null;
+    typeof user?.name === "string"
+      ? sanitizePendingMemberName(user.name)
+      : null;
 
   return ensureAuth0AppUserRecord({
     email: typeof user?.email === "string" ? user.email : null,
@@ -159,6 +168,10 @@ export async function createAuth0AuthState(
   session:
     | Awaited<ReturnType<typeof getAuth0Session>>
     | Awaited<ReturnType<typeof getAuth0SessionForRequest>>,
+  roleDefaults: Record<
+    AppAuthenticatedRole,
+    ResolvedAppSectionPermissions
+  > = roleAdminSectionDefaults,
 ): Promise<AppAuthState | null> {
   if (!session?.user) {
     return null;
@@ -174,6 +187,7 @@ export async function createAuth0AuthState(
     appUser.role,
     createAppAuthUser(appUser, "auth0"),
     "auth0",
+    roleDefaults,
   );
 }
 

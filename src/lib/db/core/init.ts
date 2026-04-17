@@ -1,4 +1,8 @@
-import type { CreateCollectionOptions, Document, IndexDescription } from "mongodb";
+import type {
+  CreateCollectionOptions,
+  Document,
+  IndexDescription,
+} from "mongodb";
 
 import { APP_USER_ROLE_VALUES } from "../../auth/app-user-model";
 import { COLLECTIONS, type CollectionName } from "./collections";
@@ -28,305 +32,390 @@ function baseDocumentProperties() {
   };
 }
 
-const collectionDefinitions: Record<CollectionName, CollectionInitDefinition> = {
-  [COLLECTIONS.users]: {
-    indexes: [
-      {
-        key: { auth0UserId: 1 },
-        name: "users_auth0UserId_unique",
-        unique: true,
-      },
-      {
-        key: { email: 1 },
-        name: "users_email_unique",
-        unique: true,
-        partialFilterExpression: { email: { $type: "string" } },
-      },
-      {
-        key: { role: 1, status: 1 },
-        name: "users_role_status_lookup",
-      },
-    ],
-    validation: {
-      validationAction: "warn",
-      validationLevel: "moderate",
-      validator: {
-        $jsonSchema: {
-          bsonType: "object",
-          required: ["auth0UserId", "email", "name", "role", "status"],
-          properties: {
-            ...baseDocumentProperties(),
-            access: {
-              bsonType: "object",
-              properties: {
-                sections: {
-                  bsonType: "object",
-                  properties: {
-                    accessControl: {
-                      bsonType: "object",
-                      properties: {
-                        canAccess: { bsonType: "bool" },
-                        canManage: { bsonType: "bool" },
-                      },
+const collectionDefinitions: Record<CollectionName, CollectionInitDefinition> =
+  {
+    [COLLECTIONS.accessPolicies]: {
+      indexes: [
+        {
+          key: { role: 1 },
+          name: "accessPolicies_role_unique",
+          unique: true,
+        },
+      ],
+      validation: {
+        validationAction: "warn",
+        validationLevel: "moderate",
+        validator: {
+          $jsonSchema: {
+            bsonType: "object",
+            required: ["role"],
+            properties: {
+              ...baseDocumentProperties(),
+              role: { enum: [...APP_USER_ROLE_VALUES] },
+              sections: {
+                bsonType: "object",
+                properties: {
+                  accessControl: {
+                    bsonType: "object",
+                    properties: {
+                      canAccess: { bsonType: "bool" },
+                      canManage: { bsonType: "bool" },
                     },
-                    books: {
-                      bsonType: "object",
-                      properties: {
-                        canAccess: { bsonType: "bool" },
-                        canManage: { bsonType: "bool" },
-                      },
+                  },
+                  books: {
+                    bsonType: "object",
+                    properties: {
+                      canAccess: { bsonType: "bool" },
+                      canManage: { bsonType: "bool" },
                     },
-                    borrowings: {
-                      bsonType: "object",
-                      properties: {
-                        canAccess: { bsonType: "bool" },
-                        canManage: { bsonType: "bool" },
-                      },
+                  },
+                  borrowings: {
+                    bsonType: "object",
+                    properties: {
+                      canAccess: { bsonType: "bool" },
+                      canManage: { bsonType: "bool" },
                     },
-                    categories: {
-                      bsonType: "object",
-                      properties: {
-                        canAccess: { bsonType: "bool" },
-                        canManage: { bsonType: "bool" },
-                      },
+                  },
+                  categories: {
+                    bsonType: "object",
+                    properties: {
+                      canAccess: { bsonType: "bool" },
+                      canManage: { bsonType: "bool" },
                     },
-                    financial: {
-                      bsonType: "object",
-                      properties: {
-                        canAccess: { bsonType: "bool" },
-                        canManage: { bsonType: "bool" },
-                      },
+                  },
+                  financial: {
+                    bsonType: "object",
+                    properties: {
+                      canAccess: { bsonType: "bool" },
+                      canManage: { bsonType: "bool" },
                     },
-                    inventory: {
-                      bsonType: "object",
-                      properties: {
-                        canAccess: { bsonType: "bool" },
-                        canManage: { bsonType: "bool" },
-                      },
+                  },
+                  inventory: {
+                    bsonType: "object",
+                    properties: {
+                      canAccess: { bsonType: "bool" },
+                      canManage: { bsonType: "bool" },
                     },
-                    users: {
-                      bsonType: "object",
-                      properties: {
-                        canAccess: { bsonType: "bool" },
-                        canManage: { bsonType: "bool" },
-                      },
+                  },
+                  users: {
+                    bsonType: "object",
+                    properties: {
+                      canAccess: { bsonType: "bool" },
+                      canManage: { bsonType: "bool" },
                     },
                   },
                 },
-                canManageUsers: { bsonType: "bool" },
-                canManageBooks: { bsonType: "bool" },
-                canManageCategories: { bsonType: "bool" },
-                canManageInventory: { bsonType: "bool" },
-                canManageBorrowings: { bsonType: "bool" },
-                canViewFinancials: { bsonType: "bool" },
-                canManageFinancials: { bsonType: "bool" },
-                canManageAccessControl: { bsonType: "bool" },
               },
             },
-            auth0UserId: { bsonType: "string" },
-            avatarUrl: { bsonType: "string" },
-            email: { bsonType: "string" },
-            lastLoginAt: { bsonType: "date" },
-            name: { bsonType: "string" },
-            role: { enum: [...APP_USER_ROLE_VALUES] },
-            status: { enum: ["active", "suspended"] },
           },
         },
       },
     },
-  },
-  [COLLECTIONS.categories]: {
-    indexes: [
-      {
-        key: { name: 1 },
-        name: "categories_name_unique",
-        unique: true,
-      },
-      {
-        key: { slug: 1 },
-        name: "categories_slug_unique",
-        unique: true,
-      },
-    ],
-    validation: {
-      validationAction: "warn",
-      validationLevel: "moderate",
-      validator: {
-        $jsonSchema: {
-          bsonType: "object",
-          required: ["name", "slug"],
-          properties: {
-            ...baseDocumentProperties(),
-            description: { bsonType: "string" },
-            name: { bsonType: "string" },
-            slug: { bsonType: "string" },
-          },
+    [COLLECTIONS.users]: {
+      indexes: [
+        {
+          key: { auth0UserId: 1 },
+          name: "users_auth0UserId_unique",
+          unique: true,
         },
-      },
-    },
-  },
-  [COLLECTIONS.books]: {
-    indexes: [
-      {
-        key: { isbn: 1 },
-        name: "books_isbn_unique",
-        unique: true,
-        partialFilterExpression: { isbn: { $type: "string" } },
-      },
-      {
-        key: { categoryId: 1, status: 1 },
-        name: "books_category_status_lookup",
-      },
-      {
-        key: { title: 1, author: 1 },
-        name: "books_title_author_lookup",
-      },
-    ],
-    validation: {
-      validationAction: "warn",
-      validationLevel: "moderate",
-      validator: {
-        $jsonSchema: {
-          bsonType: "object",
-          required: [
-            "allowCustomDuration",
-            "author",
-            "categoryId",
-            "description",
-            "feeCents",
-            "isbn",
-            "predefinedDurations",
-            "status",
-            "title",
-          ],
-          properties: {
-            ...baseDocumentProperties(),
-            allowCustomDuration: { bsonType: "bool" },
-            author: { bsonType: "string" },
-            categoryId: { bsonType: ["objectId", "string"] },
-            coverImageUrl: { bsonType: "string" },
-            description: { bsonType: "string" },
-            feeCents: { bsonType: ["int", "long", "double", "decimal"] },
-            isbn: { bsonType: "string" },
-            metadata: { bsonType: "object" },
-            predefinedDurations: {
-              bsonType: "array",
-              items: { bsonType: ["int", "long", "double", "decimal"] },
-            },
-            status: { enum: ["active", "inactive"] },
-            title: { bsonType: "string" },
-          },
+        {
+          key: { email: 1 },
+          name: "users_email_unique",
+          unique: true,
+          partialFilterExpression: { email: { $type: "string" } },
         },
-      },
-    },
-  },
-  [COLLECTIONS.bookCopies]: {
-    indexes: [
-      {
-        key: { copyCode: 1 },
-        name: "bookCopies_copyCode_unique",
-        unique: true,
-      },
-      {
-        key: { bookId: 1, status: 1 },
-        name: "bookCopies_book_status_lookup",
-      },
-      {
-        key: { status: 1, condition: 1 },
-        name: "bookCopies_status_condition_lookup",
-      },
-    ],
-    validation: {
-      validationAction: "warn",
-      validationLevel: "moderate",
-      validator: {
-        $jsonSchema: {
-          bsonType: "object",
-          required: ["bookId", "condition", "copyCode", "status"],
-          properties: {
-            ...baseDocumentProperties(),
-            bookId: { bsonType: ["objectId", "string"] },
-            condition: { enum: ["new", "good", "fair", "poor"] },
-            copyCode: { bsonType: "string" },
-            notes: { bsonType: "string" },
-            status: {
-              enum: ["available", "reserved", "borrowed", "maintenance"],
+        {
+          key: { role: 1, status: 1 },
+          name: "users_role_status_lookup",
+        },
+      ],
+      validation: {
+        validationAction: "warn",
+        validationLevel: "moderate",
+        validator: {
+          $jsonSchema: {
+            bsonType: "object",
+            required: ["auth0UserId", "email", "name", "role", "status"],
+            properties: {
+              ...baseDocumentProperties(),
+              access: {
+                bsonType: "object",
+                properties: {
+                  sections: {
+                    bsonType: "object",
+                    properties: {
+                      accessControl: {
+                        bsonType: "object",
+                        properties: {
+                          canAccess: { bsonType: "bool" },
+                          canManage: { bsonType: "bool" },
+                        },
+                      },
+                      books: {
+                        bsonType: "object",
+                        properties: {
+                          canAccess: { bsonType: "bool" },
+                          canManage: { bsonType: "bool" },
+                        },
+                      },
+                      borrowings: {
+                        bsonType: "object",
+                        properties: {
+                          canAccess: { bsonType: "bool" },
+                          canManage: { bsonType: "bool" },
+                        },
+                      },
+                      categories: {
+                        bsonType: "object",
+                        properties: {
+                          canAccess: { bsonType: "bool" },
+                          canManage: { bsonType: "bool" },
+                        },
+                      },
+                      financial: {
+                        bsonType: "object",
+                        properties: {
+                          canAccess: { bsonType: "bool" },
+                          canManage: { bsonType: "bool" },
+                        },
+                      },
+                      inventory: {
+                        bsonType: "object",
+                        properties: {
+                          canAccess: { bsonType: "bool" },
+                          canManage: { bsonType: "bool" },
+                        },
+                      },
+                      users: {
+                        bsonType: "object",
+                        properties: {
+                          canAccess: { bsonType: "bool" },
+                          canManage: { bsonType: "bool" },
+                        },
+                      },
+                    },
+                  },
+                  canManageUsers: { bsonType: "bool" },
+                  canManageBooks: { bsonType: "bool" },
+                  canManageCategories: { bsonType: "bool" },
+                  canManageInventory: { bsonType: "bool" },
+                  canManageBorrowings: { bsonType: "bool" },
+                  canViewFinancials: { bsonType: "bool" },
+                  canManageFinancials: { bsonType: "bool" },
+                  canManageAccessControl: { bsonType: "bool" },
+                },
+              },
+              auth0UserId: { bsonType: "string" },
+              avatarUrl: { bsonType: "string" },
+              email: { bsonType: "string" },
+              lastLoginAt: { bsonType: "date" },
+              name: { bsonType: "string" },
+              role: { enum: [...APP_USER_ROLE_VALUES] },
+              status: { enum: ["active", "suspended"] },
             },
           },
         },
       },
     },
-  },
-  [COLLECTIONS.borrowRequests]: {
-    indexes: [
-      {
-        key: { userId: 1, status: 1, requestedAt: -1 },
-        name: "borrowRequests_user_status_requestedAt",
-      },
-      {
-        key: { bookCopyId: 1, status: 1 },
-        name: "borrowRequests_copy_status_lookup",
-      },
-      {
-        key: { status: 1, requestedAt: -1 },
-        name: "borrowRequests_status_requestedAt",
-      },
-      {
-        key: { bookId: 1 },
-        name: "borrowRequests_book_lookup",
-      },
-    ],
-    validation: {
-      validationAction: "warn",
-      validationLevel: "moderate",
-      validator: {
-        $jsonSchema: {
-          bsonType: "object",
-          required: [
-            "bookCopyId",
-            "bookId",
-            "durationType",
-            "feeCents",
-            "paymentMethod",
-            "paymentStatus",
-            "requestedAt",
-            "requestedDurationDays",
-            "status",
-            "userId",
-          ],
-          properties: {
-            ...baseDocumentProperties(),
-            approvedDurationDays: {
-              bsonType: ["int", "long", "double", "decimal"],
+    [COLLECTIONS.categories]: {
+      indexes: [
+        {
+          key: { name: 1 },
+          name: "categories_name_unique",
+          unique: true,
+        },
+        {
+          key: { slug: 1 },
+          name: "categories_slug_unique",
+          unique: true,
+        },
+      ],
+      validation: {
+        validationAction: "warn",
+        validationLevel: "moderate",
+        validator: {
+          $jsonSchema: {
+            bsonType: "object",
+            required: ["name", "slug"],
+            properties: {
+              ...baseDocumentProperties(),
+              description: { bsonType: "string" },
+              name: { bsonType: "string" },
+              slug: { bsonType: "string" },
             },
-            bookCopyId: { bsonType: ["objectId", "string"] },
-            bookId: { bsonType: ["objectId", "string"] },
-            cancelledAt: { bsonType: "date" },
-            dueAt: { bsonType: "date" },
-            durationType: { enum: ["predefined", "custom"] },
-            feeCents: { bsonType: ["int", "long", "double", "decimal"] },
-            notes: { bsonType: "string" },
-            paymentMethod: { enum: ["onsite-cash"] },
-            paymentStatus: { enum: ["unpaid", "pending", "paid", "waived"] },
-            rejectionReason: { bsonType: "string" },
-            requestedAt: { bsonType: "date" },
-            requestedDurationDays: {
-              bsonType: ["int", "long", "double", "decimal"],
-            },
-            returnedAt: { bsonType: "date" },
-            reviewedAt: { bsonType: "date" },
-            reviewedByUserId: { bsonType: ["objectId", "string"] },
-            startedAt: { bsonType: "date" },
-            status: {
-              enum: ["draft", "pending", "active", "overdue", "returned", "cancelled"],
-            },
-            userId: { bsonType: ["objectId", "string"] },
           },
         },
       },
     },
-  },
-};
+    [COLLECTIONS.books]: {
+      indexes: [
+        {
+          key: { isbn: 1 },
+          name: "books_isbn_unique",
+          unique: true,
+          partialFilterExpression: { isbn: { $type: "string" } },
+        },
+        {
+          key: { categoryId: 1, status: 1 },
+          name: "books_category_status_lookup",
+        },
+        {
+          key: { title: 1, author: 1 },
+          name: "books_title_author_lookup",
+        },
+      ],
+      validation: {
+        validationAction: "warn",
+        validationLevel: "moderate",
+        validator: {
+          $jsonSchema: {
+            bsonType: "object",
+            required: [
+              "allowCustomDuration",
+              "author",
+              "categoryId",
+              "description",
+              "feeCents",
+              "isbn",
+              "predefinedDurations",
+              "status",
+              "title",
+            ],
+            properties: {
+              ...baseDocumentProperties(),
+              allowCustomDuration: { bsonType: "bool" },
+              author: { bsonType: "string" },
+              categoryId: { bsonType: ["objectId", "string"] },
+              coverImageUrl: { bsonType: "string" },
+              description: { bsonType: "string" },
+              feeCents: { bsonType: ["int", "long", "double", "decimal"] },
+              isbn: { bsonType: "string" },
+              metadata: { bsonType: "object" },
+              predefinedDurations: {
+                bsonType: "array",
+                items: { bsonType: ["int", "long", "double", "decimal"] },
+              },
+              status: { enum: ["active", "inactive"] },
+              title: { bsonType: "string" },
+            },
+          },
+        },
+      },
+    },
+    [COLLECTIONS.bookCopies]: {
+      indexes: [
+        {
+          key: { copyCode: 1 },
+          name: "bookCopies_copyCode_unique",
+          unique: true,
+        },
+        {
+          key: { bookId: 1, status: 1 },
+          name: "bookCopies_book_status_lookup",
+        },
+        {
+          key: { status: 1, condition: 1 },
+          name: "bookCopies_status_condition_lookup",
+        },
+      ],
+      validation: {
+        validationAction: "warn",
+        validationLevel: "moderate",
+        validator: {
+          $jsonSchema: {
+            bsonType: "object",
+            required: ["bookId", "condition", "copyCode", "status"],
+            properties: {
+              ...baseDocumentProperties(),
+              bookId: { bsonType: ["objectId", "string"] },
+              condition: { enum: ["new", "good", "fair", "poor"] },
+              copyCode: { bsonType: "string" },
+              notes: { bsonType: "string" },
+              status: {
+                enum: ["available", "reserved", "borrowed", "maintenance"],
+              },
+            },
+          },
+        },
+      },
+    },
+    [COLLECTIONS.borrowRequests]: {
+      indexes: [
+        {
+          key: { userId: 1, status: 1, requestedAt: -1 },
+          name: "borrowRequests_user_status_requestedAt",
+        },
+        {
+          key: { bookCopyId: 1, status: 1 },
+          name: "borrowRequests_copy_status_lookup",
+        },
+        {
+          key: { status: 1, requestedAt: -1 },
+          name: "borrowRequests_status_requestedAt",
+        },
+        {
+          key: { bookId: 1 },
+          name: "borrowRequests_book_lookup",
+        },
+      ],
+      validation: {
+        validationAction: "warn",
+        validationLevel: "moderate",
+        validator: {
+          $jsonSchema: {
+            bsonType: "object",
+            required: [
+              "bookCopyId",
+              "bookId",
+              "durationType",
+              "feeCents",
+              "paymentMethod",
+              "paymentStatus",
+              "requestedAt",
+              "requestedDurationDays",
+              "status",
+              "userId",
+            ],
+            properties: {
+              ...baseDocumentProperties(),
+              approvedDurationDays: {
+                bsonType: ["int", "long", "double", "decimal"],
+              },
+              bookCopyId: { bsonType: ["objectId", "string"] },
+              bookId: { bsonType: ["objectId", "string"] },
+              cancelledAt: { bsonType: "date" },
+              dueAt: { bsonType: "date" },
+              durationType: { enum: ["predefined", "custom"] },
+              feeCents: { bsonType: ["int", "long", "double", "decimal"] },
+              notes: { bsonType: "string" },
+              paymentMethod: { enum: ["onsite-cash"] },
+              paymentStatus: { enum: ["unpaid", "pending", "paid", "waived"] },
+              rejectionReason: { bsonType: "string" },
+              requestedAt: { bsonType: "date" },
+              requestedDurationDays: {
+                bsonType: ["int", "long", "double", "decimal"],
+              },
+              returnedAt: { bsonType: "date" },
+              reviewedAt: { bsonType: "date" },
+              reviewedByUserId: { bsonType: ["objectId", "string"] },
+              startedAt: { bsonType: "date" },
+              status: {
+                enum: [
+                  "draft",
+                  "pending",
+                  "active",
+                  "overdue",
+                  "returned",
+                  "cancelled",
+                ],
+              },
+              userId: { bsonType: ["objectId", "string"] },
+            },
+          },
+        },
+      },
+    },
+  };
 
 async function getDatabase() {
   const client = await getMongoClient();

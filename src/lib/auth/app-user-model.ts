@@ -57,6 +57,19 @@ export const AppAdminSectionAccessSchema = z
   .partial();
 export type AppAdminSectionAccess = z.infer<typeof AppAdminSectionAccessSchema>;
 
+export const AppRoleAdminSectionDefaultsSchema = z
+  .object({
+    super_admin: AppAdminSectionAccessSchema.optional(),
+    admin: AppAdminSectionAccessSchema.optional(),
+    employee: AppAdminSectionAccessSchema.optional(),
+    financial: AppAdminSectionAccessSchema.optional(),
+    member: AppAdminSectionAccessSchema.optional(),
+  })
+  .partial();
+export type AppRoleAdminSectionDefaults = z.infer<
+  typeof AppRoleAdminSectionDefaultsSchema
+>;
+
 export const AppUserAccessConfigSchema = z
   .object({
     sections: AppAdminSectionAccessSchema.optional(),

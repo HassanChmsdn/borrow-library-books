@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -11,72 +11,95 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   APP_ADMIN_SECTION_VALUES,
+  APP_USER_ROLE_VALUES,
+  createEmptyResolvedAdminSectionPermissions,
   getAdminSectionLabel,
-  getResolvedAdminSectionPermissions,
   getAppRoleDisplayLabel,
-  roleAdminSectionDefaults,
+  getResolvedAdminSectionPermissionsForDefaults,
+  hasAdminAccessRole,
   type AppAdminSection,
   type AppAdminSectionAccess,
-  type AppAdminSectionPermission,
+  type AppUserRole,
+  type ResolvedAppSectionPermissions,
 } from "@/lib/auth";
 
 import { updateAdminAccessControlUserAction } from "./actions";
 import type {
-  AccessControlPermissionLevel,
+  AdminAccessControlRolePolicyRecord,
   AdminAccessControlUserRecord,
 } from "./types";
 
 interface AdminAccessControlOverridesModuleProps {
+  initialRolePolicies: ReadonlyArray<AdminAccessControlRolePolicyRecord>;
   initialUsers: ReadonlyArray<AdminAccessControlUserRecord>;
 }
 
-function permissionLevelFromSectionPermission(
-  permission: AppAdminSectionPermission | undefined,
-): AccessControlPermissionLevel {
-  if (!permission) {
-    return "inherit";
+type SectionToggleDraft = Record<
+  AppAdminSection,
+  {
+    canAccess: boolean;
+    canManage: boolean;
+    inherit: boolean;
   }
+>;
 
-  if (permission.canManage) {
-    return "manage";
-  }
+function createRolePolicyMap() {
+  return APP_USER_ROLE_VALUES.reduce(
+    (map, role) => {
+      map[role] = createEmptyResolvedAdminSectionPermissions();
 
-  if (permission.canAccess) {
-    return "access";
-  }
-
-  return "none";
+      return map;
+    },
+    {} as Record<AppUserRole, ResolvedAppSectionPermissions>,
+  );
 }
 
-function createDraftLevelsFromSections(
-  sections: AppAdminSectionAccess | undefined,
-): Record<AppAdminSection, AccessControlPermissionLevel> {
-  return APP_ADMIN_SECTION_VALUES.reduce((levels, section) => {
-    levels[section] = permissionLevelFromSectionPermission(sections?.[section]);
-
-    return levels;
-  }, {} as Record<AppAdminSection, AccessControlPermissionLevel>);
-}
-
-function buildSectionsFromDraft(
-  levels: Record<AppAdminSection, AccessControlPermissionLevel>,
+function mergeRolePolicies(
+  rolePolicies: ReadonlyArray<AdminAccessControlRolePolicyRecord>,
 ) {
-  const entries = APP_ADMIN_SECTION_VALUES.flatMap((section) => {
-    const level = levels[section];
+  const map = createRolePolicyMap();
 
-    if (level === "inherit") {
+  for (const record of rolePolicies) {
+    map[record.role] = record.effectivePermissions;
+  }
+
+  return map;
+}
+
+function createDraftFromSections(
+  sections: AppAdminSectionAccess | undefined,
+): SectionToggleDraft {
+  return APP_ADMIN_SECTION_VALUES.reduce((draft, section) => {
+    const permission = sections?.[section];
+
+    draft[section] = {
+      canAccess:
+        permission?.canAccess === true || permission?.canManage === true,
+      canManage: permission?.canManage === true,
+      inherit: !permission,
+    };
+
+    return draft;
+  }, {} as SectionToggleDraft);
+}
+
+function buildSectionsFromDraft(draft: SectionToggleDraft) {
+  const entries = APP_ADMIN_SECTION_VALUES.flatMap((section) => {
+    const permission = draft[section];
+
+    if (permission.inherit) {
       return [];
     }
 
-    if (level === "none") {
-      return [[section, { canAccess: false, canManage: false }]];
-    }
-
-    if (level === "access") {
-      return [[section, { canAccess: true, canManage: false }]];
-    }
-
-    return [[section, { canAccess: true, canManage: true }]];
+    return [
+      [
+        section,
+        {
+          canAccess: permission.canAccess || permission.canManage,
+          canManage: permission.canManage,
+        },
+      ],
+    ];
   });
 
   return entries.length > 0
@@ -99,7 +122,10 @@ function formatPermissionSummary(options: {
   return "No access";
 }
 
-function getPermissionTone(options: { canAccess: boolean; canManage: boolean }) {
+function getPermissionTone(options: {
+  canAccess: boolean;
+  canManage: boolean;
+}) {
   if (options.canManage) {
     return "success" as const;
   }
@@ -111,27 +137,123 @@ function getPermissionTone(options: { canAccess: boolean; canManage: boolean }) 
   return "neutral" as const;
 }
 
-const permissionLevelOptions: ReadonlyArray<{
-  label: string;
-  value: AccessControlPermissionLevel;
-}> = [
-  { label: "Inherit role default", value: "inherit" },
-  { label: "No access", value: "none" },
-  { label: "Access only", value: "access" },
-  { label: "Access + manage", value: "manage" },
-];
+function getSectionsSignature(sections: AppAdminSectionAccess | undefined) {
+  return JSON.stringify(
+    APP_ADMIN_SECTION_VALUES.map((section) => {
+      const permission = sections?.[section];
+
+      return [
+        section,
+        permission?.canAccess === true,
+        permission?.canManage === true,
+      ];
+    }),
+  );
+}
+
+function AccessToggleRow(props: {
+  defaultPermission: { canAccess: boolean; canManage: boolean };
+  draft: SectionToggleDraft[AppAdminSection];
+  isDisabled: boolean;
+  onAccessChange: (checked: boolean) => void;
+  onInheritChange: (checked: boolean) => void;
+  onManageChange: (checked: boolean) => void;
+  section: AppAdminSection;
+}) {
+  const {
+    defaultPermission,
+    draft,
+    isDisabled,
+    onAccessChange,
+    onInheritChange,
+    onManageChange,
+    section,
+  } = props;
+  const effectivePermission = draft.inherit
+    ? defaultPermission
+    : {
+        canAccess: draft.canAccess || draft.canManage,
+        canManage: draft.canManage,
+      };
+
+  return (
+    <div className="rounded-card border-border-subtle bg-background grid gap-4 border p-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-body text-foreground font-medium">
+            {getAdminSectionLabel(section)}
+          </p>
+          <p className="text-body-sm text-text-secondary mt-1">
+            Role default: {formatPermissionSummary(defaultPermission)}
+          </p>
+        </div>
+        <AdminStatusBadge
+          label={`Effective: ${formatPermissionSummary(effectivePermission)}`}
+          tone={getPermissionTone(effectivePermission)}
+        />
+      </div>
+
+      <div className="flex flex-wrap gap-3">
+        <label className="text-body-sm text-foreground flex items-center gap-2">
+          <input
+            checked={isDisabled ? true : draft.inherit}
+            className="border-input size-4 rounded"
+            disabled={isDisabled}
+            type="checkbox"
+            onChange={(event) => onInheritChange(event.target.checked)}
+          />
+          Use role default
+        </label>
+
+        <label className="text-body-sm text-foreground flex items-center gap-2">
+          <input
+            checked={
+              draft.inherit
+                ? defaultPermission.canAccess
+                : draft.canAccess || draft.canManage
+            }
+            className="border-input size-4 rounded"
+            disabled={isDisabled || draft.inherit}
+            type="checkbox"
+            onChange={(event) => onAccessChange(event.target.checked)}
+          />
+          Access
+        </label>
+
+        <label className="text-body-sm text-foreground flex items-center gap-2">
+          <input
+            checked={
+              draft.inherit ? defaultPermission.canManage : draft.canManage
+            }
+            className="border-input size-4 rounded"
+            disabled={isDisabled || draft.inherit}
+            type="checkbox"
+            onChange={(event) => onManageChange(event.target.checked)}
+          />
+          Manage
+        </label>
+      </div>
+    </div>
+  );
+}
 
 function AdminAccessControlOverridesModule({
+  initialRolePolicies,
   initialUsers,
 }: Readonly<AdminAccessControlOverridesModuleProps>) {
   const router = useRouter();
   const [users, setUsers] = useState(initialUsers);
-  const [selectedUserId, setSelectedUserId] = useState(initialUsers[0]?.id ?? "");
-  const [draftLevels, setDraftLevels] = useState<Record<
-    AppAdminSection,
-    AccessControlPermissionLevel
-  >>(() =>
-    createDraftLevelsFromSections(initialUsers[0]?.access?.sections),
+  const [rolePolicies, setRolePolicies] = useState(() =>
+    mergeRolePolicies(initialRolePolicies),
+  );
+  const [selectedUserId, setSelectedUserId] = useState(
+    initialUsers[0]?.id ?? "",
+  );
+  const [draftRole, setDraftRole] = useState<AppUserRole>(
+    initialUsers[0]?.role ?? "member",
+  );
+  const [draftSections, setDraftSections] = useState<SectionToggleDraft>(() =>
+    createDraftFromSections(initialUsers[0]?.access?.sections),
   );
   const [feedback, setFeedback] = useState<{
     message: string;
@@ -139,50 +261,60 @@ function AdminAccessControlOverridesModule({
   } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  useEffect(() => {
+    setUsers(initialUsers);
+  }, [initialUsers]);
+
+  useEffect(() => {
+    setRolePolicies(mergeRolePolicies(initialRolePolicies));
+  }, [initialRolePolicies]);
+
   const selectedUser = useMemo(
     () => users.find((user) => user.id === selectedUserId) ?? users[0] ?? null,
     [selectedUserId, users],
   );
 
-  function selectUser(nextUserId: string) {
-    const nextUser = users.find((user) => user.id === nextUserId) ?? null;
+  useEffect(() => {
+    if (!selectedUser) {
+      return;
+    }
 
+    setDraftRole(selectedUser.role);
+    setDraftSections(createDraftFromSections(selectedUser.access?.sections));
+  }, [selectedUser]);
+
+  const isStaffRole = hasAdminAccessRole(draftRole);
+  const builtSections = isStaffRole
+    ? buildSectionsFromDraft(draftSections)
+    : undefined;
+  const effectivePermissions = getResolvedAdminSectionPermissionsForDefaults(
+    draftRole,
+    rolePolicies,
+    builtSections ? { sections: builtSections } : undefined,
+  );
+  const hasChanges = Boolean(
+    selectedUser &&
+    (draftRole !== selectedUser.role ||
+      getSectionsSignature(builtSections) !==
+        getSectionsSignature(selectedUser.access?.sections)),
+  );
+
+  function selectUser(nextUserId: string) {
     setSelectedUserId(nextUserId);
-    setDraftLevels(createDraftLevelsFromSections(nextUser?.access?.sections));
     setFeedback(null);
   }
 
-  const effectivePermissions = useMemo(() => {
+  function resetDraft() {
     if (!selectedUser) {
-      return undefined;
+      return;
     }
 
-    return getResolvedAdminSectionPermissions(
-      selectedUser.role,
-      selectedUser.access
-        ? {
-            ...selectedUser.access,
-            sections: buildSectionsFromDraft(draftLevels),
-          }
-        : {
-            sections: buildSectionsFromDraft(draftLevels),
-          },
-    );
-  }, [draftLevels, selectedUser]);
+    setDraftRole(selectedUser.role);
+    setDraftSections(createDraftFromSections(selectedUser.access?.sections));
+    setFeedback(null);
+  }
 
-  const hasChanges = useMemo(() => {
-    if (!selectedUser) {
-      return false;
-    }
-
-    const current = createDraftLevelsFromSections(selectedUser.access?.sections);
-
-    return APP_ADMIN_SECTION_VALUES.some(
-      (section) => current[section] !== draftLevels[section],
-    );
-  }, [draftLevels, selectedUser]);
-
-  async function saveOverrides() {
+  async function saveChanges() {
     if (!selectedUser) {
       return;
     }
@@ -191,7 +323,8 @@ function AdminAccessControlOverridesModule({
     setFeedback(null);
 
     const result = await updateAdminAccessControlUserAction({
-      sections: buildSectionsFromDraft(draftLevels),
+      role: draftRole,
+      sections: builtSections,
       userId: selectedUser.id,
     });
 
@@ -202,7 +335,10 @@ function AdminAccessControlOverridesModule({
             user.id === result.record?.id ? result.record : user,
           ),
         );
-        setDraftLevels(createDraftLevelsFromSections(result.record.access?.sections));
+        setDraftRole(result.record.role);
+        setDraftSections(
+          createDraftFromSections(result.record.access?.sections),
+        );
       }
 
       setFeedback({ message: result.message, tone: "success" });
@@ -214,16 +350,16 @@ function AdminAccessControlOverridesModule({
     setIsSaving(false);
   }
 
-  async function resetOverrides() {
+  async function clearCustomAccess() {
     if (!selectedUser) {
       return;
     }
 
-    setDraftLevels(createDraftLevelsFromSections(undefined));
     setIsSaving(true);
     setFeedback(null);
 
     const result = await updateAdminAccessControlUserAction({
+      role: draftRole,
       sections: undefined,
       userId: selectedUser.id,
     });
@@ -235,7 +371,10 @@ function AdminAccessControlOverridesModule({
             user.id === result.record?.id ? result.record : user,
           ),
         );
-        setDraftLevels(createDraftLevelsFromSections(result.record.access?.sections));
+        setDraftRole(result.record.role);
+        setDraftSections(
+          createDraftFromSections(result.record.access?.sections),
+        );
       }
 
       setFeedback({ message: result.message, tone: "success" });
@@ -250,11 +389,12 @@ function AdminAccessControlOverridesModule({
   if (!selectedUser) {
     return (
       <AdminSectionCard
-        title="User overrides"
-        description="No staff accounts are currently available for section override management."
+        description="No accounts are currently available for access management."
+        title="User access management"
       >
         <p className="text-body-sm text-text-secondary">
-          Add or provision a staff identity first, then return here to configure user-specific section access.
+          Add or provision an account first, then return here to assign roles
+          and section access.
         </p>
       </AdminSectionCard>
     );
@@ -262,38 +402,46 @@ function AdminAccessControlOverridesModule({
 
   return (
     <AdminSectionCard
-      title="User-specific section overrides"
-      description="Select a staff account and optionally override its inherited section permissions. Inherited values continue to follow the account role defaults."
       actions={
         <div className="flex flex-wrap gap-2">
           <Button
+            disabled={isSaving || !selectedUser.hasSectionOverrides}
             size="sm"
             variant="outline"
-            disabled={isSaving || !selectedUser.hasSectionOverrides}
             onClick={() => {
-              void resetOverrides();
+              void clearCustomAccess();
             }}
           >
-            Clear overrides
+            Clear custom access
           </Button>
           <Button
-            size="sm"
             disabled={isSaving || !hasChanges}
+            size="sm"
+            variant="outline"
+            onClick={resetDraft}
+          >
+            Reset draft
+          </Button>
+          <Button
+            disabled={isSaving || !hasChanges}
+            size="sm"
             onClick={() => {
-              void saveOverrides();
+              void saveChanges();
             }}
           >
-            {isSaving ? "Saving..." : "Save overrides"}
+            {isSaving ? "Saving..." : "Save user access"}
           </Button>
         </div>
       }
+      description="Assign roles to individual accounts and optionally layer user-specific section permissions on top of the selected role defaults."
+      title="User access management"
     >
       {feedback ? (
         <div
           className={
             feedback.tone === "success"
-              ? "rounded-card border border-success/25 bg-success/5 px-4 py-3"
-              : "rounded-card border border-danger/25 bg-danger/5 px-4 py-3"
+              ? "rounded-card border-success/25 bg-success/5 border px-4 py-3"
+              : "rounded-card border-danger/25 bg-danger/5 border px-4 py-3"
           }
           role="status"
         >
@@ -309,16 +457,31 @@ function AdminAccessControlOverridesModule({
         </div>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(16rem,20rem)_minmax(0,1fr)]">
+      <div className="grid gap-4 lg:grid-cols-[minmax(18rem,22rem)_minmax(0,1fr)]">
         <div className="grid gap-4">
           <AdminFilterSelect
-            label="Staff account"
+            label="User account"
             options={users.map((user) => ({
               label: `${user.fullName} (${getAppRoleDisplayLabel(user.role)})`,
               value: user.id,
             }))}
             value={selectedUser.id}
             onValueChange={selectUser}
+          />
+
+          <AdminFilterSelect
+            label="Assigned role"
+            options={APP_USER_ROLE_VALUES.map((role) => ({
+              label: getAppRoleDisplayLabel(role),
+              value: role,
+            }))}
+            value={draftRole}
+            onValueChange={(value) => {
+              setDraftRole(value);
+              if (!hasAdminAccessRole(value)) {
+                setDraftSections(createDraftFromSections(undefined));
+              }
+            }}
           />
 
           <div className="rounded-card border-border-subtle bg-elevated grid gap-3 border p-4">
@@ -333,15 +496,17 @@ function AdminAccessControlOverridesModule({
 
             <div className="flex flex-wrap gap-2">
               <AdminStatusBadge
-                label={getAppRoleDisplayLabel(selectedUser.role)}
+                label={getAppRoleDisplayLabel(draftRole)}
                 tone="info"
               />
               <AdminStatusBadge
-                label={selectedUser.status === "active" ? "Active" : "Suspended"}
+                label={
+                  selectedUser.status === "active" ? "Active" : "Suspended"
+                }
                 tone={selectedUser.status === "active" ? "success" : "warning"}
               />
-              {selectedUser.hasSectionOverrides ? (
-                <AdminStatusBadge label="Custom overrides" tone="info" />
+              {builtSections ? (
+                <AdminStatusBadge label="Custom section access" tone="info" />
               ) : (
                 <AdminStatusBadge label="Role defaults only" tone="neutral" />
               )}
@@ -350,52 +515,72 @@ function AdminAccessControlOverridesModule({
             <p className="text-body-sm text-text-secondary">
               {selectedUser.subtitle}
             </p>
+
+            {!isStaffRole ? (
+              <p className="text-body-sm text-text-secondary border-border-subtle rounded-lg border border-dashed px-3 py-2">
+                Member accounts do not receive admin workspace sections. Saving
+                this role clears any existing admin section overrides.
+              </p>
+            ) : null}
           </div>
         </div>
 
         <div className="grid gap-3">
-          {APP_ADMIN_SECTION_VALUES.map((section) => {
-            const permission = effectivePermissions?.[section];
+          {APP_ADMIN_SECTION_VALUES.map((section) => (
+            <AccessToggleRow
+              key={section}
+              defaultPermission={rolePolicies[draftRole][section]}
+              draft={draftSections[section]}
+              isDisabled={!isStaffRole}
+              section={section}
+              onAccessChange={(checked) => {
+                setDraftSections((current) => ({
+                  ...current,
+                  [section]: {
+                    ...current[section],
+                    canAccess: checked,
+                    canManage: checked ? current[section].canManage : false,
+                  },
+                }));
+              }}
+              onInheritChange={(checked) => {
+                setDraftSections((current) => ({
+                  ...current,
+                  [section]: {
+                    ...current[section],
+                    inherit: checked,
+                  },
+                }));
+              }}
+              onManageChange={(checked) => {
+                setDraftSections((current) => ({
+                  ...current,
+                  [section]: {
+                    ...current[section],
+                    canAccess: checked || current[section].canAccess,
+                    canManage: checked,
+                  },
+                }));
+              }}
+            />
+          ))}
 
-            return (
-              <div
-                key={section}
-                className="rounded-card border-border-subtle bg-background grid gap-3 border p-4"
-              >
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <p className="text-body text-foreground font-medium">
-                      {getAdminSectionLabel(section)}
-                    </p>
-                    <p className="text-body-sm text-text-secondary mt-1">
-                      Role default: {formatPermissionSummary(
-                        roleAdminSectionDefaults[selectedUser.role][section],
-                      )}
-                    </p>
-                  </div>
-
-                  {permission ? (
-                    <AdminStatusBadge
-                      label={`Effective: ${formatPermissionSummary(permission)}`}
-                      tone={getPermissionTone(permission)}
-                    />
-                  ) : null}
-                </div>
-
-                <AdminFilterSelect
-                  label="Override"
-                  options={permissionLevelOptions}
-                  value={draftLevels[section]}
-                  onValueChange={(value) =>
-                    setDraftLevels((current) => ({
-                      ...current,
-                      [section]: value,
-                    }))
-                  }
+          <div className="rounded-card border-border-subtle bg-elevated grid gap-2 border p-4">
+            <p className="text-body text-foreground font-medium">
+              Effective access summary
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {APP_ADMIN_SECTION_VALUES.map((section) => (
+                <AdminStatusBadge
+                  key={`summary-${section}`}
+                  label={`${getAdminSectionLabel(section)}: ${formatPermissionSummary(
+                    effectivePermissions[section],
+                  )}`}
+                  tone={getPermissionTone(effectivePermissions[section])}
                 />
-              </div>
-            );
-          })}
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </AdminSectionCard>

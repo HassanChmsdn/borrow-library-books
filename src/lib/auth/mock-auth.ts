@@ -5,14 +5,12 @@ import {
   type AppUserStatus,
 } from "./app-user-model";
 
-import {
-  getMockAppUserRecord,
-  type AppUserRecord,
-} from "./app-users";
+import { getMockAppUserRecord, type AppUserRecord } from "./app-users";
 import {
   createEmptyResolvedAdminSectionPermissions,
   getRouteAccessPolicy,
-  getResolvedAdminSectionPermissions,
+  getResolvedAdminSectionPermissionsForDefaults,
+  roleAdminSectionDefaults,
   type AppRouteAccessPolicy,
   type ResolvedAppSectionPermissions,
 } from "./permissions";
@@ -80,16 +78,13 @@ export type MockAuthState = AppAuthState;
 export type MockSession = AppAuthState;
 
 export interface AppRouteAuthorizationResult {
-  denialReason: "admin" | "member" | "section" | null;
+  denialReason: "admin" | "member" | "role" | "section" | null;
   isAllowed: boolean;
   policy: AppRouteAccessPolicy | null;
 }
 
 function getInitials(fullName: string, email: string) {
-  const nameParts = fullName
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
+  const nameParts = fullName.trim().split(/\s+/).filter(Boolean);
 
   if (nameParts.length >= 2) {
     return `${nameParts[0][0]}${nameParts[1][0]}`.toUpperCase();
@@ -157,12 +152,16 @@ export function createAuthenticatedAuthState(
   role: AppAuthenticatedRole,
   currentUser: AppAuthUser,
   authSource: AppAuthSource,
+  roleDefaults: Record<
+    AppAuthenticatedRole,
+    ResolvedAppSectionPermissions
+  > = roleAdminSectionDefaults,
 ): AppAuthState {
   const isActive = currentUser.status === "active";
   const access = currentUser.access;
   const isStaff = hasAdminAccessRole(role) && isActive;
   const sectionAccess = isActive
-    ? getResolvedAdminSectionPermissions(role, access)
+    ? getResolvedAdminSectionPermissionsForDefaults(role, roleDefaults, access)
     : createEmptyResolvedAdminSectionPermissions();
 
   return {
@@ -204,7 +203,13 @@ export function getMockCurrentUser(role: AppAuthenticatedRole) {
   return createAppAuthUser(record, "mock");
 }
 
-export function createMockAuthState(roleValue: unknown): AppAuthState {
+export function createMockAuthState(
+  roleValue: unknown,
+  roleDefaults: Record<
+    AppAuthenticatedRole,
+    ResolvedAppSectionPermissions
+  > = roleAdminSectionDefaults,
+): AppAuthState {
   if (!isMockAuthenticatedRole(roleValue)) {
     return createGuestAuthState();
   }
@@ -219,6 +224,7 @@ export function createMockAuthState(roleValue: unknown): AppAuthState {
     record.role,
     createAppAuthUser(record, "mock"),
     "mock",
+    roleDefaults,
   );
 }
 
@@ -345,6 +351,17 @@ export function getRouteAuthorization(
     };
   }
 
+  if (
+    policy.roles &&
+    !policy.roles.includes(authState.currentRole as AppAuthenticatedRole)
+  ) {
+    return {
+      denialReason: "role",
+      isAllowed: false,
+      policy,
+    };
+  }
+
   if (!policy.section) {
     return {
       denialReason: null,
@@ -377,7 +394,11 @@ export function sanitizeRedirectTo(
   redirectTo: string | null | undefined,
   fallback: string,
 ) {
-  if (!redirectTo || !redirectTo.startsWith("/") || redirectTo.startsWith("//")) {
+  if (
+    !redirectTo ||
+    !redirectTo.startsWith("/") ||
+    redirectTo.startsWith("//")
+  ) {
     return fallback;
   }
 

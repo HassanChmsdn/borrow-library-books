@@ -8,17 +8,34 @@ import {
   type AppAdminSection,
   type AppAdminSectionAccess,
   type AppUserAccessConfig,
+  type AppUserRole,
 } from "@/lib/auth/app-user-model";
-import { getUsersCollection, isMongoConfigured } from "@/lib/db";
-import { getUserRecordById, setMockUserAccessConfig } from "@/lib/data/repositories/users";
-import { requireAdminSectionManagement } from "@/lib/auth/server";
+import {
+  getAppRoleAccountLabel,
+  getResolvedAdminSectionPermissionsForDefaults,
+} from "@/lib/auth";
+import {
+  listRoleAdminSectionDefaults,
+  updateRoleAdminSectionDefaults,
+} from "@/lib/auth/access-policies";
+import { requireAuthorizedRoute } from "@/lib/auth/server";
 import { hasAdminAccessRole } from "@/lib/auth/roles";
+import { getUsersCollection, isMongoConfigured } from "@/lib/db";
+import {
+  getUserRecordById,
+  setMockUserAccessConfig,
+  setMockUserRole,
+} from "@/lib/data/repositories/users";
 
 import {
   toAdminAccessControlUserRecord,
+  listAdminAccessControlRolePolicyRecords,
 } from "./server";
 import {
+  updateAdminAccessControlRolePolicySchema,
   updateAdminAccessControlUserSchema,
+  type UpdateAdminAccessControlRolePolicyInput,
+  type UpdateAdminAccessControlRolePolicyResult,
   type UpdateAdminAccessControlUserInput,
   type UpdateAdminAccessControlUserResult,
 } from "./types";
@@ -95,16 +112,23 @@ function normalizeMutationError(error: unknown) {
 }
 
 async function loadUpdatedAccessControlRecord(userId: string) {
+  const roleDefaults = await listRoleAdminSectionDefaults();
+
   if (!isMongoConfigured()) {
     const record = getUserRecordById(userId);
 
-    if (!record || !hasAdminAccessRole(record.role)) {
+    if (!record) {
       return null;
     }
 
     return toAdminAccessControlUserRecord({
       access: record.access,
       email: record.email,
+      effectivePermissions: getResolvedAdminSectionPermissionsForDefaults(
+        record.role,
+        roleDefaults,
+        record.access,
+      ),
       fullName: record.fullName,
       id: record.id,
       role: record.role,
@@ -120,13 +144,18 @@ async function loadUpdatedAccessControlRecord(userId: string) {
   const users = await getUsersCollection();
   const record = await users.findOne({ _id: new ObjectId(userId) });
 
-  if (!record || !hasAdminAccessRole(record.role)) {
+  if (!record) {
     return null;
   }
 
   return toAdminAccessControlUserRecord({
     access: record.access,
     email: record.email,
+    effectivePermissions: getResolvedAdminSectionPermissionsForDefaults(
+      record.role,
+      roleDefaults,
+      record.access,
+    ),
     fullName: record.name,
     id: record._id.toString(),
     role: record.role,
@@ -135,13 +164,16 @@ async function loadUpdatedAccessControlRecord(userId: string) {
   });
 }
 
+async function loadUpdatedRolePolicyRecord(role: AppUserRole) {
+  const records = await listAdminAccessControlRolePolicyRecords();
+
+  return records.find((record) => record.role === role) ?? null;
+}
+
 export async function updateAdminAccessControlUserAction(
   input: UpdateAdminAccessControlUserInput,
 ): Promise<UpdateAdminAccessControlUserResult> {
-  await requireAdminSectionManagement(
-    "accessControl",
-    "/admin/settings/access-control",
-  );
+  await requireAuthorizedRoute("/admin/settings/access-control");
 
   const parsed = updateAdminAccessControlUserSchema.safeParse(input);
 
@@ -155,6 +187,7 @@ export async function updateAdminAccessControlUserAction(
   }
 
   const normalizedSections = normalizeSectionAccess(parsed.data.sections);
+  const nextRole = parsed.data.role;
 
   try {
     if (!isMongoConfigured()) {
@@ -167,18 +200,12 @@ export async function updateAdminAccessControlUserAction(
         };
       }
 
-      if (!hasAdminAccessRole(currentRecord.role)) {
-        return {
-          message:
-            "Section overrides can only be assigned to staff accounts within the admin workspace.",
-          status: "error",
-        };
-      }
+      const nextAccess = hasAdminAccessRole(nextRole)
+        ? mergeUserAccessConfig(currentRecord.access, normalizedSections)
+        : undefined;
 
-      setMockUserAccessConfig(
-        parsed.data.userId,
-        mergeUserAccessConfig(currentRecord.access, normalizedSections),
-      );
+      setMockUserRole(parsed.data.userId, nextRole);
+      setMockUserAccessConfig(parsed.data.userId, nextAccess);
     } else {
       if (!ObjectId.isValid(parsed.data.userId)) {
         return {
@@ -198,18 +225,9 @@ export async function updateAdminAccessControlUserAction(
         };
       }
 
-      if (!hasAdminAccessRole(currentRecord.role)) {
-        return {
-          message:
-            "Section overrides can only be assigned to staff accounts within the admin workspace.",
-          status: "error",
-        };
-      }
-
-      const nextAccess = mergeUserAccessConfig(
-        currentRecord.access,
-        normalizedSections,
-      );
+      const nextAccess = hasAdminAccessRole(nextRole)
+        ? mergeUserAccessConfig(currentRecord.access, normalizedSections)
+        : undefined;
 
       await users.updateOne(
         { _id: objectId },
@@ -217,11 +235,13 @@ export async function updateAdminAccessControlUserAction(
           ? {
               $set: {
                 access: nextAccess,
+                role: nextRole,
                 updatedAt: new Date(),
               },
             }
           : {
               $set: {
+                role: nextRole,
                 updatedAt: new Date(),
               },
               $unset: {
@@ -234,12 +254,56 @@ export async function updateAdminAccessControlUserAction(
     revalidatePath("/admin");
     revalidatePath("/admin/settings/access-control");
 
-    const updatedRecord = await loadUpdatedAccessControlRecord(parsed.data.userId);
+    const updatedRecord = await loadUpdatedAccessControlRecord(
+      parsed.data.userId,
+    );
 
     return {
-      message: normalizedSections
-        ? "Section overrides were saved for this staff account."
-        : "Section overrides were cleared and the account now follows its role defaults again.",
+      message: hasAdminAccessRole(nextRole)
+        ? normalizedSections
+          ? `Role and section access were saved for ${getAppRoleAccountLabel(nextRole)}.`
+          : `Role updated to ${getAppRoleAccountLabel(nextRole)} and custom section access was cleared.`
+        : `Role updated to ${getAppRoleAccountLabel(nextRole)} and admin section access was cleared.`,
+      record: updatedRecord ?? undefined,
+      status: "success",
+    };
+  } catch (error) {
+    return {
+      message: normalizeMutationError(error),
+      status: "error",
+    };
+  }
+}
+
+export async function updateAdminAccessControlRolePolicyAction(
+  input: UpdateAdminAccessControlRolePolicyInput,
+): Promise<UpdateAdminAccessControlRolePolicyResult> {
+  await requireAuthorizedRoute("/admin/settings/access-control");
+
+  const parsed = updateAdminAccessControlRolePolicySchema.safeParse(input);
+
+  if (!parsed.success) {
+    return {
+      message:
+        parsed.error.issues[0]?.message ??
+        "Review the selected role policy before saving.",
+      status: "error",
+    };
+  }
+
+  try {
+    await updateRoleAdminSectionDefaults(
+      parsed.data.role,
+      normalizeSectionAccess(parsed.data.sections),
+    );
+
+    revalidatePath("/admin");
+    revalidatePath("/admin/settings/access-control");
+
+    const updatedRecord = await loadUpdatedRolePolicyRecord(parsed.data.role);
+
+    return {
+      message: `Default section access was updated for the ${getAppRoleAccountLabel(parsed.data.role)} role.`,
       record: updatedRecord ?? undefined,
       status: "success",
     };

@@ -2,6 +2,7 @@ import type { Collection, Document } from "mongodb";
 
 import { getMongoClient, getMongoDatabaseName } from "./client";
 import type {
+  AccessPolicyDocument,
   BookCopyDocument,
   BookDocument,
   BorrowRequestDocument,
@@ -10,6 +11,7 @@ import type {
 } from "../models";
 
 export const COLLECTIONS = {
+  accessPolicies: "accessPolicies",
   bookCopies: "bookCopies",
   books: "books",
   borrowRequests: "borrowRequests",
@@ -25,7 +27,9 @@ async function getDatabase() {
   return client.db(getMongoDatabaseName());
 }
 
-export async function getCollection<TDocument extends Document>(name: CollectionName) {
+export async function getCollection<TDocument extends Document>(
+  name: CollectionName,
+) {
   const db = await getDatabase();
 
   return db.collection<TDocument>(name);
@@ -33,6 +37,10 @@ export async function getCollection<TDocument extends Document>(name: Collection
 
 export function getUsersCollection() {
   return getCollection<UserDocument>(COLLECTIONS.users);
+}
+
+export function getAccessPoliciesCollection() {
+  return getCollection<AccessPolicyDocument>(COLLECTIONS.accessPolicies);
 }
 
 export function getCategoriesCollection() {
@@ -52,6 +60,7 @@ export function getBorrowRequestsCollection() {
 }
 
 export interface MongoCollections {
+  accessPolicies: Promise<Collection<AccessPolicyDocument>>;
   bookCopies: Promise<Collection<BookCopyDocument>>;
   books: Promise<Collection<BookDocument>>;
   borrowRequests: Promise<Collection<BorrowRequestDocument>>;
@@ -61,6 +70,7 @@ export interface MongoCollections {
 
 export function getCollections(): MongoCollections {
   return {
+    accessPolicies: getAccessPoliciesCollection(),
     bookCopies: getBookCopiesCollection(),
     books: getBooksCollection(),
     borrowRequests: getBorrowRequestsCollection(),

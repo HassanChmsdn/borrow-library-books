@@ -1,10 +1,19 @@
-export { updateAdminAccessControlUserAction } from "./actions";
+export {
+  updateAdminAccessControlRolePolicyAction,
+  updateAdminAccessControlUserAction,
+} from "./actions";
+export { AdminAccessControlRolePoliciesModule } from "./admin-access-control-role-policies-module";
 export { AdminAccessControlOverridesModule } from "./admin-access-control-overrides-module";
-export { listAdminAccessControlUserRecords } from "./server";
+export {
+  listAdminAccessControlRolePolicyRecords,
+  listAdminAccessControlUserRecords,
+} from "./server";
 
 export type {
-  AccessControlPermissionLevel,
+  AdminAccessControlRolePolicyRecord,
   AdminAccessControlUserRecord,
+  UpdateAdminAccessControlRolePolicyInput,
+  UpdateAdminAccessControlRolePolicyResult,
   UpdateAdminAccessControlUserInput,
   UpdateAdminAccessControlUserResult,
 } from "./types";

@@ -1,6 +1,4 @@
-export {
-  getAuthorizedAdminNavigationSections,
-} from "./admin-navigation";
+export { getAuthorizedAdminNavigationSections } from "./admin-navigation";
 
 export {
   canAccessRoute,
@@ -70,6 +68,7 @@ export {
   getAdminSectionRoute,
   getRouteAccessPolicy,
   getResolvedAdminSectionPermissions,
+  getResolvedAdminSectionPermissionsForDefaults,
   roleAdminSectionDefaults,
   type AppRouteAccessAudience,
   type AppRouteAccessLevel,

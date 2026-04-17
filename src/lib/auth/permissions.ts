@@ -24,6 +24,7 @@ export interface AppRouteAccessPolicy {
   level?: AppRouteAccessLevel;
   matchStrategy: "exact" | "prefix";
   pathname: string;
+  roles?: ReadonlyArray<AppUserRole>;
   section?: AppAdminSection;
 }
 
@@ -168,15 +169,58 @@ function resolveSectionPermissionOverride(
   };
 }
 
+export function getResolvedAdminSectionPermissionsForDefaults(
+  role: AppUserRole | null | undefined,
+  roleDefaults: Record<AppUserRole, ResolvedAppSectionPermissions>,
+  access?: AppUserAccessConfig | null,
+): ResolvedAppSectionPermissions {
+  return APP_ADMIN_SECTION_VALUES.reduce((permissions, section) => {
+    const baseDefaults = role ? roleDefaults[role] : undefined;
+
+    permissions[section] = role
+      ? resolveSectionPermissionOverride(
+          role,
+          {
+            ...access,
+            sections: access?.sections,
+          },
+          section,
+        )
+      : createResolvedSectionPermission();
+
+    if (role && baseDefaults) {
+      const sectionOverride = access?.sections?.[section] as
+        | AppAdminSectionPermission
+        | undefined;
+      const accessOverride =
+        sectionOverride?.canAccess ??
+        resolveLegacySectionAccessOverride(access, section);
+      const manageOverride =
+        sectionOverride?.canManage ??
+        resolveLegacySectionManagementOverride(access, section);
+      const canManage = manageOverride ?? baseDefaults[section].canManage;
+      const canAccess =
+        (accessOverride ?? baseDefaults[section].canAccess) || canManage;
+
+      permissions[section] = {
+        canAccess,
+        canManage,
+      };
+    }
+
+    return permissions;
+  }, createEmptyResolvedAdminSectionPermissions());
+}
+
 export function getResolvedAdminSectionPermissions(
   role: AppUserRole | null | undefined,
   access?: AppUserAccessConfig | null,
 ): ResolvedAppSectionPermissions {
-  return APP_ADMIN_SECTION_VALUES.reduce((permissions, section) => {
-    permissions[section] = resolveSectionPermissionOverride(role, access, section);
-
-    return permissions;
-  }, createEmptyResolvedAdminSectionPermissions());
+  return getResolvedAdminSectionPermissionsForDefaults(
+    role,
+    roleAdminSectionDefaults,
+    access,
+  );
 }
 
 export function canAccessAdminSectionRole(
@@ -298,6 +342,7 @@ export const APP_ROUTE_ACCESS_POLICIES: ReadonlyArray<AppRouteAccessPolicy> = [
     level: "manage",
     matchStrategy: "prefix",
     pathname: "/admin/settings/access-control",
+    roles: ["super_admin", "admin"],
     section: "accessControl",
   },
   {
@@ -385,7 +430,9 @@ function matchesRoutePolicy(pathname: string, policy: AppRouteAccessPolicy) {
     return pathname.startsWith(policy.pathname);
   }
 
-  return pathname === policy.pathname || pathname.startsWith(`${policy.pathname}/`);
+  return (
+    pathname === policy.pathname || pathname.startsWith(`${policy.pathname}/`)
+  );
 }
 
 export function getRouteAccessPolicy(pathname: string) {

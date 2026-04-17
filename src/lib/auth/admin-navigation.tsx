@@ -13,11 +13,7 @@ import {
 import type { ShellNavSection } from "@/components/layout/types";
 
 import type { AppAdminSection } from "./app-user-model";
-import {
-  canAccessAdminSection,
-  hasAdminAccess,
-  type AppAuthState,
-} from "./mock-auth";
+import { canAccessRoute, type AppAuthState } from "./mock-auth";
 
 interface AdminNavigationItemConfig {
   href: string;
@@ -87,7 +83,8 @@ const adminNavigationSections: ReadonlyArray<AdminNavigationSectionConfig> = [
       {
         href: "/admin/financial",
         label: "Financial",
-        description: "Review fee intake, reconciliations, and cashier workflows.",
+        description:
+          "Review fee intake, reconciliations, and cashier workflows.",
         icon: <HandCoins aria-hidden="true" />,
         section: "financial",
       },
@@ -99,7 +96,8 @@ const adminNavigationSections: ReadonlyArray<AdminNavigationSectionConfig> = [
       {
         href: "/admin/settings/access-control",
         label: "Access Control",
-        description: "Inspect role defaults and prepare targeted access overrides.",
+        description:
+          "Inspect role defaults and prepare targeted access overrides.",
         icon: <ShieldCheck aria-hidden="true" />,
         section: "accessControl",
       },
@@ -111,20 +109,12 @@ function canAccessAdminNavigationItem(
   authState: AppAuthState,
   item: AdminNavigationItemConfig,
 ) {
-  if (!hasAdminAccess(authState)) {
-    return false;
-  }
-
-  return !item.section || canAccessAdminSection(authState, item.section);
+  return canAccessRoute(authState, item.href);
 }
 
 export function getAuthorizedAdminNavigationSections(
   authState: AppAuthState,
 ): ReadonlyArray<ShellNavSection> {
-  if (!hasAdminAccess(authState)) {
-    return [];
-  }
-
   return adminNavigationSections
     .map((section) => ({
       title: section.title,

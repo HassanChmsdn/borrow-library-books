@@ -20,6 +20,7 @@ export {
 
 export {
   COLLECTIONS,
+  getAccessPoliciesCollection,
   getBookCopiesCollection,
   getBooksCollection,
   getBorrowRequestsCollection,
@@ -32,6 +33,7 @@ export {
 } from "./collections";
 
 export type {
+  AccessPolicyDocument,
   AppUserAccessConfig,
   AppUserRole,
   AppUserStatus,
