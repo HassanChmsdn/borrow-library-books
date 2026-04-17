@@ -1,4 +1,8 @@
 export {
+  getAuthorizedAdminNavigationSections,
+} from "./admin-navigation";
+
+export {
   canAccessRoute,
   MOCK_AUTH_COOKIE,
   canAccessAdminSection,
