@@ -32,6 +32,7 @@ export {
 } from "./collections";
 
 export type {
+  AppUserAccessConfig,
   AppUserRole,
   AppUserStatus,
   BaseDocument,
@@ -68,6 +69,7 @@ export type {
 } from "./models";
 
 export {
+  AppUserAccessConfigSchema,
   APP_USER_ROLE_VALUES,
   AppUserRoleSchema,
   AppUserStatusSchema,

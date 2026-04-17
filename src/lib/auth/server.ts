@@ -9,6 +9,7 @@ import {
   createMockAuthState,
   getCurrentRole,
   getCurrentUser,
+  isAdmin,
   isAuthenticated,
   isMember,
   type AppAuthState,
@@ -64,7 +65,8 @@ export async function getMockAuthFlags() {
   return {
     isAuthenticated: isAuthenticated(session),
     isMember: isMember(session),
-    isAdmin: hasAdminAccess(session),
+    isAdmin: isAdmin(session),
+    hasAdminAccess: hasAdminAccess(session),
   };
 }
 

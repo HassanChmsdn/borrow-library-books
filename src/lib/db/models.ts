@@ -2,24 +2,28 @@ import { ObjectId } from "mongodb";
 import { z } from "zod";
 
 import {
+  AppUserAccessConfigSchema,
   APP_USER_ROLE_VALUES,
   AppUserRoleSchema,
   APP_USER_STATUS_VALUES,
   AppUserStatusSchema,
   MEMBER_APP_USER_ROLE,
   STAFF_APP_USER_ROLE_VALUES,
+  type AppUserAccessConfig,
   type AppUserRole,
   type AppUserStatus,
   type StaffAppUserRole,
 } from "../auth/app-user-model";
 
 export {
+  AppUserAccessConfigSchema,
   APP_USER_ROLE_VALUES,
   AppUserRoleSchema,
   APP_USER_STATUS_VALUES,
   AppUserStatusSchema,
   MEMBER_APP_USER_ROLE,
   STAFF_APP_USER_ROLE_VALUES,
+  type AppUserAccessConfig,
   type AppUserRole,
   type AppUserStatus,
   type StaffAppUserRole,
@@ -80,6 +84,7 @@ export const BaseDocumentSchema = z.object({
 export type BaseDocument = z.infer<typeof BaseDocumentSchema>;
 
 export const UserDocumentSchema = BaseDocumentSchema.extend({
+  access: AppUserAccessConfigSchema.optional(),
   auth0UserId: z.string().trim().min(1),
   avatarUrl: z.string().trim().url().optional(),
   email: z.string().trim().toLowerCase().email(),

@@ -305,6 +305,7 @@ export const getLibrarySnapshot = cache(async (): Promise<LibrarySnapshot> => {
       const membershipLabel = deriveMembershipLabel(role);
 
       return {
+        access: user.access,
         auth0UserId: user.auth0UserId,
         email: user.email,
         fullName: user.name,

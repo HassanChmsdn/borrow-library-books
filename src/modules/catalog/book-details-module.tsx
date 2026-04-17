@@ -58,7 +58,7 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
   const [submittingMode, setSubmittingMode] = useState<
     "custom" | "predefined" | null
   >(null);
-  const { isAdmin, isMember } = useMockAuth();
+  const { hasAdminAccess, isMember } = useMockAuth();
 
   const availabilityTone = getBookAvailabilityTone(book);
   const availabilityLabel = formatBookAvailabilityLabel(book);
@@ -75,17 +75,17 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
       });
   const borrowPrimaryLabel = isMember
     ? "Borrow this book"
-    : isAdmin
+    : hasAdminAccess
       ? "Switch to member to borrow"
       : "Sign in to borrow";
   const customDurationLabel = isMember
     ? "Request custom duration"
-    : isAdmin
+    : hasAdminAccess
       ? "Switch to member for custom duration"
       : "Sign in for custom duration";
   const borrowHelperText = isMember
     ? "Borrow requests are created from this page and the first available physical copy is assigned automatically. My Borrowings remains the member list and status page."
-    : isAdmin
+    : hasAdminAccess
       ? "Mock admin sessions cannot borrow titles directly. Switch to a member session to continue into the borrowing flow."
       : "Borrowing actions require a member session. Guests can keep browsing publicly and sign in only when they are ready to borrow.";
 

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 
 import {
-  isAdmin,
+  hasAdminAccess,
   sanitizeRedirectTo,
 } from "@/lib/auth";
 import { PageHeader, ShellBrand } from "@/components/layout";
@@ -34,7 +34,7 @@ export default async function AdminAccessPage({ searchParams }: AdminAccessPageP
   const session = await getCurrentSession();
   const auth0Enabled = isAuth0Configured();
 
-  if (isAdmin(session)) {
+  if (hasAdminAccess(session)) {
     redirect(redirectTo);
   }
 
@@ -53,8 +53,8 @@ export default async function AdminAccessPage({ searchParams }: AdminAccessPageP
         <div className="gap-section flex flex-col">
           <PageHeader
             eyebrow="Restricted Access"
-            title="Admin sign in"
-            description="Continue with an authorized admin identity to open the operations workspace and protected management routes."
+            title="Staff sign in"
+            description="Continue with an authorized staff identity to open the operations workspace and protected management routes."
           />
 
           <section style={{ maxWidth: "var(--layout-reading-max-width)" }}>
@@ -65,7 +65,7 @@ export default async function AdminAccessPage({ searchParams }: AdminAccessPageP
               </div>
               <CardTitle>Admin workspace access</CardTitle>
               <CardDescription>
-                Authentication is completed on the secure Auth0 page. Only users with an authorized admin role can enter this workspace.
+                Authentication is completed on the secure Auth0 page. Only users with an authorized staff role can enter this workspace.
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
@@ -77,7 +77,7 @@ export default async function AdminAccessPage({ searchParams }: AdminAccessPageP
                   {redirectTo}
                 </p>
                 <p className="text-body-sm text-text-secondary mt-2">
-                  If you are redirected here from a protected admin route, sign in with the admin account that should access that destination.
+                  If you are redirected here from a protected admin route, sign in with the staff account that should access that destination.
                 </p>
               </div>
 

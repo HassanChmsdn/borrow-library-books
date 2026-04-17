@@ -1,4 +1,5 @@
 import {
+  type AppUserAccessConfig,
   APP_USER_ROLE_VALUES,
   type AppUserRole,
   type AppUserStatus,
@@ -9,10 +10,20 @@ import {
   type AppUserRecord,
 } from "./app-users";
 import {
+  canManageBooksRole,
+  canManageBorrowingsRole,
+  canManageCategoriesRole,
+  canManageInventoryRole,
+  canManageUsersRole,
+  canViewFinancialsRole,
+  isAdminRole,
+  isEmployeeRole,
+  isFinancialRole,
   getDefaultRedirectForAppRole,
   hasAdminAccessRole,
   isAppUserRole,
   isMemberRole,
+  isSuperAdminRole,
 } from "./roles";
 
 export const MOCK_AUTH_COOKIE = "borrow-library-mock-role";
@@ -28,6 +39,7 @@ export type MockAuthRole = AppAuthRole;
 
 export interface AppAuthUser {
   id: string;
+  access?: AppUserAccessConfig;
   role: AppAuthenticatedRole;
   status: AppUserStatus;
   fullName: string;
@@ -41,12 +53,21 @@ export interface AppAuthState {
   currentUser: AppAuthUser | null;
   currentRole: AppAuthRole;
   currentStatus: AppUserStatus | "guest";
+  canManageUsers: boolean;
+  canManageBooks: boolean;
+  canManageCategories: boolean;
+  canManageInventory: boolean;
+  canManageBorrowings: boolean;
+  canViewFinancials: boolean;
   hasAdminAccess: boolean;
   isAuthenticated: boolean;
+  isSuperAdmin: boolean;
   isStaff: boolean;
   isGuest: boolean;
   isMember: boolean;
   isAdmin: boolean;
+  isEmployee: boolean;
+  isFinancial: boolean;
   isSuspended: boolean;
   authSource: AppAuthSource;
 }
@@ -85,6 +106,7 @@ export function createAppAuthUser(
   authSource: AppAuthSource,
 ): AppAuthUser {
   return {
+    access: record.access,
     id: record.id,
     role: record.role,
     status: record.status,
@@ -101,12 +123,21 @@ export function createGuestAuthState(): AppAuthState {
     currentUser: null,
     currentRole: "guest",
     currentStatus: "guest",
+    canManageUsers: false,
+    canManageBooks: false,
+    canManageCategories: false,
+    canManageInventory: false,
+    canManageBorrowings: false,
+    canViewFinancials: false,
     hasAdminAccess: false,
     isAuthenticated: false,
+    isSuperAdmin: false,
     isStaff: false,
     isGuest: true,
     isMember: false,
     isAdmin: false,
+    isEmployee: false,
+    isFinancial: false,
     isSuspended: false,
     authSource: "none",
   };
@@ -118,6 +149,7 @@ export function createAuthenticatedAuthState(
   authSource: AppAuthSource,
 ): AppAuthState {
   const isActive = currentUser.status === "active";
+  const access = currentUser.access;
   const isStaff = hasAdminAccessRole(role) && isActive;
 
   return {
@@ -128,12 +160,21 @@ export function createAuthenticatedAuthState(
     },
     currentRole: role,
     currentStatus: currentUser.status,
+    canManageUsers: canManageUsersRole(role, access) && isActive,
+    canManageBooks: canManageBooksRole(role, access) && isActive,
+    canManageCategories: canManageCategoriesRole(role, access) && isActive,
+    canManageInventory: canManageInventoryRole(role, access) && isActive,
+    canManageBorrowings: canManageBorrowingsRole(role, access) && isActive,
+    canViewFinancials: canViewFinancialsRole(role, access) && isActive,
     hasAdminAccess: isStaff,
     isAuthenticated: true,
+    isSuperAdmin: isSuperAdminRole(role) && isActive,
     isStaff,
     isGuest: false,
     isMember: isMemberRole(role) && isActive,
-    isAdmin: isStaff,
+    isAdmin: isAdminRole(role) && isActive,
+    isEmployee: isEmployeeRole(role) && isActive,
+    isFinancial: isFinancialRole(role) && isActive,
     isSuspended: !isActive,
     authSource,
   };
@@ -187,8 +228,20 @@ export function isMember(authState: AppAuthState) {
   return authState.isMember;
 }
 
+export function isSuperAdmin(authState: AppAuthState) {
+  return authState.isSuperAdmin;
+}
+
 export function isAdmin(authState: AppAuthState) {
   return authState.isAdmin;
+}
+
+export function isEmployee(authState: AppAuthState) {
+  return authState.isEmployee;
+}
+
+export function isFinancial(authState: AppAuthState) {
+  return authState.isFinancial;
 }
 
 export function hasAdminAccess(authState: AppAuthState) {
@@ -201,6 +254,30 @@ export function isStaff(authState: AppAuthState) {
 
 export function isSuspended(authState: AppAuthState) {
   return authState.isSuspended;
+}
+
+export function canManageUsers(authState: AppAuthState) {
+  return authState.canManageUsers;
+}
+
+export function canManageBooks(authState: AppAuthState) {
+  return authState.canManageBooks;
+}
+
+export function canManageCategories(authState: AppAuthState) {
+  return authState.canManageCategories;
+}
+
+export function canManageInventory(authState: AppAuthState) {
+  return authState.canManageInventory;
+}
+
+export function canManageBorrowings(authState: AppAuthState) {
+  return authState.canManageBorrowings;
+}
+
+export function canViewFinancials(authState: AppAuthState) {
+  return authState.canViewFinancials;
 }
 
 export function getDefaultRedirectForRole(role: AppAuthenticatedRole) {

@@ -3,6 +3,7 @@ import "server-only";
 import type { WithId } from "mongodb";
 
 import type {
+  AppUserAccessConfig,
   AppUserRole,
   AppUserStatus,
   UserDocument,
@@ -16,6 +17,7 @@ import {
 } from "../repositories/users";
 
 export interface AppUserLookupRecord {
+  access?: AppUserAccessConfig;
   auth0UserId?: string;
   email: string;
   fullName: string;
@@ -52,6 +54,7 @@ function createFallbackName(options: {
 }
 
 function mapRepositoryRecord(record: {
+  access?: AppUserAccessConfig;
   auth0UserId?: string;
   email: string;
   fullName: string;
@@ -61,6 +64,7 @@ function mapRepositoryRecord(record: {
   subtitle: string;
 }): AppUserLookupRecord {
   return {
+    access: record.access,
     auth0UserId: record.auth0UserId,
     email: record.email,
     fullName: record.fullName,
@@ -73,6 +77,7 @@ function mapRepositoryRecord(record: {
 
 function mapUserDocument(record: WithId<UserDocument>): AppUserLookupRecord {
   return {
+    access: record.access,
     auth0UserId: record.auth0UserId,
     email: record.email,
     fullName: record.name,

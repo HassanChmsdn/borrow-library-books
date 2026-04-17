@@ -1,4 +1,8 @@
-import type { AppUserRole, AppUserStatus } from "@/lib/db";
+import type {
+  AppUserAccessConfig,
+  AppUserRole,
+  AppUserStatus,
+} from "@/lib/db";
 import {
   getAppRoleAccountLabel,
   hasAdminAccessRole,
@@ -8,6 +12,7 @@ import { adminSharedUsers } from "@/modules/admin-shared/mock-data";
 type UserManagementRole = "user" | "admin";
 
 export interface UserRepositoryRecord {
+  access?: AppUserAccessConfig;
   auth0UserId?: string;
   email: string;
   fullName: string;

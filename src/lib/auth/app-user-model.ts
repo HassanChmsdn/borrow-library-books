@@ -21,6 +21,18 @@ export const AppUserRoleSchema = z.enum(APP_USER_ROLE_VALUES);
 export type AppUserRole = z.infer<typeof AppUserRoleSchema>;
 export type StaffAppUserRole = (typeof STAFF_APP_USER_ROLE_VALUES)[number];
 
+export const AppUserAccessConfigSchema = z
+  .object({
+    canManageUsers: z.boolean().optional(),
+    canManageBooks: z.boolean().optional(),
+    canManageCategories: z.boolean().optional(),
+    canManageInventory: z.boolean().optional(),
+    canManageBorrowings: z.boolean().optional(),
+    canViewFinancials: z.boolean().optional(),
+  })
+  .partial();
+export type AppUserAccessConfig = z.infer<typeof AppUserAccessConfigSchema>;
+
 export const APP_USER_STATUS_VALUES = ["active", "suspended"] as const;
 export const AppUserStatusSchema = z.enum(APP_USER_STATUS_VALUES);
 export type AppUserStatus = z.infer<typeof AppUserStatusSchema>;

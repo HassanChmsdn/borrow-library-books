@@ -1,12 +1,21 @@
-import type { AppUserRole, AppUserStatus } from "./app-user-model";
+import type {
+  AppUserAccessConfig,
+  AppUserRole,
+  AppUserStatus,
+} from "./app-user-model";
 import { findUserRecordByMockRole } from "@/lib/data/repositories/users";
 
-export type { AppUserRole, AppUserStatus } from "./app-user-model";
+export type {
+  AppUserAccessConfig,
+  AppUserRole,
+  AppUserStatus,
+} from "./app-user-model";
 
 export interface AppUserRecord {
   id: string;
   authProvider: "mock" | "auth0";
   authSubject: string;
+  access?: AppUserAccessConfig;
   email: string;
   fullName: string;
   role: AppUserRole;
@@ -18,6 +27,7 @@ function toAppUserRecord(
   authProvider: AppUserRecord["authProvider"],
   authSubject: string,
   record: {
+    access?: AppUserAccessConfig;
     email: string;
     fullName: string;
     id: string;
@@ -29,6 +39,7 @@ function toAppUserRecord(
   return {
     authProvider,
     authSubject,
+    access: record.access,
     email: record.email,
     fullName: record.fullName,
     id: record.id,

@@ -56,6 +56,17 @@ const collectionDefinitions: Record<CollectionName, CollectionInitDefinition> = 
           required: ["auth0UserId", "email", "name", "role", "status"],
           properties: {
             ...baseDocumentProperties(),
+            access: {
+              bsonType: "object",
+              properties: {
+                canManageUsers: { bsonType: "bool" },
+                canManageBooks: { bsonType: "bool" },
+                canManageCategories: { bsonType: "bool" },
+                canManageInventory: { bsonType: "bool" },
+                canManageBorrowings: { bsonType: "bool" },
+                canViewFinancials: { bsonType: "bool" },
+              },
+            },
             auth0UserId: { bsonType: "string" },
             avatarUrl: { bsonType: "string" },
             email: { bsonType: "string" },

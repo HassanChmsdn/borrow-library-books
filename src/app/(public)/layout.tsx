@@ -5,7 +5,7 @@ import {
   buildSignOutHref,
   buildMockSignInHref,
   getCurrentUser,
-  isAdmin,
+  hasAdminAccess,
   isAuthenticated,
   isMember,
   type AppAuthState,
@@ -47,7 +47,7 @@ function PublicUtilitySlot({
 
   return (
     <>
-      {isAdmin(session) ? (
+      {hasAdminAccess(session) ? (
         <Button asChild size="sm" variant="outline">
           <Link href="/admin">Admin console</Link>
         </Button>

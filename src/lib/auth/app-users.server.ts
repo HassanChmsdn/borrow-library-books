@@ -1,6 +1,10 @@
 import "server-only";
 
-import type { AppUserRole, AppUserStatus } from "./app-user-model";
+import type {
+  AppUserAccessConfig,
+  AppUserRole,
+  AppUserStatus,
+} from "./app-user-model";
 import {
   ensureAppUserForAuth0Identity,
   lookupAppUserByAuth0Identity,
@@ -8,13 +12,18 @@ import {
 
 import { getMockAppUserRecord, type AppUserRecord } from "./app-users";
 
-export type { AppUserRole, AppUserStatus } from "./app-user-model";
+export type {
+  AppUserAccessConfig,
+  AppUserRole,
+  AppUserStatus,
+} from "./app-user-model";
 export type { AppUserRecord } from "./app-users";
 
 function toAppUserRecord(
   authProvider: AppUserRecord["authProvider"],
   authSubject: string,
   record: {
+    access?: AppUserAccessConfig;
     email: string;
     fullName: string;
     id: string;
@@ -26,6 +35,7 @@ function toAppUserRecord(
   return {
     authProvider,
     authSubject,
+    access: record.access,
     email: record.email,
     fullName: record.fullName,
     id: record.id,
