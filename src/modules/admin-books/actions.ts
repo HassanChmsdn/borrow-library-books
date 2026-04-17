@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireAdminSession } from "@/lib/auth/server";
+import { requireAdminSectionManagement } from "@/lib/auth/server";
 import {
   deleteAdminBook,
   saveAdminBook,
@@ -60,7 +60,7 @@ export async function saveAdminBookAction(
     };
   }
 
-  await requireAdminSession("/admin/books");
+  await requireAdminSectionManagement("books", "/admin/books");
 
   try {
     const savedBook = await saveAdminBook({
@@ -102,7 +102,7 @@ export async function saveAdminBookAction(
 export async function deleteAdminBookAction(
   bookId: string,
 ): Promise<AdminBookMutationResult> {
-  await requireAdminSession("/admin/books");
+  await requireAdminSectionManagement("books", "/admin/books");
 
   try {
     const deletedBook = await deleteAdminBook(bookId);

@@ -23,6 +23,11 @@ import type {
 interface AdminDashboardModuleProps {
   data: {
     activity: ReadonlyArray<AdminDashboardActivityItem>;
+    availableSections: {
+      books: boolean;
+      borrowings: boolean;
+      inventory: boolean;
+    };
     metrics: ReadonlyArray<AdminDashboardMetric>;
     notices: ReadonlyArray<AdminDashboardNoticeItem>;
     quickActions: ReadonlyArray<AdminDashboardQuickAction>;
@@ -32,7 +37,15 @@ interface AdminDashboardModuleProps {
 }
 
 function AdminDashboardModule({ data }: Readonly<AdminDashboardModuleProps>) {
-  const { activity, metrics, notices, quickActions, trendPoints, trendSummary } = data;
+  const {
+    activity,
+    availableSections,
+    metrics,
+    notices,
+    quickActions,
+    trendPoints,
+    trendSummary,
+  } = data;
 
   const hasDashboardContent =
     activity.length > 0 ||
@@ -43,7 +56,7 @@ function AdminDashboardModule({ data }: Readonly<AdminDashboardModuleProps>) {
     trendSummary.length > 0;
 
   if (!hasDashboardContent) {
-    return <AdminDashboardEmptyState />;
+    return <AdminDashboardEmptyState availableSections={availableSections} />;
   }
 
   return (
@@ -54,12 +67,16 @@ function AdminDashboardModule({ data }: Readonly<AdminDashboardModuleProps>) {
         description="A production-oriented overview of pending circulation work, active borrowing pressure, overdue follow-up, cash fee intake, and member activity."
         actions={
           <>
-            <Button asChild size="sm" variant="outline">
-              <Link href="/admin/borrowings">Review borrowings</Link>
-            </Button>
-            <Button asChild size="sm">
-              <Link href="/admin/inventory">Open inventory</Link>
-            </Button>
+            {availableSections.borrowings ? (
+              <Button asChild size="sm" variant="outline">
+                <Link href="/admin/borrowings">Review borrowings</Link>
+              </Button>
+            ) : null}
+            {availableSections.inventory ? (
+              <Button asChild size="sm">
+                <Link href="/admin/inventory">Open inventory</Link>
+              </Button>
+            ) : null}
           </>
         }
       />
@@ -84,7 +101,30 @@ function AdminDashboardModule({ data }: Readonly<AdminDashboardModuleProps>) {
   );
 }
 
-function AdminDashboardEmptyState() {
+function AdminDashboardEmptyState({
+  availableSections,
+}: Readonly<{
+  availableSections: {
+    books: boolean;
+    borrowings: boolean;
+    inventory: boolean;
+  };
+}>) {
+  const emptyStateHref = availableSections.books
+    ? "/admin/books"
+    : availableSections.borrowings
+      ? "/admin/borrowings"
+      : availableSections.inventory
+        ? "/admin/inventory"
+        : null;
+  const emptyStateLabel = availableSections.books
+    ? "Open books management"
+    : availableSections.borrowings
+      ? "Open borrowings"
+      : availableSections.inventory
+        ? "Open inventory"
+        : null;
+
   return (
     <div className="gap-section flex flex-col">
       <AdminPageHeader
@@ -96,11 +136,11 @@ function AdminDashboardEmptyState() {
       <AdminEmptyState
         title="No dashboard data available"
         description="KPI cards, notices, trends, and recent activity will appear here once the admin data source contains operational records again."
-        action={
+        action={emptyStateHref && emptyStateLabel ? (
           <Button asChild size="sm" variant="outline">
-            <Link href="/admin/books">Open books management</Link>
+            <Link href={emptyStateHref}>{emptyStateLabel}</Link>
           </Button>
-        }
+        ) : undefined}
       />
     </div>
   );

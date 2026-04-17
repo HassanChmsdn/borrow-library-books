@@ -128,22 +128,62 @@ const hiddenAuthUsers: ReadonlyArray<UserRepositoryRecord> = [
 
 const userRecords = [...visibleUserRecords, ...hiddenAuthUsers] as const;
 
+const mockUserAccessOverrides = new Map<string, AppUserAccessConfig | null>();
+
+function applyMockUserAccessOverride(record: UserRepositoryRecord) {
+  if (!mockUserAccessOverrides.has(record.id)) {
+    return record;
+  }
+
+  const access = mockUserAccessOverrides.get(record.id) ?? undefined;
+
+  return {
+    ...record,
+    access,
+  } satisfies UserRepositoryRecord;
+}
+
 export function listUserRecords() {
-  return userRecords;
+  return userRecords.map((record) => applyMockUserAccessOverride(record));
 }
 
 export function listVisibleUserRecords() {
-  return userRecords.filter((user) => user.visibleInAdminDirectory);
+  return listUserRecords().filter((user) => user.visibleInAdminDirectory);
 }
 
 export function getUserRecordById(userId: string) {
-  return userRecords.find((user) => user.id === userId) ?? null;
+  const record = userRecords.find((user) => user.id === userId);
+
+  return record ? applyMockUserAccessOverride(record) : null;
 }
 
 export function findUserRecordByAuth0Subject(subject: string) {
-  return userRecords.find((user) => user.auth0UserId === subject) ?? null;
+  const record = userRecords.find((user) => user.auth0UserId === subject);
+
+  return record ? applyMockUserAccessOverride(record) : null;
 }
 
 export function findUserRecordByMockRole(role: AppUserRole) {
-  return userRecords.find((user) => user.mockRole === role) ?? null;
+  const record = userRecords.find((user) => user.mockRole === role);
+
+  return record ? applyMockUserAccessOverride(record) : null;
+}
+
+export function setMockUserAccessConfig(
+  userId: string,
+  access: AppUserAccessConfig | undefined,
+) {
+  const record = userRecords.find((user) => user.id === userId);
+
+  if (!record) {
+    return null;
+  }
+
+  if (access) {
+    mockUserAccessOverrides.set(userId, access);
+  } else {
+    mockUserAccessOverrides.set(userId, null);
+  }
+
+  return applyMockUserAccessOverride(record);
 }

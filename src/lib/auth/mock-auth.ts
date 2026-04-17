@@ -10,12 +10,11 @@ import {
   type AppUserRecord,
 } from "./app-users";
 import {
-  canManageBooksRole,
-  canManageBorrowingsRole,
-  canManageCategoriesRole,
-  canManageInventoryRole,
-  canManageUsersRole,
-  canViewFinancialsRole,
+  createEmptyResolvedAdminSectionPermissions,
+  getResolvedAdminSectionPermissions,
+  type ResolvedAppSectionPermissions,
+} from "./permissions";
+import {
   isAdminRole,
   isEmployeeRole,
   isFinancialRole,
@@ -25,6 +24,7 @@ import {
   isMemberRole,
   isSuperAdminRole,
 } from "./roles";
+import type { AppAdminSection } from "./app-user-model";
 
 export const MOCK_AUTH_COOKIE = "borrow-library-mock-role";
 
@@ -53,6 +53,7 @@ export interface AppAuthState {
   currentUser: AppAuthUser | null;
   currentRole: AppAuthRole;
   currentStatus: AppUserStatus | "guest";
+  sectionAccess: ResolvedAppSectionPermissions;
   canManageUsers: boolean;
   canManageBooks: boolean;
   canManageCategories: boolean;
@@ -123,6 +124,7 @@ export function createGuestAuthState(): AppAuthState {
     currentUser: null,
     currentRole: "guest",
     currentStatus: "guest",
+    sectionAccess: createEmptyResolvedAdminSectionPermissions(),
     canManageUsers: false,
     canManageBooks: false,
     canManageCategories: false,
@@ -151,6 +153,9 @@ export function createAuthenticatedAuthState(
   const isActive = currentUser.status === "active";
   const access = currentUser.access;
   const isStaff = hasAdminAccessRole(role) && isActive;
+  const sectionAccess = isActive
+    ? getResolvedAdminSectionPermissions(role, access)
+    : createEmptyResolvedAdminSectionPermissions();
 
   return {
     currentUser: {
@@ -160,12 +165,13 @@ export function createAuthenticatedAuthState(
     },
     currentRole: role,
     currentStatus: currentUser.status,
-    canManageUsers: canManageUsersRole(role, access) && isActive,
-    canManageBooks: canManageBooksRole(role, access) && isActive,
-    canManageCategories: canManageCategoriesRole(role, access) && isActive,
-    canManageInventory: canManageInventoryRole(role, access) && isActive,
-    canManageBorrowings: canManageBorrowingsRole(role, access) && isActive,
-    canViewFinancials: canViewFinancialsRole(role, access) && isActive,
+    sectionAccess,
+    canManageUsers: sectionAccess.users.canManage,
+    canManageBooks: sectionAccess.books.canManage,
+    canManageCategories: sectionAccess.categories.canManage,
+    canManageInventory: sectionAccess.inventory.canManage,
+    canManageBorrowings: sectionAccess.borrowings.canManage,
+    canViewFinancials: sectionAccess.financial.canAccess,
     hasAdminAccess: isStaff,
     isAuthenticated: true,
     isSuperAdmin: isSuperAdminRole(role) && isActive,
@@ -278,6 +284,27 @@ export function canManageBorrowings(authState: AppAuthState) {
 
 export function canViewFinancials(authState: AppAuthState) {
   return authState.canViewFinancials;
+}
+
+export function getAdminSectionAccess(
+  authState: AppAuthState,
+  section: AppAdminSection,
+) {
+  return authState.sectionAccess[section];
+}
+
+export function canAccessAdminSection(
+  authState: AppAuthState,
+  section: AppAdminSection,
+) {
+  return getAdminSectionAccess(authState, section).canAccess;
+}
+
+export function canManageAdminSection(
+  authState: AppAuthState,
+  section: AppAdminSection,
+) {
+  return getAdminSectionAccess(authState, section).canManage;
 }
 
 export function getDefaultRedirectForRole(role: AppAuthenticatedRole) {

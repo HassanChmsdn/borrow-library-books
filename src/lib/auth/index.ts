@@ -1,5 +1,7 @@
 export {
   MOCK_AUTH_COOKIE,
+  canAccessAdminSection,
+  canManageAdminSection,
   canManageBooks,
   canManageBorrowings,
   canManageCategories,
@@ -45,12 +47,26 @@ export {
 } from "./mock-auth";
 
 export {
+  canAccessAdminSectionRole,
+  canManageAccessControlRole,
+  canManageAdminSectionRole,
   canManageBooksRole,
   canManageBorrowingsRole,
   canManageCategoriesRole,
   canManageInventoryRole,
   canManageUsersRole,
   canViewFinancialsRole,
+  createEmptyResolvedAdminSectionPermissions,
+  getAdminSectionFromPathname,
+  getAdminSectionLabel,
+  getAdminSectionRoute,
+  getResolvedAdminSectionPermissions,
+  roleAdminSectionDefaults,
+  type ResolvedAppSectionPermission,
+  type ResolvedAppSectionPermissions,
+} from "./permissions";
+
+export {
   getAppRoleAccountLabel,
   getAppRoleDisplayLabel,
   getDefaultRedirectForAppRole,
@@ -64,6 +80,17 @@ export {
   isStaffRole,
   type AdminAccessRole,
 } from "./roles";
+
+export type {
+  AppAdminSection,
+  AppAdminSectionAccess,
+  AppAdminSectionPermission,
+} from "./app-user-model";
+
+export {
+  APP_ADMIN_SECTION_VALUES,
+  APP_USER_ROLE_VALUES,
+} from "./app-user-model";
 
 export {
   getMockAppUserRecord,

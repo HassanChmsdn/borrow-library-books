@@ -44,7 +44,9 @@ These routes require authenticated staff access.
 | `/admin/books/[id]` | Staff only | Edit/view book details management flow. |
 | `/admin/categories` | Staff only | Categories management page. |
 | `/admin/borrowings` | Staff only | Borrowings management page. |
+| `/admin/financial` | Staff only | Financial operations page. |
 | `/admin/inventory` | Staff only | Inventory copies management page. |
+| `/admin/settings/access-control` | Staff only | Access-control policy page for authorized staff. |
 | `/admin/users` | Staff only | Users management page. |
 | `/admin/users/[id]` | Staff only | Admin user profile/details page. |
 | `/admin/profile` | Staff only | Current authenticated admin profile page. |
@@ -70,12 +72,13 @@ These routes require authenticated staff access.
 - Can access public routes.
 - Can access admin routes under `/admin/*`.
 - Staff roles currently include `super_admin`, `admin`, `employee`, and `financial`.
+- Section access inside `/admin/*` now resolves from role defaults plus optional per-user overrides stored on the app-user access model.
 - Under the current mocked model, staff and member are separate roles. Staff access does not automatically imply member account access unless the auth model is expanded later.
 
 ## Current Guard Behavior
 
 - `/account/*` is protected by mocked member-only access checks.
-- `/admin/*` is protected by staff-access checks derived from the app user role.
+- `/admin/*` is protected first by staff-access checks, then by section-level permissions for route groups such as books, users, financial, and access control.
 - Route protection is enforced in both middleware and server-side layout guards.
 - The current mocked auth layer is temporary and structured to be replaced later by Auth0 and MongoDB-backed user/session logic.
 

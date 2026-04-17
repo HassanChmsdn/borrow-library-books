@@ -3,15 +3,19 @@ import Link from "next/link";
 import {
   BookCopy,
   FolderKanban,
+  HandCoins,
   LayoutDashboard,
   PackageOpen,
   Rows3,
+  ShieldCheck,
   Users,
 } from "lucide-react";
 
 import {
   buildSignOutHref,
+  canAccessAdminSection,
   getCurrentUser,
+  type AppAdminSection,
 } from "@/lib/auth";
 import { MockAuthProvider } from "@/lib/auth/react";
 import {
@@ -22,7 +26,21 @@ import {
 import { Button } from "@/components/ui/button";
 import { requireAdminSession } from "@/lib/auth/server";
 
-const adminNavigationSections = [
+interface AdminNavigationItemConfig {
+  href: string;
+  label: string;
+  description?: string;
+  icon?: ReactNode;
+  matchStrategy?: "exact" | "prefix";
+  section?: AppAdminSection;
+}
+
+interface AdminNavigationSectionConfig {
+  title: string;
+  items: ReadonlyArray<AdminNavigationItemConfig>;
+}
+
+const adminNavigationSections: ReadonlyArray<AdminNavigationSectionConfig> = [
   {
     title: "Workspace",
     items: [
@@ -38,18 +56,21 @@ const adminNavigationSections = [
         label: "Borrowings",
         description: "Review holds, renewals, due-soon items, and returns.",
         icon: <BookCopy aria-hidden="true" />,
+        section: "borrowings",
       },
       {
         href: "/admin/books",
         label: "Books",
         description: "Manage catalog records, shelf details, and fees.",
         icon: <Rows3 aria-hidden="true" />,
+        section: "books",
       },
       {
         href: "/admin/inventory",
         label: "Inventory",
         description: "Track stock health, branch balances, and restock plans.",
         icon: <PackageOpen aria-hidden="true" />,
+        section: "inventory",
       },
     ],
   },
@@ -61,12 +82,33 @@ const adminNavigationSections = [
         label: "Categories",
         description: "Shape collection mix, shelves, and demand by category.",
         icon: <FolderKanban aria-hidden="true" />,
+        section: "categories",
       },
       {
         href: "/admin/users",
         label: "Users",
         description: "Monitor members, balances, and engagement activity.",
         icon: <Users aria-hidden="true" />,
+        section: "users",
+      },
+      {
+        href: "/admin/financial",
+        label: "Financial",
+        description: "Review fee intake, reconciliations, and cashier workflows.",
+        icon: <HandCoins aria-hidden="true" />,
+        section: "financial",
+      },
+    ],
+  },
+  {
+    title: "Governance",
+    items: [
+      {
+        href: "/admin/settings/access-control",
+        label: "Access Control",
+        description: "Inspect role defaults and prepare targeted access overrides.",
+        icon: <ShieldCheck aria-hidden="true" />,
+        section: "accessControl",
       },
     ],
   },
@@ -125,6 +167,21 @@ export default async function AdminSectionLayout({
 }>) {
   const session = await requireAdminSession();
   const currentUser = getCurrentUser(session);
+  const navigationSections = adminNavigationSections
+    .map((section) => ({
+      title: section.title,
+      items: section.items
+        .filter((item) => !item.section || canAccessAdminSection(session, item.section))
+        .map((item) => ({
+          description: item.description,
+          href: item.href,
+          icon: item.icon,
+          label: item.label,
+          matchStrategy: item.matchStrategy,
+        })),
+    }))
+    .filter((section) => section.items.length > 0);
+  const canAccessBooks = canAccessAdminSection(session, "books");
 
   return (
     <MockAuthProvider value={session}>
@@ -137,7 +194,7 @@ export default async function AdminSectionLayout({
             title="Borrow Library Books"
           />
         }
-        navigationSections={adminNavigationSections}
+        navigationSections={navigationSections}
         topHeader={
           <AdminTopHeader
             eyebrow="Library Admin"
@@ -148,9 +205,11 @@ export default async function AdminSectionLayout({
                 <Button asChild size="sm" variant="outline">
                   <Link href="/books">Reader Experience</Link>
                 </Button>
-                <Button asChild size="sm" variant="secondary">
-                  <Link href="/admin/books">Catalog queue</Link>
-                </Button>
+                {canAccessBooks ? (
+                  <Button asChild size="sm" variant="secondary">
+                    <Link href="/admin/books">Catalog queue</Link>
+                  </Button>
+                ) : null}
               </>
             }
           />

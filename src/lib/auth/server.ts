@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 
 import {
   MOCK_AUTH_COOKIE,
+  canAccessAdminSection,
+  canManageAdminSection,
   hasAdminAccess,
   buildMockSignInHref,
   createGuestAuthState,
@@ -12,6 +14,7 @@ import {
   isAdmin,
   isAuthenticated,
   isMember,
+  type AppAdminSection,
   type AppAuthState,
 } from "./index";
 import {
@@ -95,6 +98,32 @@ export async function requireAdminSession(redirectTo = "/admin") {
         redirectTo,
       }),
     );
+  }
+
+  return session;
+}
+
+export async function requireAdminSectionAccess(
+  section: AppAdminSection,
+  redirectTo = "/admin",
+) {
+  const session = await requireAdminSession(redirectTo);
+
+  if (!canAccessAdminSection(session, section)) {
+    redirect("/admin");
+  }
+
+  return session;
+}
+
+export async function requireAdminSectionManagement(
+  section: AppAdminSection,
+  redirectTo = "/admin",
+) {
+  const session = await requireAdminSession(redirectTo);
+
+  if (!canManageAdminSection(session, section)) {
+    redirect("/admin");
   }
 
   return session;

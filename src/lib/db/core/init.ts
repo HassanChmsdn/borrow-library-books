@@ -59,12 +59,68 @@ const collectionDefinitions: Record<CollectionName, CollectionInitDefinition> = 
             access: {
               bsonType: "object",
               properties: {
+                sections: {
+                  bsonType: "object",
+                  properties: {
+                    accessControl: {
+                      bsonType: "object",
+                      properties: {
+                        canAccess: { bsonType: "bool" },
+                        canManage: { bsonType: "bool" },
+                      },
+                    },
+                    books: {
+                      bsonType: "object",
+                      properties: {
+                        canAccess: { bsonType: "bool" },
+                        canManage: { bsonType: "bool" },
+                      },
+                    },
+                    borrowings: {
+                      bsonType: "object",
+                      properties: {
+                        canAccess: { bsonType: "bool" },
+                        canManage: { bsonType: "bool" },
+                      },
+                    },
+                    categories: {
+                      bsonType: "object",
+                      properties: {
+                        canAccess: { bsonType: "bool" },
+                        canManage: { bsonType: "bool" },
+                      },
+                    },
+                    financial: {
+                      bsonType: "object",
+                      properties: {
+                        canAccess: { bsonType: "bool" },
+                        canManage: { bsonType: "bool" },
+                      },
+                    },
+                    inventory: {
+                      bsonType: "object",
+                      properties: {
+                        canAccess: { bsonType: "bool" },
+                        canManage: { bsonType: "bool" },
+                      },
+                    },
+                    users: {
+                      bsonType: "object",
+                      properties: {
+                        canAccess: { bsonType: "bool" },
+                        canManage: { bsonType: "bool" },
+                      },
+                    },
+                  },
+                },
                 canManageUsers: { bsonType: "bool" },
                 canManageBooks: { bsonType: "bool" },
                 canManageCategories: { bsonType: "bool" },
                 canManageInventory: { bsonType: "bool" },
                 canManageBorrowings: { bsonType: "bool" },
                 canViewFinancials: { bsonType: "bool" },
+                canManageFinancials: { bsonType: "bool" },
+                canManageAccessControl: { bsonType: "bool" },
               },
             },
             auth0UserId: { bsonType: "string" },

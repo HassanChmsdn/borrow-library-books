@@ -10,6 +10,11 @@ import {
 } from "lucide-react";
 
 import {
+  canAccessAdminSection,
+  getAdminSectionFromPathname,
+  type AppAuthState,
+} from "@/lib/auth";
+import {
   listBookCopyRecordsFromStore,
   listBorrowRequestRecordsFromStore,
   listVisibleUserRecordsFromStore,
@@ -31,7 +36,17 @@ import type {
 
 const oneDayInMs = 24 * 60 * 60 * 1000;
 
-export async function getAdminDashboardModuleData() {
+function canOpenAdminHref(session: AppAuthState | undefined, href: string) {
+  if (!session) {
+    return true;
+  }
+
+  const section = getAdminSectionFromPathname(href);
+
+  return !section || canAccessAdminSection(session, section);
+}
+
+export async function getAdminDashboardModuleData(session?: AppAuthState) {
   const [borrowings, copies, users] = await Promise.all([
     listBorrowRequestRecordsFromStore(),
     listBookCopyRecordsFromStore(),
@@ -112,7 +127,7 @@ export async function getAdminDashboardModuleData() {
     },
   ];
 
-  const notices: ReadonlyArray<AdminDashboardNoticeItem> = [
+  const notices = [
     {
       actionHref: "/admin/borrowings",
       actionLabel: "Open borrowings",
@@ -135,7 +150,10 @@ export async function getAdminDashboardModuleData() {
       title: "Overdue follow-up",
       tone: "danger",
     },
-  ];
+  ] satisfies ReadonlyArray<AdminDashboardNoticeItem>;
+  const visibleNotices = notices.filter((notice) =>
+    canOpenAdminHref(session, notice.actionHref),
+  );
 
   const trendPoints: ReadonlyArray<AdminDashboardTrendPoint> = Array.from({ length: 7 }, (_, index) => {
     const currentDate = new Date(now.getTime() - (6 - index) * oneDayInMs);
@@ -225,7 +243,7 @@ export async function getAdminDashboardModuleData() {
     title: "Borrowing activity",
   }));
 
-  const quickActions: ReadonlyArray<AdminDashboardQuickAction> = [
+  const quickActions = [
     {
       actionLabel: "Open books",
       description: "Review catalog records, borrowing fees, and availability changes.",
@@ -250,13 +268,21 @@ export async function getAdminDashboardModuleData() {
       id: "quick-users",
       title: "Users",
     },
-  ];
+  ] satisfies ReadonlyArray<AdminDashboardQuickAction>;
+  const visibleQuickActions = quickActions.filter((action) =>
+    canOpenAdminHref(session, action.href),
+  );
 
   return {
     activity,
+    availableSections: {
+      books: canOpenAdminHref(session, "/admin/books"),
+      borrowings: canOpenAdminHref(session, "/admin/borrowings"),
+      inventory: canOpenAdminHref(session, "/admin/inventory"),
+    },
     metrics,
-    notices,
-    quickActions,
+    notices: visibleNotices,
+    quickActions: visibleQuickActions,
     trendPoints,
     trendSummary,
   };

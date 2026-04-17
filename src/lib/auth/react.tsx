@@ -3,6 +3,8 @@
 import { createContext, useContext, type PropsWithChildren } from "react";
 
 import {
+  canAccessAdminSection,
+  canManageAdminSection,
   canManageBooks,
   canManageBorrowings,
   canManageCategories,
@@ -24,6 +26,7 @@ import {
   isSuspended,
   type AppAuthState,
 } from "./index";
+import type { AppAdminSection } from "./app-user-model";
 
 const MockAuthContext = createContext<AppAuthState>(createGuestAuthState());
 
@@ -134,4 +137,12 @@ export function useCanManageBorrowings() {
 
 export function useCanViewFinancials() {
   return useMockAuth().canViewFinancials;
+}
+
+export function useCanAccessAdminSection(section: AppAdminSection) {
+  return canAccessAdminSection(useMockAuthContext(), section);
+}
+
+export function useCanManageAdminSection(section: AppAdminSection) {
+  return canManageAdminSection(useMockAuthContext(), section);
 }

@@ -2,6 +2,7 @@ import {
   AdminBookDetailsEmptyState,
   AdminBookDetailsModule,
 } from "@/modules/admin-books";
+import { requireAdminSectionAccess } from "@/lib/auth/server";
 import {
   getAdminBookDetailsRecordByIdFromStore,
   listAdminBookDetailRecords,
@@ -31,6 +32,7 @@ export async function generateStaticParams() {
 export default async function AdminBookEditPage(
   props: AdminBookDetailsPageProps,
 ) {
+  await requireAdminSectionAccess("books", "/admin/books");
   const { id } = await props.params;
   const book = await getAdminBookDetailsRecordByIdFromStore(id);
 

@@ -2,10 +2,12 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import {
+  canAccessAdminSection,
   buildMockSignInHref,
   createGuestAuthState,
   createMockAuthState,
-  isAdmin,
+  getAdminSectionFromPathname,
+  hasAdminAccess,
   isMember,
   MOCK_AUTH_COOKIE,
 } from "@/lib/auth";
@@ -24,13 +26,21 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (pathname.startsWith("/admin") && !isAdmin(authState)) {
-    return NextResponse.redirect(
-      new URL(
-        buildMockSignInHref({ role: "admin", redirectTo }),
-        request.url,
-      ),
-    );
+  if (pathname.startsWith("/admin")) {
+    if (!hasAdminAccess(authState)) {
+      return NextResponse.redirect(
+        new URL(
+          buildMockSignInHref({ role: "admin", redirectTo }),
+          request.url,
+        ),
+      );
+    }
+
+    const section = getAdminSectionFromPathname(pathname);
+
+    if (section && !canAccessAdminSection(authState, section)) {
+      return NextResponse.redirect(new URL("/admin", request.url));
+    }
   }
 
   if (pathname.startsWith("/account") && !isMember(authState)) {
