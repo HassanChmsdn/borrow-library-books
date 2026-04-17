@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 
 interface ConfirmActionDialogProps {
   cancelLabel?: string;
+  confirmDisabled?: boolean;
   children?: React.ReactNode;
   confirmLabel?: string;
   defaultOpen?: boolean;
@@ -23,6 +24,7 @@ interface ConfirmActionDialogProps {
 
 function ConfirmActionDialog({
   cancelLabel = "Cancel",
+  confirmDisabled = false,
   children,
   confirmLabel = "Confirm",
   defaultOpen = false,
@@ -121,6 +123,7 @@ function ConfirmActionDialog({
                   <Button
                     type="button"
                     variant={tone === "danger" ? "destructive" : "default"}
+                    disabled={confirmDisabled}
                     onClick={() => {
                       onConfirm?.();
                       setOpen(false);

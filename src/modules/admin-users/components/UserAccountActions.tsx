@@ -1,10 +1,16 @@
+"use client";
+
+import * as React from "react";
+
 import {
+  AdminFilterSelect,
   AdminDetailSection,
   AdminSectionCard,
   ConfirmActionDialog,
 } from "@/components/admin";
 import { Button } from "@/components/ui/button";
 
+import { adminUserRoleFieldOptions } from "../mock-data";
 import { UserRoleBadge } from "./UserRoleBadge";
 import { UserStatusBadge } from "./UserStatusBadge";
 
@@ -13,7 +19,7 @@ import type { AdminUserRole, AdminUserStatus } from "../types";
 interface UserAccountActionsProps {
   isMutating?: boolean;
   lastActionMessage?: string | null;
-  onChangeRole?: () => void;
+  onChangeRole?: (role: AdminUserRole) => void;
   onReactivateUser?: () => void;
   onSuspendUser?: () => void;
   role: AdminUserRole;
@@ -29,7 +35,12 @@ function UserAccountActions({
   role,
   status,
 }: Readonly<UserAccountActionsProps>) {
-  const roleActionLabel = role === "admin" ? "Change to user" : "Promote to admin";
+  const [isRoleDialogOpen, setIsRoleDialogOpen] = React.useState(false);
+  const [nextRole, setNextRole] = React.useState(role);
+
+  React.useEffect(() => {
+    setNextRole(role);
+  }, [role]);
 
   return (
     <AdminSectionCard
@@ -72,16 +83,32 @@ function UserAccountActions({
 
         <ConfirmActionDialog
           title="Change account role?"
-          description="This mock action updates the local role state so the layout is ready for future admin role-management APIs."
-          confirmLabel={roleActionLabel}
+          description="Select the application role that should be assigned to this account. This mock action updates local state only, while keeping the UI aligned with the future role-management API shape."
+          confirmLabel="Save role"
+          confirmDisabled={isMutating || nextRole === role}
           tone="default"
+          open={isRoleDialogOpen}
+          onOpenChange={(open) => {
+            setIsRoleDialogOpen(open);
+
+            if (!open) {
+              setNextRole(role);
+            }
+          }}
           trigger={
             <Button type="button" variant="outline" disabled={isMutating}>
-              {roleActionLabel}
+              Change role
             </Button>
           }
-          onConfirm={onChangeRole}
-        />
+          onConfirm={() => onChangeRole?.(nextRole)}
+        >
+          <AdminFilterSelect
+            label="Assigned role"
+            options={adminUserRoleFieldOptions}
+            value={nextRole}
+            onValueChange={setNextRole}
+          />
+        </ConfirmActionDialog>
       </div>
 
       <p className="text-body-sm text-text-secondary">

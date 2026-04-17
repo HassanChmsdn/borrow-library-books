@@ -4,6 +4,10 @@ import {
   listVisibleUserRecords,
 } from "@/lib/data";
 import {
+  getAppRoleDisplayLabel,
+  hasAdminAccessRole,
+} from "@/lib/auth/roles";
+import {
   formatAdminCurrency,
   formatAdminJoinedDate,
   formatAdminShortDate,
@@ -19,6 +23,7 @@ import type {
   AdminUserStatus,
   AdminUsersRoleFilter,
 } from "./types";
+import { adminUserFormRoleValues } from "./types";
 
 function getBorrowingFeeLabel(feeCents: number) {
   return feeCents === 0 ? "Free" : `${formatAdminCurrency(feeCents)} cash`;
@@ -63,7 +68,7 @@ function getBorrowingSummaryLabel(
   totalCount: number,
   role: AdminUserRecord["role"],
 ) {
-  if (role === "admin" && totalCount === 0) {
+  if (hasAdminAccessRole(role) && totalCount === 0) {
     return "No personal loans";
   }
 
@@ -119,7 +124,7 @@ function getBorrowingSummaryMeta(
     return borrowingHistory[0].completedDateLabel;
   }
 
-  return role === "admin"
+  return hasAdminAccessRole(role)
     ? "Staff account used for admin operations"
     : "No borrowing activity yet";
 }
@@ -128,16 +133,18 @@ export const adminUsersRoleOptions: ReadonlyArray<
   AdminFilterOption<AdminUsersRoleFilter>
 > = [
   { label: "All roles", value: "all" },
-  { label: "Users", value: "user" },
-  { label: "Admins", value: "admin" },
+  ...adminUserFormRoleValues.map((role) => ({
+    label: getAppRoleDisplayLabel(role),
+    value: role,
+  })),
 ];
 
 export const adminUserRoleFieldOptions: ReadonlyArray<
   AdminFilterOption<AdminUserFormValues["role"]>
-> = [
-  { label: "User", value: "user" },
-  { label: "Admin", value: "admin" },
-];
+> = adminUserFormRoleValues.map((role) => ({
+  label: getAppRoleDisplayLabel(role),
+  value: role,
+}));
 
 export const adminUserStatusFieldOptions: ReadonlyArray<
   AdminFilterOption<AdminUserStatus>
@@ -151,7 +158,7 @@ export const adminUserFormDefaults: AdminUserFormValues = {
   email: "",
   fullName: "",
   onboardingNote: "",
-  role: "user",
+  role: "member",
   temporaryPassword: "",
 };
 
@@ -174,7 +181,7 @@ export const adminUserProfileRecords: ReadonlyArray<AdminUserProfileRecord> =
       id: user.id,
       fullName: user.fullName,
       email: user.email,
-      role: user.managementRole,
+      role: user.role,
       status: user.status,
       joinedDateLabel: formatAdminJoinedDate(user.joinedOn),
       profileHref: `/admin/users/${user.id}`,
@@ -183,12 +190,12 @@ export const adminUserProfileRecords: ReadonlyArray<AdminUserProfileRecord> =
         pendingCount,
         overdueCount,
         borrowings.length,
-        user.managementRole,
+        user.role,
       ),
       borrowingSummaryMeta: getBorrowingSummaryMeta(
         currentBorrowings,
         borrowingHistory,
-        user.managementRole,
+        user.role,
       ),
       profileSummaryNote: user.profileNote,
       totalBorrowingsCount: borrowings.length,

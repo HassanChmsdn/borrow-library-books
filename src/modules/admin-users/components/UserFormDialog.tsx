@@ -139,12 +139,12 @@ function UserFormDialog({
           <div className="border-b border-black/5 p-5 sm:p-6">
             <div className="space-y-1.5">
               <h2 className="text-title text-foreground font-semibold">
-                Create user
+                Create account
               </h2>
               <p className="text-body-sm text-text-secondary max-w-[60ch]">
-                Add a new mocked account for roster review and future Auth0-backed
-                user management. This flow stays local for now but uses the same
-                typed contract the real create-user mutation can adopt later.
+                Add a new mocked member or staff account for roster review and future Auth0-backed
+                account management. This flow stays local for now but uses the same
+                typed role contract the real create-user mutation can adopt later.
               </p>
             </div>
           </div>
@@ -184,8 +184,8 @@ function UserFormDialog({
                   </span>
                 ) : (
                   <span className="text-body-sm text-text-secondary">
-                    Use the name that will appear in member-facing borrowing and
-                    profile views.
+                    Use the name that will appear in account-facing borrowing,
+                    admin, and profile views.
                   </span>
                 )}
               </label>
@@ -266,7 +266,7 @@ function UserFormDialog({
                 ) : (
                   <span className="text-body-sm text-text-secondary">
                     Optional. Keep this for mocked onboarding only until Auth0
-                    owns invitation and password flows.
+                    owns invitation and password flows for each account type.
                   </span>
                 )}
               </label>
@@ -315,7 +315,7 @@ function UserFormDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Creating user..." : "Create user"}
+              {isSubmitting ? "Creating account..." : "Create account"}
             </Button>
           </div>
         </form>

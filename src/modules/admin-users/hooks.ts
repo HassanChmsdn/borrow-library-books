@@ -12,10 +12,12 @@ import {
   adminUserRecords,
   adminUsersRoleOptions,
 } from "./mock-data";
+import { getAppRoleDisplayLabel } from "@/lib/auth/roles";
 import type {
   AdminUserFormValues,
   AdminUserProfileRecord,
   AdminUserRecord,
+  AdminUserRole,
   AdminUsersRoleFilter,
 } from "./types";
 
@@ -148,27 +150,27 @@ export function useAdminUserProfileState(initialUser?: AdminUserProfileRecord) {
     );
   }
 
-  function toggleRole() {
+  function changeRole(nextRole: AdminUserRole) {
     if (!user) {
       return;
     }
 
-    const nextRole = user.role === "admin" ? "user" : "admin";
+    if (nextRole === user.role) {
+      return;
+    }
 
     applyMockAction(
       (currentUser) => ({ ...currentUser, role: nextRole }),
-      nextRole === "admin"
-        ? "Role updated to admin locally. This control is ready for a future role-management mutation."
-        : "Role updated to user locally. This control is ready for a future role-management mutation.",
+      `Role updated to ${getAppRoleDisplayLabel(nextRole)} locally. This control is ready for a future role-management mutation.`,
     );
   }
 
   return {
     isMutating,
     lastActionMessage,
+    changeRole,
     reactivateUser,
     suspendUser,
-    toggleRole,
     user,
   };
 }

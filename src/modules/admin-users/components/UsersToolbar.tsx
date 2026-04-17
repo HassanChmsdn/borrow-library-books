@@ -30,7 +30,7 @@ function UsersToolbar({
       <AdminSearchBar
         value={searchValue}
         onChange={(event) => onSearchChange(event.target.value)}
-        label="Search members"
+        label="Search accounts"
         placeholder="Search by name, email, or borrowing summary..."
       />
       <AdminFilterSelect

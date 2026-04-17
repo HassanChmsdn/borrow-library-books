@@ -1,4 +1,5 @@
 import { AdminStatusBadge } from "@/components/admin";
+import { getAppRoleDisplayLabel } from "@/lib/auth/roles";
 
 import type { AdminUserRole } from "../types";
 
@@ -7,10 +8,15 @@ interface UserRoleBadgeProps {
 }
 
 function UserRoleBadge({ role }: Readonly<UserRoleBadgeProps>) {
-  const config =
-    role === "admin"
-      ? { label: "Admin", tone: "info" as const }
-      : { label: "User", tone: "neutral" as const };
+  const configMap = {
+    super_admin: { label: getAppRoleDisplayLabel("super_admin"), tone: "warning" as const },
+    admin: { label: getAppRoleDisplayLabel("admin"), tone: "info" as const },
+    employee: { label: getAppRoleDisplayLabel("employee"), tone: "info" as const },
+    financial: { label: getAppRoleDisplayLabel("financial"), tone: "success" as const },
+    member: { label: getAppRoleDisplayLabel("member"), tone: "neutral" as const },
+  };
+
+  const config = configMap[role];
 
   return <AdminStatusBadge label={config.label} tone={config.tone} />;
 }

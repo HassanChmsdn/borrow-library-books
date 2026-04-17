@@ -1,6 +1,11 @@
 import { z } from "zod";
 
-export type AdminUserRole = "user" | "admin";
+import {
+  APP_USER_ROLE_VALUES,
+  type AppUserRole,
+} from "@/lib/auth/app-user-model";
+
+export type AdminUserRole = AppUserRole;
 
 export type AdminUserStatus = "active" | "suspended";
 
@@ -64,7 +69,7 @@ export interface AdminUserProfileModuleProps {
   isLoading?: boolean;
 }
 
-export const adminUserFormRoleValues = ["user", "admin"] as const;
+export const adminUserFormRoleValues = APP_USER_ROLE_VALUES;
 export const adminUserFormStatusValues = ["active", "suspended"] as const;
 
 export const adminUserFormSchema = z.object({

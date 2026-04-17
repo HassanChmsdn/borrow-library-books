@@ -27,9 +27,9 @@ function AdminUserProfileModule({
   const {
     isMutating,
     lastActionMessage,
+    changeRole,
     reactivateUser,
     suspendUser,
-    toggleRole,
     user,
   } = useAdminUserProfileState(initialUser);
 
@@ -44,9 +44,9 @@ function AdminUserProfileModule({
   return (
     <div className="gap-section flex flex-col">
       <AdminPageHeader
-        eyebrow="Members"
+        eyebrow="Accounts"
         title={user.fullName}
-        description="Review account posture, live circulation exposure, and staff actions from one member management screen built for future server integration."
+        description="Review account posture, live circulation exposure, and staff actions from one account management screen built for future server integration."
         actions={
           <Button asChild size="sm" variant="outline">
             <Link href="/admin/users">
@@ -69,7 +69,7 @@ function AdminUserProfileModule({
           <UserAccountActions
             isMutating={isMutating}
             lastActionMessage={lastActionMessage}
-            onChangeRole={toggleRole}
+            onChangeRole={changeRole}
             onReactivateUser={reactivateUser}
             onSuspendUser={suspendUser}
             role={user.role}
@@ -83,7 +83,7 @@ function AdminUserProfileModule({
             description="Live circulation items currently attached to this account, including overdue exposure and onsite cash reminders where relevant."
             records={user.currentBorrowings}
             emptyTitle="No current borrowings"
-            emptyDescription="This member does not currently hold any active or pending circulation items."
+            emptyDescription="This account does not currently hold any active or pending circulation items."
           />
 
           <UserBorrowingHistory
@@ -103,9 +103,9 @@ function AdminUserProfileEmptyState() {
   return (
     <div className="gap-section flex flex-col">
       <AdminPageHeader
-        eyebrow="Members"
+        eyebrow="Accounts"
         title="User profile"
-        description="The selected member could not be found in the current mock admin roster."
+        description="The selected account could not be found in the current mock admin roster."
       />
 
       <AdminEmptyState

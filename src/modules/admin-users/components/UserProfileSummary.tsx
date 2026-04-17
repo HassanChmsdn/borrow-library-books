@@ -4,6 +4,7 @@ import {
   AdminSectionCard,
   AdminUserAvatar,
 } from "@/components/admin";
+import { getAppRoleDisplayLabel, hasAdminAccessRole } from "@/lib/auth/roles";
 
 import { UserRoleBadge } from "./UserRoleBadge";
 import { UserStatusBadge } from "./UserStatusBadge";
@@ -25,7 +26,11 @@ function UserProfileSummary({ user }: Readonly<UserProfileSummaryProps>) {
           <AdminUserAvatar
             name={user.fullName}
             subtitle={user.email}
-            meta={user.role === "admin" ? "Staff account" : "Member account"}
+            meta={
+              hasAdminAccessRole(user.role)
+                ? `${getAppRoleDisplayLabel(user.role)} account`
+                : "Member account"
+            }
           />
           <div className="flex flex-wrap items-center gap-2 sm:justify-end">
             <UserRoleBadge role={user.role} />

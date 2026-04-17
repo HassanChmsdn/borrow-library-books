@@ -55,9 +55,9 @@ function AdminUsersModule({
   return (
     <div className="gap-section flex flex-col">
       <AdminPageHeader
-        eyebrow="Members"
+        eyebrow="Accounts"
         title="User management"
-        description="Review member roles, account health, and borrowing posture through a responsive staff roster built for future profile management flows."
+        description="Review member and staff roles, account health, and borrowing posture through a responsive roster built for future profile management flows."
         controls={
           <UsersToolbar
             searchValue={searchValue}
@@ -74,7 +74,7 @@ function AdminUsersModule({
                 }}
               >
                 <Plus aria-hidden="true" className="size-4" />
-                Add user
+                Add account
               </Button>
             }
           />
@@ -99,7 +99,7 @@ function AdminUsersModule({
 
       <AdminDataTable
         title="Library members"
-        description="Desktop favors a dense roster table while mobile keeps the same hierarchy in stacked cards for quick staff review."
+        description="Desktop favors a dense roster table while mobile keeps the same hierarchy in stacked cards for quick staff review across member and staff accounts."
         actions={
           hasActiveFilters ? (
             <Button type="button" size="sm" variant="ghost" onClick={clearFilters}>
@@ -110,13 +110,13 @@ function AdminUsersModule({
       >
         {isEmpty ? (
           <AdminEmptyState
-            title="No members are available yet"
-            description="Once member records are connected or imported, this roster will support role filtering, account review, and profile navigation."
+            title="No accounts are available yet"
+            description="Once member and staff records are connected or imported, this roster will support role filtering, account review, and profile navigation."
           />
         ) : isNoResults ? (
           <AdminEmptyState
-            title="No members match the current filters"
-            description="Try another name, email, or role filter to bring matching staff and reader accounts back into view."
+            title="No accounts match the current filters"
+            description="Try another name, email, or role filter to bring matching staff and member accounts back into view."
             action={
               <Button type="button" size="sm" variant="outline" onClick={clearFilters}>
                 Clear search and role
@@ -152,9 +152,9 @@ function AdminUsersLoadingState() {
   return (
     <div className="gap-section flex flex-col">
       <AdminPageHeader
-        eyebrow="Members"
+        eyebrow="Accounts"
         title="User management"
-        description="Loading member management surfaces."
+        description="Loading account management surfaces."
       />
       <LoadingSkeleton count={2} variant="card" className="lg:hidden" />
       <LoadingSkeleton count={1} variant="table" />

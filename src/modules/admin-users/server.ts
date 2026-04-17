@@ -25,10 +25,6 @@ function getBorrowingFeeLabel(feeCents: number) {
   return feeCents === 0 ? "Free" : `${formatAdminCurrency(feeCents)} cash`;
 }
 
-function toAdminRole(role: Parameters<typeof hasAdminAccessRole>[0]) {
-  return hasAdminAccessRole(role) ? "admin" : "user";
-}
-
 function toAdminPaymentStatus(status: "cash-due" | "cash-settled" | "not-required") {
   if (status === "cash-settled") {
     return "cash-settled" satisfies AdminUserPaymentStatus;
@@ -79,7 +75,7 @@ function getBorrowingSummaryLabel(
   totalCount: number,
   role: AdminUserRecord["role"],
 ) {
-  if (role === "admin" && totalCount === 0) {
+  if (hasAdminAccessRole(role) && totalCount === 0) {
     return "No personal loans";
   }
 
@@ -135,7 +131,7 @@ function getBorrowingSummaryMeta(
     return borrowingHistory[0].completedDateLabel;
   }
 
-  return role === "admin"
+  return hasAdminAccessRole(role)
     ? "Staff account used for admin operations"
     : "No borrowing activity yet";
 }
@@ -161,7 +157,7 @@ export const listAdminUserProfileRecords = cache(
             .sort((left, right) => (right.returnedOn ?? "").localeCompare(left.returnedOn ?? ""))
             .map((record) => toUserBorrowingRecord(record)),
         );
-        const role = toAdminRole(user.role);
+        const role = user.role;
         const activeCount = currentBorrowings.filter((record) => record.status === "active").length;
         const pendingCount = currentBorrowings.filter((record) => record.status === "pending").length;
         const overdueCount = currentBorrowings.filter((record) => record.status === "overdue").length;
