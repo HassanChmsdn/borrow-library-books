@@ -342,7 +342,6 @@ export const APP_ROUTE_ACCESS_POLICIES: ReadonlyArray<AppRouteAccessPolicy> = [
     level: "manage",
     matchStrategy: "prefix",
     pathname: "/admin/settings/access-control",
-    roles: ["super_admin", "admin"],
     section: "accessControl",
   },
   {

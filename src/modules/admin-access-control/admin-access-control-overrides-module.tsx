@@ -12,7 +12,9 @@ import { Button } from "@/components/ui/button";
 import {
   APP_ADMIN_SECTION_VALUES,
   APP_USER_ROLE_VALUES,
+  canManageAppUserRecord,
   createEmptyResolvedAdminSectionPermissions,
+  getAssignableAppUserRoles,
   getAdminSectionLabel,
   getAppRoleDisplayLabel,
   getResolvedAdminSectionPermissionsForDefaults,
@@ -22,6 +24,7 @@ import {
   type AppUserRole,
   type ResolvedAppSectionPermissions,
 } from "@/lib/auth";
+import { useMockAuthContext } from "@/lib/auth/react";
 
 import { updateAdminAccessControlUserAction } from "./actions";
 import type {
@@ -242,6 +245,7 @@ function AdminAccessControlOverridesModule({
   initialUsers,
 }: Readonly<AdminAccessControlOverridesModuleProps>) {
   const router = useRouter();
+  const authState = useMockAuthContext();
   const [users, setUsers] = useState(initialUsers);
   const [rolePolicies, setRolePolicies] = useState(() =>
     mergeRolePolicies(initialRolePolicies),
@@ -283,6 +287,13 @@ function AdminAccessControlOverridesModule({
     setDraftSections(createDraftFromSections(selectedUser.access?.sections));
   }, [selectedUser]);
 
+  const assignableRoles = getAssignableAppUserRoles(authState);
+  const availableDraftRoles = assignableRoles.includes(draftRole)
+    ? assignableRoles
+    : ([draftRole, ...assignableRoles] as ReadonlyArray<AppUserRole>);
+  const canManageSelectedUser = selectedUser
+    ? canManageAppUserRecord(authState, selectedUser.role)
+    : false;
   const isStaffRole = hasAdminAccessRole(draftRole);
   const builtSections = isStaffRole
     ? buildSectionsFromDraft(draftSections)
@@ -405,7 +416,11 @@ function AdminAccessControlOverridesModule({
       actions={
         <div className="flex flex-wrap gap-2">
           <Button
-            disabled={isSaving || !selectedUser.hasSectionOverrides}
+            disabled={
+              isSaving ||
+              !selectedUser.hasSectionOverrides ||
+              !canManageSelectedUser
+            }
             size="sm"
             variant="outline"
             onClick={() => {
@@ -423,7 +438,7 @@ function AdminAccessControlOverridesModule({
             Reset draft
           </Button>
           <Button
-            disabled={isSaving || !hasChanges}
+            disabled={isSaving || !hasChanges || !canManageSelectedUser}
             size="sm"
             onClick={() => {
               void saveChanges();
@@ -471,11 +486,12 @@ function AdminAccessControlOverridesModule({
 
           <AdminFilterSelect
             label="Assigned role"
-            options={APP_USER_ROLE_VALUES.map((role) => ({
+            options={availableDraftRoles.map((role) => ({
               label: getAppRoleDisplayLabel(role),
               value: role,
             }))}
             value={draftRole}
+            disabled={isSaving || !canManageSelectedUser}
             onValueChange={(value) => {
               setDraftRole(value);
               if (!hasAdminAccessRole(value)) {
@@ -516,6 +532,12 @@ function AdminAccessControlOverridesModule({
               {selectedUser.subtitle}
             </p>
 
+            {!canManageSelectedUser ? (
+              <p className="text-body-sm text-text-secondary border-border-subtle rounded-lg border border-dashed px-3 py-2">
+                This account can be reviewed here, but the current session is not allowed to change its role or section access.
+              </p>
+            ) : null}
+
             {!isStaffRole ? (
               <p className="text-body-sm text-text-secondary border-border-subtle rounded-lg border border-dashed px-3 py-2">
                 Member accounts do not receive admin workspace sections. Saving
@@ -531,7 +553,7 @@ function AdminAccessControlOverridesModule({
               key={section}
               defaultPermission={rolePolicies[draftRole][section]}
               draft={draftSections[section]}
-              isDisabled={!isStaffRole}
+              isDisabled={!isStaffRole || !canManageSelectedUser}
               section={section}
               onAccessChange={(checked) => {
                 setDraftSections((current) => ({

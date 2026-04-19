@@ -11,6 +11,10 @@ import {
   type AppUserRole,
 } from "@/lib/auth/app-user-model";
 import {
+  canAssignAppUserRole,
+  canManageAccessControlRolePolicy,
+  canManageAppUserRecord,
+  getCurrentUser,
   getAppRoleAccountLabel,
   getResolvedAdminSectionPermissionsForDefaults,
 } from "@/lib/auth";
@@ -173,7 +177,7 @@ async function loadUpdatedRolePolicyRecord(role: AppUserRole) {
 export async function updateAdminAccessControlUserAction(
   input: UpdateAdminAccessControlUserInput,
 ): Promise<UpdateAdminAccessControlUserResult> {
-  await requireAuthorizedRoute("/admin/settings/access-control");
+  const session = await requireAuthorizedRoute("/admin/settings/access-control");
 
   const parsed = updateAdminAccessControlUserSchema.safeParse(input);
 
@@ -188,6 +192,15 @@ export async function updateAdminAccessControlUserAction(
 
   const normalizedSections = normalizeSectionAccess(parsed.data.sections);
   const nextRole = parsed.data.role;
+  const currentOperator = getCurrentUser(session);
+
+  if (currentOperator?.id === parsed.data.userId) {
+    return {
+      message:
+        "Change another account instead. The currently signed-in account cannot change its own access configuration here.",
+      status: "error",
+    };
+  }
 
   try {
     if (!isMongoConfigured()) {
@@ -196,6 +209,20 @@ export async function updateAdminAccessControlUserAction(
       if (!currentRecord) {
         return {
           message: "The selected staff account could not be found.",
+          status: "error",
+        };
+      }
+
+      if (!canManageAppUserRecord(session, currentRecord.role)) {
+        return {
+          message: "The current session cannot modify that account.",
+          status: "error",
+        };
+      }
+
+      if (!canAssignAppUserRole(session, nextRole)) {
+        return {
+          message: `You cannot assign the ${getAppRoleAccountLabel(nextRole)} role from the current session.`,
           status: "error",
         };
       }
@@ -221,6 +248,20 @@ export async function updateAdminAccessControlUserAction(
       if (!currentRecord) {
         return {
           message: "The selected staff account could not be found.",
+          status: "error",
+        };
+      }
+
+      if (!canManageAppUserRecord(session, currentRecord.role)) {
+        return {
+          message: "The current session cannot modify that account.",
+          status: "error",
+        };
+      }
+
+      if (!canAssignAppUserRole(session, nextRole)) {
+        return {
+          message: `You cannot assign the ${getAppRoleAccountLabel(nextRole)} role from the current session.`,
           status: "error",
         };
       }
@@ -278,7 +319,7 @@ export async function updateAdminAccessControlUserAction(
 export async function updateAdminAccessControlRolePolicyAction(
   input: UpdateAdminAccessControlRolePolicyInput,
 ): Promise<UpdateAdminAccessControlRolePolicyResult> {
-  await requireAuthorizedRoute("/admin/settings/access-control");
+  const session = await requireAuthorizedRoute("/admin/settings/access-control");
 
   const parsed = updateAdminAccessControlRolePolicySchema.safeParse(input);
 
@@ -287,6 +328,13 @@ export async function updateAdminAccessControlRolePolicyAction(
       message:
         parsed.error.issues[0]?.message ??
         "Review the selected role policy before saving.",
+      status: "error",
+    };
+  }
+
+  if (!canManageAccessControlRolePolicy(session, parsed.data.role)) {
+    return {
+      message: `You cannot change the default access policy for the ${getAppRoleAccountLabel(parsed.data.role)} role from the current session.`,
       status: "error",
     };
   }

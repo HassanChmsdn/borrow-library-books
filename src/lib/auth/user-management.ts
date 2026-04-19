@@ -2,6 +2,12 @@ import type { AppUserRole } from "./app-user-model";
 import type { AppAuthState } from "./mock-auth";
 import { canManageAdminSection, isAdmin, isSuperAdmin } from "./mock-auth";
 
+const accessControlAssignableRoles = [
+  "admin",
+  "employee",
+  "financial",
+] as const satisfies ReadonlyArray<Exclude<AppUserRole, "member">>;
+
 const operationalAssignableRoles = [
   "admin",
   "employee",
@@ -22,6 +28,29 @@ export function canExplicitlyManageSuperAdmins(authState: AppAuthState) {
     isSuperAdmin(authState) &&
     canManageAdminSection(authState, "accessControl")
   );
+}
+
+export function canManageAccessControl(authState: AppAuthState) {
+  return canManageAdminSection(authState, "accessControl");
+}
+
+export function getManageableAccessControlRoles(
+  authState: AppAuthState,
+): ReadonlyArray<Exclude<AppUserRole, "member">> {
+  if (!canManageAccessControl(authState)) {
+    return [];
+  }
+
+  return canExplicitlyManageSuperAdmins(authState)
+    ? (["super_admin", ...accessControlAssignableRoles] as const)
+    : accessControlAssignableRoles;
+}
+
+export function canManageAccessControlRolePolicy(
+  authState: AppAuthState,
+  role: Exclude<AppUserRole, "member">,
+) {
+  return getManageableAccessControlRoles(authState).includes(role);
 }
 
 export function getAssignableAppUserRoles(

@@ -94,10 +94,13 @@ export {
 
 export {
   canAdministrativelyManageUsers,
+  canManageAccessControl,
+  canManageAccessControlRolePolicy,
   canAssignAppUserRole,
   canCreateAppUsers,
   canExplicitlyManageSuperAdmins,
   canManageAppUserRecord,
+  getManageableAccessControlRoles,
   getAssignableAppUserRoles,
 } from "./user-management";
 

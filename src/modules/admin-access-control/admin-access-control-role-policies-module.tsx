@@ -11,11 +11,13 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   APP_ADMIN_SECTION_VALUES,
+  canManageAccessControlRolePolicy,
   getAdminSectionLabel,
   getAppRoleDisplayLabel,
   type AppAdminSection,
   type AppAdminSectionAccess,
 } from "@/lib/auth";
+import { useMockAuthContext } from "@/lib/auth/react";
 
 import { updateAdminAccessControlRolePolicyAction } from "./actions";
 import type { AdminAccessControlRolePolicyRecord } from "./types";
@@ -101,16 +103,24 @@ function AdminAccessControlRolePoliciesModule({
   initialRolePolicies,
 }: Readonly<AdminAccessControlRolePoliciesModuleProps>) {
   const router = useRouter();
+  const authState = useMockAuthContext();
   const [rolePolicies, setRolePolicies] = useState(initialRolePolicies);
   const [selectedRole, setSelectedRole] = useState(
     initialRolePolicies[0]?.role ?? "super_admin",
   );
+  const visibleRolePolicies = useMemo(
+    () =>
+      rolePolicies.filter((record) =>
+        canManageAccessControlRolePolicy(authState, record.role),
+      ),
+    [authState, rolePolicies],
+  );
   const selectedPolicy = useMemo(
     () =>
-      rolePolicies.find((record) => record.role === selectedRole) ??
-      rolePolicies[0] ??
+      visibleRolePolicies.find((record) => record.role === selectedRole) ??
+      visibleRolePolicies[0] ??
       null,
-    [rolePolicies, selectedRole],
+    [selectedRole, visibleRolePolicies],
   );
   const [draft, setDraft] = useState<RolePolicyDraft>(() =>
     createDraft(selectedPolicy),
@@ -124,6 +134,12 @@ function AdminAccessControlRolePoliciesModule({
   useEffect(() => {
     setRolePolicies(initialRolePolicies);
   }, [initialRolePolicies]);
+
+  useEffect(() => {
+    if (!selectedPolicy && visibleRolePolicies[0]) {
+      setSelectedRole(visibleRolePolicies[0].role);
+    }
+  }, [selectedPolicy, visibleRolePolicies]);
 
   useEffect(() => {
     setDraft(createDraft(selectedPolicy));
@@ -203,7 +219,16 @@ function AdminAccessControlRolePoliciesModule({
   }
 
   if (!selectedPolicy) {
-    return null;
+    return (
+      <AdminSectionCard
+        description="The current session cannot edit any role-level access-control defaults."
+        title="Role access policies"
+      >
+        <p className="text-body-sm text-text-secondary">
+          Review user-specific access only, or sign in with a session that has broader access-control authority.
+        </p>
+      </AdminSectionCard>
+    );
   }
 
   return (
@@ -266,7 +291,7 @@ function AdminAccessControlRolePoliciesModule({
       <div className="grid gap-4">
         <AdminFilterSelect
           label="Staff role"
-          options={rolePolicies.map((record) => ({
+          options={visibleRolePolicies.map((record) => ({
             label: getAppRoleDisplayLabel(record.role),
             value: record.role,
           }))}

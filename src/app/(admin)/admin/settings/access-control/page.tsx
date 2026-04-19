@@ -27,7 +27,7 @@ export default async function AdminAccessControlPage() {
       <AdminPageHeader
         eyebrow="Governance"
         title="Access management"
-        description="Manage staff role defaults and per-user section access from one surface. Only admin and super-admin operators can reach this page, and all changes remain compatible with the Mongo-backed authorization model."
+        description="Manage staff role defaults and per-user section access from one surface. Only staff sessions with explicit access-control permission can reach this page, and super-admin remains the highest-privilege role for protected changes."
       />
 
       <AdminSectionCard
