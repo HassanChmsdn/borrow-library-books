@@ -139,12 +139,16 @@ export const adminUsersRoleOptions: ReadonlyArray<
   })),
 ];
 
-export const adminUserRoleFieldOptions: ReadonlyArray<
-  AdminFilterOption<AdminUserFormValues["role"]>
-> = adminUserFormRoleValues.map((role) => ({
-  label: getAppRoleDisplayLabel(role),
-  value: role,
-}));
+export function getAdminUserRoleFieldOptions(
+  roles: ReadonlyArray<AdminUserFormValues["role"]> = adminUserFormRoleValues,
+): ReadonlyArray<AdminFilterOption<AdminUserFormValues["role"]>> {
+  return roles.map((role) => ({
+    label: getAppRoleDisplayLabel(role),
+    value: role,
+  }));
+}
+
+export const adminUserRoleFieldOptions = getAdminUserRoleFieldOptions();
 
 export const adminUserStatusFieldOptions: ReadonlyArray<
   AdminFilterOption<AdminUserStatus>
@@ -155,6 +159,7 @@ export const adminUserStatusFieldOptions: ReadonlyArray<
 
 export const adminUserFormDefaults: AdminUserFormValues = {
   accountStatus: "active",
+  auth0UserId: "",
   email: "",
   fullName: "",
   onboardingNote: "",

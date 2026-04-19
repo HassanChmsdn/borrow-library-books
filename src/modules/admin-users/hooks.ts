@@ -1,23 +1,21 @@
 "use client";
 
-import {
-  startTransition,
-  useEffect,
-  useDeferredValue,
-  useState,
-} from "react";
+import { useEffect, useDeferredValue, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import {
-  createMockAdminUserRecord,
   adminUserRecords,
   adminUsersRoleOptions,
 } from "./mock-data";
-import { getAppRoleDisplayLabel } from "@/lib/auth/roles";
+import {
+  createAdminUserAction,
+  updateAdminUserRoleAction,
+  updateAdminUserStatusAction,
+} from "./actions";
 import type {
   AdminUserFormValues,
   AdminUserProfileRecord,
   AdminUserRecord,
-  AdminUserRole,
   AdminUsersRoleFilter,
 } from "./types";
 
@@ -29,6 +27,7 @@ interface AdminUsersFeedbackState {
 export function useAdminUsersModuleState(
   inputRecords: ReadonlyArray<AdminUserRecord> = adminUserRecords,
 ) {
+  const router = useRouter();
   const [records, setRecords] = useState(inputRecords);
   const [createFeedback, setCreateFeedback] =
     useState<AdminUsersFeedbackState | null>(null);
@@ -68,33 +67,36 @@ export function useAdminUsersModuleState(
     setIsCreatingUser(true);
     setCreateFeedback(null);
 
-    await new Promise((resolve) => window.setTimeout(resolve, 350));
+    const result = await createAdminUserAction(values);
 
-    const normalizedEmail = values.email.trim().toLowerCase();
-    const duplicateRecord = records.find(
-      (record) => record.email.toLowerCase() === normalizedEmail,
-    );
-
-    if (duplicateRecord) {
+    if (result.status === "error") {
       setCreateFeedback({
-        message:
-          "A user with that email already exists in the mocked roster. Change the email to simulate a new account.",
+        message: result.message,
         tone: "danger",
       });
       setIsCreatingUser(false);
       return false;
     }
 
-    const nextRecord = createMockAdminUserRecord(values);
+    const createdRecord = result.record;
 
-    setRecords((current) => [nextRecord, ...current]);
+    if (createdRecord) {
+      setRecords((current) => {
+        const nextRecords = current.filter(
+          (record) => record.id !== createdRecord.id,
+        );
+
+        return [createdRecord, ...nextRecords];
+      });
+    }
+
     setCreateFeedback({
-      message:
-        "User created locally. This mocked flow is ready to be replaced by a future Auth0 and MongoDB-backed create-user mutation.",
+      message: result.message,
       tone: "success",
     });
     setIsCreateDialogOpen(false);
     setIsCreatingUser(false);
+    router.refresh();
     return true;
   }
 
@@ -118,39 +120,76 @@ export function useAdminUsersModuleState(
 }
 
 export function useAdminUserProfileState(initialUser?: AdminUserProfileRecord) {
+  const router = useRouter();
   const [user, setUser] = useState(initialUser);
   const [isMutating, setIsMutating] = useState(false);
   const [lastActionMessage, setLastActionMessage] = useState<string | null>(null);
 
-  function applyMockAction(
-    updater: (currentUser: AdminUserProfileRecord) => AdminUserProfileRecord,
-    message: string,
-  ) {
+  useEffect(() => {
+    setUser(initialUser);
+  }, [initialUser]);
+
+  async function suspendUser() {
+    if (!user) {
+      return;
+    }
+
     setIsMutating(true);
-    startTransition(() => {
-      setUser((currentUser) =>
-        currentUser ? updater(currentUser) : currentUser,
-      );
-      setLastActionMessage(message);
-      setIsMutating(false);
+    const result = await updateAdminUserStatusAction({
+      status: "suspended",
+      userId: user.id,
     });
+
+    if (result.status === "success") {
+      setUser((currentUser) =>
+        currentUser
+          ? {
+              ...currentUser,
+              status: "suspended",
+            }
+          : currentUser,
+      );
+    }
+
+    setLastActionMessage(result.message);
+    setIsMutating(false);
+
+    if (result.status === "success") {
+      router.refresh();
+    }
   }
 
-  function suspendUser() {
-    applyMockAction(
-      (currentUser) => ({ ...currentUser, status: "suspended" }),
-      "User marked as suspended locally. Connect this action to the future admin mutation when the API is ready.",
-    );
+  async function reactivateUser() {
+    if (!user) {
+      return;
+    }
+
+    setIsMutating(true);
+    const result = await updateAdminUserStatusAction({
+      status: "active",
+      userId: user.id,
+    });
+
+    if (result.status === "success") {
+      setUser((currentUser) =>
+        currentUser
+          ? {
+              ...currentUser,
+              status: "active",
+            }
+          : currentUser,
+      );
+    }
+
+    setLastActionMessage(result.message);
+    setIsMutating(false);
+
+    if (result.status === "success") {
+      router.refresh();
+    }
   }
 
-  function reactivateUser() {
-    applyMockAction(
-      (currentUser) => ({ ...currentUser, status: "active" }),
-      "User reactivated locally. Future server wiring can replace this mock account change.",
-    );
-  }
-
-  function changeRole(nextRole: AdminUserRole) {
+  async function changeRole(nextRole: AdminUserProfileRecord["role"]) {
     if (!user) {
       return;
     }
@@ -159,10 +198,29 @@ export function useAdminUserProfileState(initialUser?: AdminUserProfileRecord) {
       return;
     }
 
-    applyMockAction(
-      (currentUser) => ({ ...currentUser, role: nextRole }),
-      `Role updated to ${getAppRoleDisplayLabel(nextRole)} locally. This control is ready for a future role-management mutation.`,
-    );
+    setIsMutating(true);
+    const result = await updateAdminUserRoleAction({
+      role: nextRole,
+      userId: user.id,
+    });
+
+    if (result.status === "success") {
+      setUser((currentUser) =>
+        currentUser
+          ? {
+              ...currentUser,
+              role: nextRole,
+            }
+          : currentUser,
+      );
+    }
+
+    setLastActionMessage(result.message);
+    setIsMutating(false);
+
+    if (result.status === "success") {
+      router.refresh();
+    }
   }
 
   return {

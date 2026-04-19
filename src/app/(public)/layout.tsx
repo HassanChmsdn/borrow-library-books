@@ -13,17 +13,8 @@ import {
 import { MockAuthProvider } from "@/lib/auth/react";
 import { PublicShell, ShellBrand } from "@/components/layout";
 import { Button } from "@/components/ui/button";
-import { allBooksCatalog } from "@/modules/catalog/all-books-data";
+import { listCatalogBooks } from "@/modules/catalog/server";
 import { getCurrentSession } from "@/lib/auth/server";
-
-const publicNavigationItems = [
-  {
-    href: "/books",
-    label: "All Books",
-    badge: String(allBooksCatalog.length),
-    matchStrategy: "prefix" as const,
-  },
-];
 
 function PublicUtilitySlot({
   session,
@@ -36,7 +27,7 @@ function PublicUtilitySlot({
         <Link
           href={buildMockSignInHref({
             role: "member",
-            redirectTo: "/account/borrowings",
+            redirectTo: "/books",
           })}
         >
           Member sign in
@@ -68,8 +59,19 @@ export default async function PublicSectionLayout({
 }: Readonly<{
   children: ReactNode;
 }>) {
-  const session = await getCurrentSession();
+  const [session, books] = await Promise.all([
+    getCurrentSession(),
+    listCatalogBooks(),
+  ]);
   const currentUser = getCurrentUser(session);
+  const publicNavigationItems = [
+    {
+      href: "/books",
+      label: "All Books",
+      badge: String(books.length),
+      matchStrategy: "prefix" as const,
+    },
+  ];
 
   return (
     <MockAuthProvider value={session}>

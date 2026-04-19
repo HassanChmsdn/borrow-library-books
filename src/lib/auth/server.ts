@@ -10,11 +10,11 @@ import {
   buildMockSignInHref,
   createGuestAuthState,
   createMockAuthState,
+  isAuthenticated,
   getCurrentRole,
   getRouteAuthorization,
   getCurrentUser,
   isAdmin,
-  isAuthenticated,
   isMember,
   type AppAdminSection,
   type AppAuthState,
@@ -69,12 +69,19 @@ export async function getCurrentSessionRole() {
 export async function requireAuthorizedRoute(pathname: string) {
   const session = await getCurrentSession();
   const authorization = getRouteAuthorization(session, pathname);
+  const fallbackForAuthenticatedUser = hasAdminAccess(session)
+    ? "/admin"
+    : "/books";
 
   if (authorization.isAllowed) {
     return session;
   }
 
   if (authorization.denialReason === "member") {
+    if (isAuthenticated(session)) {
+      redirect(fallbackForAuthenticatedUser);
+    }
+
     redirect(
       buildMockSignInHref({
         role: "member",
@@ -84,6 +91,10 @@ export async function requireAuthorizedRoute(pathname: string) {
   }
 
   if (authorization.denialReason === "admin") {
+    if (isAuthenticated(session)) {
+      redirect(fallbackForAuthenticatedUser);
+    }
+
     redirect(
       buildMockSignInHref({
         role: "admin",

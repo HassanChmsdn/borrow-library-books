@@ -1,6 +1,14 @@
+import { redirect } from "next/navigation";
+
 import { MemberAuthPanel } from "@/components/auth/member-auth-panel";
 
-import { sanitizeRedirectTo } from "@/lib/auth";
+import {
+  getCurrentRole,
+  getRouteAuthorization,
+  hasAdminAccess,
+  isAuthenticated,
+  sanitizeRedirectTo,
+} from "@/lib/auth";
 import { buildMemberSignupConfirmationRedirect } from "@/lib/auth/member-auth-flow";
 import { PageHeader } from "@/components/layout";
 import {
@@ -8,6 +16,7 @@ import {
   buildAuth0SignupHref,
   isAuth0Configured,
 } from "@/lib/auth/auth0";
+import { getCurrentSession } from "@/lib/auth/server";
 
 interface SignInPageProps {
   searchParams: Promise<{
@@ -36,9 +45,23 @@ function sanitizeMemberAuthMode(mode?: string) {
 export default async function MemberSignInPage({ searchParams }: SignInPageProps) {
   const params = await searchParams;
   const mode = sanitizeMemberAuthMode(params.mode);
-  const redirectTo = sanitizeRedirectTo(params.redirectTo, "/account/borrowings");
+  const redirectTo = sanitizeRedirectTo(params.redirectTo, "/books");
   const signupRedirectTo = buildMemberSignupConfirmationRedirect(redirectTo);
   const errorMessage = getMemberAuthErrorMessage(params.error);
+  const session = await getCurrentSession();
+
+  if (isAuthenticated(session)) {
+    const currentRole = getCurrentRole(session);
+    const authorization = getRouteAuthorization(session, redirectTo);
+
+    if (currentRole !== "guest" && authorization.isAllowed) {
+      redirect(redirectTo);
+    }
+
+    if (currentRole !== "guest") {
+      redirect(hasAdminAccess(session) ? "/admin" : "/books");
+    }
+  }
 
   return (
     <div className="gap-section flex flex-col">

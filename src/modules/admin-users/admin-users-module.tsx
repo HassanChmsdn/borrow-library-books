@@ -9,7 +9,8 @@ import {
 } from "@/components/admin";
 import { LoadingSkeleton } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
-import { useCanManageAdminSection } from "@/lib/auth/react";
+import { canCreateAppUsers, getAssignableAppUserRoles } from "@/lib/auth";
+import { useCanManageAdminSection, useMockAuthContext } from "@/lib/auth/react";
 
 import {
   UserFormDialog,
@@ -18,7 +19,11 @@ import {
   UsersToolbar,
 } from "./components";
 import { useAdminUsersModuleState } from "./hooks";
-import { adminUserFormDefaults, adminUserRecords } from "./mock-data";
+import {
+  adminUserFormDefaults,
+  adminUserRecords,
+  getAdminUserRoleFieldOptions,
+} from "./mock-data";
 
 import type { AdminUsersModuleProps } from "./types";
 
@@ -26,7 +31,12 @@ function AdminUsersModule({
   isLoading = false,
   records = adminUserRecords,
 }: Readonly<AdminUsersModuleProps>) {
-  const canManageUsers = useCanManageAdminSection("users");
+  const authState = useMockAuthContext();
+  const canManageUsersSection = useCanManageAdminSection("users");
+  const canCreateUsers = canCreateAppUsers(authState);
+  const createRoleOptions = getAdminUserRoleFieldOptions(
+    getAssignableAppUserRoles(authState),
+  );
   const {
     clearFilters,
     createFeedback,
@@ -68,7 +78,7 @@ function AdminUsersModule({
             roleOptions={roleOptions}
             onRoleChange={setRoleFilter}
             action={
-              canManageUsers ? (
+              canCreateUsers ? (
               <Button
                 type="button"
                 onClick={() => {
@@ -89,7 +99,7 @@ function AdminUsersModule({
         <div className="rounded-card border border-success/20 bg-success/5 flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1">
             <p className="text-body-sm text-foreground font-medium">
-              Mocked user created
+              Account created
             </p>
             <p className="text-body-sm text-text-secondary">
               {createFeedback.message}
@@ -102,8 +112,8 @@ function AdminUsersModule({
       ) : null}
 
       <AdminDataTable
-        title="Library members"
-        description="Desktop favors a dense roster table while mobile keeps the same hierarchy in stacked cards for quick staff review across member and staff accounts."
+        title="Library accounts"
+        description="Desktop favors a dense roster table while mobile keeps the same hierarchy in stacked cards for quick review across member and staff accounts."
         actions={
           hasActiveFilters ? (
             <Button type="button" size="sm" variant="ghost" onClick={clearFilters}>
@@ -129,13 +139,13 @@ function AdminUsersModule({
           />
         ) : (
           <>
-            <UsersCardList canManage={canManageUsers} users={filteredRecords} />
-            <UsersTable canManage={canManageUsers} users={filteredRecords} />
+            <UsersCardList canManage={canManageUsersSection} users={filteredRecords} />
+            <UsersTable canManage={canManageUsersSection} users={filteredRecords} />
           </>
         )}
       </AdminDataTable>
 
-      {canManageUsers ? (
+      {canCreateUsers ? (
         <UserFormDialog
           initialValues={adminUserFormDefaults}
           isSubmitting={isCreatingUser}
@@ -147,6 +157,7 @@ function AdminUsersModule({
           }}
           onSubmit={submitCreateUser}
           open={isCreateDialogOpen}
+          roleOptions={createRoleOptions}
           submissionError={submissionError}
         />
       ) : null}

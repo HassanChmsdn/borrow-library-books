@@ -10,28 +10,36 @@ import {
 } from "@/components/admin";
 import { Button } from "@/components/ui/button";
 
-import { adminUserRoleFieldOptions } from "../mock-data";
 import { UserRoleBadge } from "./UserRoleBadge";
 import { UserStatusBadge } from "./UserStatusBadge";
 
 import type { AdminUserRole, AdminUserStatus } from "../types";
 
 interface UserAccountActionsProps {
+  canChangeRole?: boolean;
+  canChangeStatus?: boolean;
   isMutating?: boolean;
   lastActionMessage?: string | null;
   onChangeRole?: (role: AdminUserRole) => void;
   onReactivateUser?: () => void;
   onSuspendUser?: () => void;
+  roleOptions: ReadonlyArray<{
+    label: React.ReactNode;
+    value: AdminUserRole;
+  }>;
   role: AdminUserRole;
   status: AdminUserStatus;
 }
 
 function UserAccountActions({
+  canChangeRole = false,
+  canChangeStatus = false,
   isMutating = false,
   lastActionMessage,
   onChangeRole,
   onReactivateUser,
   onSuspendUser,
+  roleOptions,
   role,
   status,
 }: Readonly<UserAccountActionsProps>) {
@@ -39,13 +47,17 @@ function UserAccountActions({
   const [nextRole, setNextRole] = React.useState(role);
 
   React.useEffect(() => {
-    setNextRole(role);
-  }, [role]);
+    setNextRole(
+      roleOptions.some((option) => option.value === role)
+        ? role
+        : (roleOptions[0]?.value ?? role),
+    );
+  }, [role, roleOptions]);
 
   return (
     <AdminSectionCard
       title="Account actions"
-      description="Mock account controls ready to connect to future staff mutations."
+      description="Existing account controls now run through the shared admin user-management flow."
     >
       <AdminDetailSection
         columns={2}
@@ -66,26 +78,34 @@ function UserAccountActions({
         {status === "active" ? (
           <ConfirmActionDialog
             title="Suspend this user?"
-            description="This mock action updates the local profile state and prepares the flow for a future suspension endpoint."
+            description="Suspend the selected account while preserving its linked identity record and borrowing history."
             confirmLabel="Suspend user"
             trigger={
-              <Button type="button" variant="destructive" disabled={isMutating}>
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={isMutating || !canChangeStatus}
+              >
                 Suspend user
               </Button>
             }
             onConfirm={onSuspendUser}
           />
         ) : (
-          <Button type="button" disabled={isMutating} onClick={onReactivateUser}>
+          <Button
+            type="button"
+            disabled={isMutating || !canChangeStatus}
+            onClick={onReactivateUser}
+          >
             Reactivate user
           </Button>
         )}
 
         <ConfirmActionDialog
           title="Change account role?"
-          description="Select the application role that should be assigned to this account. This mock action updates local state only, while keeping the UI aligned with the future role-management API shape."
+          description="Select the application role that should be assigned to this account. Super-admin assignment remains restricted to explicitly authorized operators."
           confirmLabel="Save role"
-          confirmDisabled={isMutating || nextRole === role}
+          confirmDisabled={isMutating || !canChangeRole || nextRole === role}
           tone="default"
           open={isRoleDialogOpen}
           onOpenChange={(open) => {
@@ -96,7 +116,11 @@ function UserAccountActions({
             }
           }}
           trigger={
-            <Button type="button" variant="outline" disabled={isMutating}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isMutating || !canChangeRole || roleOptions.length === 0}
+            >
               Change role
             </Button>
           }
@@ -104,7 +128,7 @@ function UserAccountActions({
         >
           <AdminFilterSelect
             label="Assigned role"
-            options={adminUserRoleFieldOptions}
+            options={roleOptions}
             value={nextRole}
             onValueChange={setNextRole}
           />
@@ -113,7 +137,9 @@ function UserAccountActions({
 
       <p className="text-body-sm text-text-secondary">
         {lastActionMessage ??
-          "Suspend, reactivate, and role-change actions are mocked locally for now and can later be replaced by real staff mutations."}
+          (canChangeRole || canChangeStatus
+            ? "Suspend, reactivate, and role changes now use the shared admin user-management actions."
+            : "This account can be reviewed here, but the current session is not allowed to change its role or status.")}
       </p>
     </AdminSectionCard>
   );

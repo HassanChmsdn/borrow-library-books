@@ -92,6 +92,15 @@ export {
   type AdminAccessRole,
 } from "./roles";
 
+export {
+  canAdministrativelyManageUsers,
+  canAssignAppUserRole,
+  canCreateAppUsers,
+  canExplicitlyManageSuperAdmins,
+  canManageAppUserRecord,
+  getAssignableAppUserRoles,
+} from "./user-management";
+
 export type {
   AppAdminSection,
   AppAdminSectionAccess,

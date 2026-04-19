@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils";
 
 import {
   adminUserFormDefaults,
-  adminUserRoleFieldOptions,
   adminUserStatusFieldOptions,
 } from "../mock-data";
 import {
@@ -25,6 +24,10 @@ interface UserFormDialogProps {
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: AdminUserFormValues) => Promise<boolean | void> | boolean | void;
   open: boolean;
+  roleOptions: ReadonlyArray<{
+    label: React.ReactNode;
+    value: AdminUserFormValues["role"];
+  }>;
   submissionError?: string | null;
 }
 
@@ -63,6 +66,7 @@ function UserFormDialog({
   onOpenChange,
   onSubmit,
   open,
+  roleOptions,
   submissionError,
 }: Readonly<UserFormDialogProps>) {
   const [mounted, setMounted] = React.useState(false);
@@ -142,9 +146,9 @@ function UserFormDialog({
                 Create account
               </h2>
               <p className="text-body-sm text-text-secondary max-w-[60ch]">
-                Add a new mocked member or staff account for roster review and future Auth0-backed
-                account management. This flow stays local for now but uses the same
-                typed role contract the real create-user mutation can adopt later.
+                Add a new member or staff account using the existing admin flow.
+                The same form now supports local mock creation and safe Auth0-linked
+                provisioning for persisted environments.
               </p>
             </div>
           </div>
@@ -219,9 +223,38 @@ function UserFormDialog({
                 )}
               </label>
 
+              <label className="grid gap-1.5 sm:col-span-2">
+                <span className="text-label text-foreground font-medium">
+                  Auth0 user id
+                </span>
+                <Input
+                  value={values.auth0UserId}
+                  aria-invalid={errors.auth0UserId ? true : undefined}
+                  disabled={isSubmitting}
+                  placeholder="auth0|example-subject"
+                  onChange={(event) =>
+                    setValues((current) => ({
+                      ...current,
+                      auth0UserId: event.target.value,
+                    }))
+                  }
+                />
+                {errors.auth0UserId ? (
+                  <span className="text-body-sm text-danger" role="alert">
+                    {errors.auth0UserId}
+                  </span>
+                ) : (
+                  <span className="text-body-sm text-text-secondary">
+                    Optional in the mock flow. Required when this account should
+                    be persisted against an existing Auth0 identity, including
+                    manual super-admin bootstrap.
+                  </span>
+                )}
+              </label>
+
               <AdminFilterSelect
                 label="Role"
-                options={adminUserRoleFieldOptions}
+                options={roleOptions}
                 value={values.role}
                 onValueChange={(value) =>
                   setValues((current) => ({

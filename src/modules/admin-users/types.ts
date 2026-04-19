@@ -74,6 +74,10 @@ export const adminUserFormStatusValues = ["active", "suspended"] as const;
 
 export const adminUserFormSchema = z.object({
   accountStatus: z.enum(adminUserFormStatusValues),
+  auth0UserId: z
+    .string()
+    .trim()
+    .max(160, "Auth0 user id must stay within 160 characters."),
   email: z
     .string()
     .trim()
@@ -99,3 +103,37 @@ export type AdminUserFormValues = z.infer<typeof adminUserFormSchema>;
 export type AdminUserFormFieldErrors = Partial<
   Record<keyof AdminUserFormValues, string>
 >;
+
+export const updateAdminUserRoleSchema = z.object({
+  role: z.enum(APP_USER_ROLE_VALUES),
+  userId: z.string().trim().min(1),
+});
+
+export type UpdateAdminUserRoleInput = z.infer<typeof updateAdminUserRoleSchema>;
+
+export const updateAdminUserStatusSchema = z.object({
+  status: z.enum(adminUserFormStatusValues),
+  userId: z.string().trim().min(1),
+});
+
+export type UpdateAdminUserStatusInput = z.infer<
+  typeof updateAdminUserStatusSchema
+>;
+
+export interface CreateAdminUserResult {
+  message: string;
+  record?: AdminUserRecord;
+  status: "error" | "success";
+}
+
+export interface UpdateAdminUserRoleResult {
+  message: string;
+  record?: AdminUserProfileRecord;
+  status: "error" | "success";
+}
+
+export interface UpdateAdminUserStatusResult {
+  message: string;
+  record?: AdminUserProfileRecord;
+  status: "error" | "success";
+}

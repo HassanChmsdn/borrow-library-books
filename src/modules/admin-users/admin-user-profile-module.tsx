@@ -9,8 +9,14 @@ import {
 } from "@/components/admin";
 import { LoadingSkeleton } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
+import {
+  canManageAppUserRecord,
+  getAssignableAppUserRoles,
+} from "@/lib/auth";
+import { useMockAuthContext } from "@/lib/auth/react";
 
 import { useAdminUserProfileState } from "./hooks";
+import { getAdminUserRoleFieldOptions } from "./mock-data";
 import type { AdminUserProfileModuleProps } from "./types";
 import {
   UserAccountActions,
@@ -32,6 +38,7 @@ function AdminUserProfileModule({
     suspendUser,
     user,
   } = useAdminUserProfileState(initialUser);
+  const authState = useMockAuthContext();
 
   if (isLoading) {
     return <AdminUserProfileLoadingState />;
@@ -40,6 +47,11 @@ function AdminUserProfileModule({
   if (!user) {
     return <AdminUserProfileEmptyState />;
   }
+
+  const canManageAccount = canManageAppUserRecord(authState, user.role);
+  const roleOptions = getAdminUserRoleFieldOptions(
+    getAssignableAppUserRoles(authState),
+  );
 
   return (
     <div className="gap-section flex flex-col">
@@ -67,11 +79,14 @@ function AdminUserProfileModule({
         <div className="grid gap-5">
           <UserProfileSummary user={user} />
           <UserAccountActions
+            canChangeRole={canManageAccount}
+            canChangeStatus={canManageAccount}
             isMutating={isMutating}
             lastActionMessage={lastActionMessage}
             onChangeRole={changeRole}
             onReactivateUser={reactivateUser}
             onSuspendUser={suspendUser}
+            roleOptions={roleOptions}
             role={user.role}
             status={user.status}
           />

@@ -4,6 +4,18 @@ import { adminSharedUsers } from "@/modules/admin-shared/mock-data";
 
 type UserManagementRole = "user" | "admin";
 
+interface CreateMockUserRecordInput {
+  access?: AppUserAccessConfig;
+  auth0UserId?: string;
+  email: string;
+  fullName: string;
+  profileNote?: string;
+  role: AppUserRole;
+  status: AppUserStatus;
+  subtitle?: string;
+  visibleInAdminDirectory?: boolean;
+}
+
 export interface UserRepositoryRecord {
   access?: AppUserAccessConfig;
   auth0UserId?: string;
@@ -27,6 +39,15 @@ function toAppUserRole(role: UserManagementRole): AppUserRole {
 
 function toUserManagementRole(role: AppUserRole): UserManagementRole {
   return hasAdminAccessRole(role) ? "admin" : "user";
+}
+
+function createUserSlug(input: string) {
+  return input
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+    .slice(0, 48);
 }
 
 const visibleUserRecords: ReadonlyArray<UserRepositoryRecord> =
@@ -118,7 +139,10 @@ const hiddenAuthUsers: ReadonlyArray<UserRepositoryRecord> = [
   },
 ];
 
-const userRecords = [...visibleUserRecords, ...hiddenAuthUsers] as const;
+const userRecords: UserRepositoryRecord[] = [
+  ...visibleUserRecords,
+  ...hiddenAuthUsers,
+];
 
 const mockUserAccessOverrides = new Map<string, AppUserAccessConfig | null>();
 const mockUserRoleOverrides = new Map<string, AppUserRole>();
@@ -168,6 +192,15 @@ export function getUserRecordById(userId: string) {
   return record ? applyMockUserAccessOverride(record) : null;
 }
 
+export function findUserRecordByEmail(email: string) {
+  const normalizedEmail = email.trim().toLowerCase();
+  const record = userRecords.find(
+    (user) => user.email.trim().toLowerCase() === normalizedEmail,
+  );
+
+  return record ? applyMockUserAccessOverride(record) : null;
+}
+
 export function findUserRecordByAuth0Subject(subject: string) {
   const record = userRecords.find((user) => user.auth0UserId === subject);
 
@@ -207,6 +240,47 @@ export function setMockUserRole(userId: string, role: AppUserRole) {
   }
 
   mockUserRoleOverrides.set(userId, role);
+
+  return applyMockUserAccessOverride(record);
+}
+
+export function setMockUserStatus(userId: string, status: AppUserStatus) {
+  const record = userRecords.find((user) => user.id === userId);
+
+  if (!record) {
+    return null;
+  }
+
+  record.status = status;
+
+  return applyMockUserAccessOverride(record);
+}
+
+export function createMockUserRecord(input: CreateMockUserRecordInput) {
+  const normalizedEmail = input.email.trim().toLowerCase();
+  const trimmedName = input.fullName.trim();
+  const slug = createUserSlug(trimmedName || normalizedEmail) || "new-user";
+  const id = `${slug}-${Date.now().toString(36)}`;
+  const roleLabel = getAppRoleAccountLabel(input.role);
+  const record: UserRepositoryRecord = {
+    access: input.access,
+    auth0UserId: input.auth0UserId,
+    email: normalizedEmail,
+    fullName: trimmedName,
+    id,
+    joinedOn: new Date().toISOString(),
+    managementRole: toUserManagementRole(input.role),
+    membershipLabel: roleLabel,
+    profileNote:
+      input.profileNote ??
+      "Created through the admin user management flow and ready for future identity-provider linking.",
+    role: input.role,
+    status: input.status,
+    subtitle: input.subtitle ?? roleLabel,
+    visibleInAdminDirectory: input.visibleInAdminDirectory ?? true,
+  };
+
+  userRecords.unshift(record);
 
   return applyMockUserAccessOverride(record);
 }

@@ -5,7 +5,7 @@ import { cache } from "react";
 import {
   getBookRecordByIdFromStore,
   listBorrowRequestRecordsFromStore,
-  listVisibleUserRecordsFromStore,
+  listUserRecordsFromStore,
 } from "@/lib/data/server";
 import {
   formatAdminCurrency,
@@ -139,7 +139,7 @@ function getBorrowingSummaryMeta(
 export const listAdminUserProfileRecords = cache(
   async (): Promise<ReadonlyArray<AdminUserProfileRecord>> => {
     const [users, borrowings] = await Promise.all([
-      listVisibleUserRecordsFromStore(),
+      listUserRecordsFromStore(),
       listBorrowRequestRecordsFromStore(),
     ]);
 
@@ -190,10 +190,8 @@ export const listAdminUserProfileRecords = cache(
   },
 );
 
-export async function listAdminUserRecords(): Promise<ReadonlyArray<AdminUserRecord>> {
-  const users = await listAdminUserProfileRecords();
-
-  return users.map((user) => ({
+export function toAdminUserRecord(user: AdminUserProfileRecord): AdminUserRecord {
+  return {
     borrowingSummaryLabel: user.borrowingSummaryLabel,
     borrowingSummaryMeta: user.borrowingSummaryMeta,
     email: user.email,
@@ -203,7 +201,13 @@ export async function listAdminUserRecords(): Promise<ReadonlyArray<AdminUserRec
     profileHref: user.profileHref,
     role: user.role,
     status: user.status,
-  }));
+  };
+}
+
+export async function listAdminUserRecords(): Promise<ReadonlyArray<AdminUserRecord>> {
+  const users = await listAdminUserProfileRecords();
+
+  return users.map(toAdminUserRecord);
 }
 
 export async function getAdminUserProfileRecordByIdFromStore(userId: string) {
