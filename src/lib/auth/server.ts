@@ -1,15 +1,12 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { listRoleAdminSectionDefaults } from "./access-policies";
 import {
-  MOCK_AUTH_COOKIE,
   canAccessAdminSection,
   canManageAdminSection,
   hasAdminAccess,
   buildMockSignInHref,
   createGuestAuthState,
-  createMockAuthState,
   isAuthenticated,
   getCurrentRole,
   getRouteAuthorization,
@@ -29,11 +26,9 @@ export type AppSession = AppAuthState;
 export type MockSession = AppAuthState;
 
 export async function getMockSession(): Promise<AppSession> {
-  const cookieStore = await cookies();
-  const roleValue = cookieStore.get(MOCK_AUTH_COOKIE)?.value;
-  const roleDefaults = await listRoleAdminSectionDefaults();
+  await listRoleAdminSectionDefaults();
 
-  return createMockAuthState(roleValue, roleDefaults);
+  return createGuestAuthState();
 }
 
 export async function getCurrentSession(): Promise<AppSession> {

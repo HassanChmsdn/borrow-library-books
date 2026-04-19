@@ -412,10 +412,6 @@ export function buildMockSignInHref(options?: {
   const params = new URLSearchParams();
   const isAdminRoute = hasAdminAccessRole(options?.role);
 
-  if (options?.role && !isAdminRoute) {
-    params.set("role", options.role);
-  }
-
   if (options?.redirectTo) {
     params.set("redirectTo", options.redirectTo);
   }

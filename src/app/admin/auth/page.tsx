@@ -20,6 +20,7 @@ import { buildAuth0LoginHref, isAuth0Configured } from "@/lib/auth/auth0";
 
 interface AdminAccessPageProps {
   searchParams: Promise<{
+    error?: string;
     redirectTo?: string;
   }>;
 }
@@ -28,11 +29,24 @@ export const metadata = {
   title: "Admin Access",
 };
 
+function getAdminAuthErrorMessage(error?: string) {
+  if (error === "auth0-not-configured") {
+    return "Admin authentication is unavailable until Auth0 is configured for this environment.";
+  }
+
+  return null;
+}
+
 export default async function AdminAccessPage({ searchParams }: AdminAccessPageProps) {
   const params = await searchParams;
   const redirectTo = sanitizeRedirectTo(params.redirectTo, "/admin");
   const session = await getCurrentSession();
   const auth0Enabled = isAuth0Configured();
+  const errorMessage =
+    getAdminAuthErrorMessage(params.error) ??
+    (!auth0Enabled
+      ? "Admin authentication is unavailable until Auth0 is configured for this environment."
+      : null);
 
   if (hasAdminAccess(session)) {
     redirect(redirectTo);
@@ -82,20 +96,22 @@ export default async function AdminAccessPage({ searchParams }: AdminAccessPageP
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                <Button asChild className="sm:min-w-52">
-                  <a href={buildAuth0LoginHref(redirectTo)}>
-                    Continue to admin login
-                  </a>
-                </Button>
+                {auth0Enabled ? (
+                  <Button asChild className="sm:min-w-52">
+                    <a href={buildAuth0LoginHref(redirectTo)}>
+                      Continue to admin login
+                    </a>
+                  </Button>
+                ) : null}
                 <Button asChild variant="outline">
                   <Link href="/books">Back to catalog</Link>
                 </Button>
               </div>
 
-              {!auth0Enabled ? (
+              {errorMessage ? (
                 <div className="rounded-2xl border border-danger/20 bg-danger-surface px-4 py-3">
                   <p className="text-body-sm text-danger font-medium">
-                    Admin authentication is unavailable until Auth0 is configured for this environment.
+                    {errorMessage}
                   </p>
                 </div>
               ) : null}
