@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
 import { TriangleAlert } from "lucide-react";
 
 import { EmptyState } from "@/components/feedback";
 import { PageHeader } from "@/components/layout";
 import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/link-button";
+import { useI18n } from "@/lib/i18n";
 
 interface PublicErrorPageProps {
   error: Error & { digest?: string };
@@ -17,6 +18,8 @@ export default function PublicErrorPage({
   error,
   reset,
 }: Readonly<PublicErrorPageProps>) {
+  const { translateText } = useI18n();
+
   useEffect(() => {
     console.error(error);
   }, [error]);
@@ -28,20 +31,20 @@ export default function PublicErrorPage({
         title="Public view unavailable"
         description="A route-level error interrupted this member-facing screen. You can retry the page or return to the public catalog."
         actions={
-          <Button asChild size="sm" variant="outline">
-            <Link href="/books">Back to catalog</Link>
-          </Button>
+          <LinkButton href="/books" size="sm" variant="outline">
+            Back to catalog
+          </LinkButton>
         }
       />
 
       <EmptyState
         action={
           <Button onClick={reset} type="button">
-            Try again
+            {translateText("Try again")}
           </Button>
         }
         description={
-          error.message ||
+          (error.message ? translateText(error.message) : null) ||
           "Try again now. If the problem persists, return to the public catalog and reopen the affected page."
         }
         icon={<TriangleAlert className="size-5" />}

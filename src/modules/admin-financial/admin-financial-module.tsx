@@ -23,26 +23,33 @@ import {
 } from "@/components/admin";
 import { LoadingSkeleton } from "@/components/feedback";
 import { FeeBadge } from "@/components/library";
-import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/link-button";
+import { getI18n } from "@/lib/i18n/server";
 import { cn } from "@/lib/utils";
+import { translateAdminFinancialText } from "@/modules/admin-shared/i18n";
 
 import { formatAdminCurrency, formatAdminDateTime } from "./server";
 import type { AdminFinancialModuleProps, AdminFinancialRecord } from "./types";
+
+type TranslateText = (text: string) => string;
 
 function FinancialRecordPaymentStatus({
   helperText,
   label,
   tone,
+  translateText,
 }: Readonly<{
   helperText?: string;
   label: string;
   tone: AdminFinancialRecord["paymentStatusTone"];
+  translateText: TranslateText;
 }>) {
+
   return (
     <div className="space-y-1">
       <AdminStatusBadge label={label} tone={tone} />
       {helperText ? (
-        <p className="text-caption text-text-tertiary">{helperText}</p>
+        <p className="text-caption text-text-tertiary">{translateText(helperText)}</p>
       ) : null}
     </div>
   );
@@ -50,9 +57,12 @@ function FinancialRecordPaymentStatus({
 
 function FinancialRecordsCardList({
   records,
+  translateText,
 }: Readonly<{
   records: ReadonlyArray<AdminFinancialRecord>;
+  translateText: TranslateText;
 }>) {
+
   return (
     <div className="grid gap-3 lg:hidden">
       {records.map((record) => (
@@ -60,34 +70,38 @@ function FinancialRecordsCardList({
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="text-title-sm text-foreground font-semibold text-balance">
-                {record.bookTitle}
+                {translateText(record.bookTitle)}
               </p>
               <p className="text-body-sm text-text-secondary mt-1">
-                {record.branch}
+                {translateText(record.branch)}
               </p>
             </div>
             <FeeBadge label={formatAdminCurrency(record.feeCents)} tone="paid" />
           </div>
 
-          <AdminUserAvatar name={record.memberName} subtitle={record.memberEmail} />
+          <AdminUserAvatar
+            name={translateText(record.memberName)}
+            subtitle={record.memberEmail}
+          />
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1">
               <p className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-                Payment status
+                {translateText("Payment status")}
               </p>
               <FinancialRecordPaymentStatus
                 helperText={record.paymentHelperText}
                 label={record.paymentStatusLabel}
                 tone={record.paymentStatusTone}
+                translateText={translateText}
               />
             </div>
             <div className="space-y-1">
               <p className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-                Activity
+                {translateText("Activity")}
               </p>
               <p className="text-body-sm text-foreground font-medium">
-                {record.activityLabel}
+                {translateText(record.activityLabel)}
               </p>
               <p className="text-body-sm text-text-secondary">
                 {formatAdminDateTime(record.activityOn)}
@@ -102,33 +116,39 @@ function FinancialRecordsCardList({
 
 function FinancialRecordsTable({
   records,
+  translateText,
 }: Readonly<{
   records: ReadonlyArray<AdminFinancialRecord>;
+  translateText: TranslateText;
 }>) {
+
   return (
     <div className="hidden lg:block">
       <AdminTable>
         <AdminTableHeader>
           <AdminTableRow>
-            <AdminTableHead>Member</AdminTableHead>
-            <AdminTableHead>Fee source</AdminTableHead>
-            <AdminTableHead>Fee</AdminTableHead>
-            <AdminTableHead>Payment status</AdminTableHead>
-            <AdminTableHead>Activity</AdminTableHead>
+            <AdminTableHead>{translateText("Member")}</AdminTableHead>
+            <AdminTableHead>{translateText("Fee source")}</AdminTableHead>
+            <AdminTableHead>{translateText("Fee")}</AdminTableHead>
+            <AdminTableHead>{translateText("Payment status")}</AdminTableHead>
+            <AdminTableHead>{translateText("Activity")}</AdminTableHead>
           </AdminTableRow>
         </AdminTableHeader>
         <AdminTableBody>
           {records.map((record) => (
             <AdminTableRow key={record.id}>
               <AdminTableCell>
-                <AdminUserAvatar name={record.memberName} subtitle={record.memberEmail} />
+                <AdminUserAvatar
+                  name={translateText(record.memberName)}
+                  subtitle={record.memberEmail}
+                />
               </AdminTableCell>
               <AdminTableCell>
                 <div className="space-y-1">
                   <p className="text-body text-foreground font-medium text-balance">
-                    {record.bookTitle}
+                    {translateText(record.bookTitle)}
                   </p>
-                  <p className="text-body-sm text-text-secondary">{record.branch}</p>
+                  <p className="text-body-sm text-text-secondary">{translateText(record.branch)}</p>
                 </div>
               </AdminTableCell>
               <AdminTableCell>
@@ -139,12 +159,13 @@ function FinancialRecordsTable({
                   helperText={record.paymentHelperText}
                   label={record.paymentStatusLabel}
                   tone={record.paymentStatusTone}
+                  translateText={translateText}
                 />
               </AdminTableCell>
               <AdminTableCell>
                 <div className="space-y-1">
                   <p className="text-body-sm text-foreground font-medium">
-                    {record.activityLabel}
+                    {translateText(record.activityLabel)}
                   </p>
                   <p className="text-body-sm text-text-secondary">
                     {formatAdminDateTime(record.activityOn)}
@@ -159,10 +180,12 @@ function FinancialRecordsTable({
   );
 }
 
-function AdminFinancialModule({
+async function AdminFinancialModule({
   data,
   isLoading = false,
 }: Readonly<AdminFinancialModuleProps>) {
+  const { translateText } = await getI18n();
+
   if (isLoading) {
     return <AdminFinancialLoadingState />;
   }
@@ -177,9 +200,9 @@ function AdminFinancialModule({
         title="Financial operations"
         description="Monitor borrowing-fee intake, unresolved cash exposure, and recent fee records in a shared admin workspace that can later connect to real payments and reporting pipelines."
         actions={
-          <Button asChild size="sm" variant="outline">
-            <Link href="/admin/borrowings">Open borrowings</Link>
-          </Button>
+          <LinkButton href="/admin/borrowings" size="sm" variant="outline">
+            {translateText("Open borrowings")}
+          </LinkButton>
         }
       />
 
@@ -189,21 +212,24 @@ function AdminFinancialModule({
             icon: <HandCoins aria-hidden="true" className="size-4" />,
             label: "Settled cash",
             supportingText: "Borrowing fees already marked settled in the current shared data source.",
-            trend: `${summary.settledRecordCount} settled records`,
+            trend: translateAdminFinancialText(`${summary.settledRecordCount} settled records`, translateText),
             value: formatAdminCurrency(summary.settledRevenueCents),
           },
           {
             icon: <TriangleAlert aria-hidden="true" className="size-4" />,
             label: "Outstanding cash",
             supportingText: "Fee exposure still waiting for onsite settlement before reconciliation is complete.",
-            trend: `${summary.overdueCashCount} overdue dues`,
+            trend: translateAdminFinancialText(`${summary.overdueCashCount} overdue dues`, translateText),
             value: formatAdminCurrency(summary.outstandingRevenueCents),
           },
           {
             icon: <BookCopy aria-hidden="true" className="size-4" />,
             label: "Fee-bearing records",
             supportingText: "Borrowing records that currently carry a payable borrowing fee.",
-            trend: `${formatAdminCurrency(summary.last30DaySettledRevenueCents)} last 30 days`,
+            trend: translateAdminFinancialText(
+              `${formatAdminCurrency(summary.last30DaySettledRevenueCents)} last 30 days`,
+              translateText,
+            ),
             value: String(summary.feeBearingRecordCount),
           },
           {
@@ -223,17 +249,23 @@ function AdminFinancialModule({
         >
           {hasRecords ? (
             <>
-              <FinancialRecordsCardList records={recentRecords.slice(0, 8)} />
-              <FinancialRecordsTable records={recentRecords.slice(0, 8)} />
+              <FinancialRecordsCardList
+                records={recentRecords.slice(0, 8)}
+                translateText={translateText}
+              />
+              <FinancialRecordsTable
+                records={recentRecords.slice(0, 8)}
+                translateText={translateText}
+              />
             </>
           ) : (
             <AdminEmptyState
               title="No fee records are available yet"
               description="Borrowing fee records will appear here once fee-bearing borrowings are seeded or synchronized from the live payment source."
               action={
-                <Button asChild size="sm" variant="outline">
-                  <Link href="/admin/borrowings">Review borrowings</Link>
-                </Button>
+                <LinkButton href="/admin/borrowings" size="sm" variant="outline">
+                  Review borrowings
+                </LinkButton>
               }
             />
           )}
@@ -247,7 +279,7 @@ function AdminFinancialModule({
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
               <div className="rounded-card border-border-subtle bg-elevated border px-4 py-3">
                 <p className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-                  Total fee exposure
+                  {translateText("Total fee exposure")}
                 </p>
                 <p className="text-title-sm text-foreground mt-2 font-semibold">
                   {formatAdminCurrency(
@@ -255,19 +287,19 @@ function AdminFinancialModule({
                   )}
                 </p>
                 <p className="text-body-sm text-text-secondary mt-1">
-                  Settled and unpaid borrowing fees combined.
+                  {translateText("Settled and unpaid borrowing fees combined.")}
                 </p>
               </div>
 
               <div className="rounded-card border-border-subtle bg-elevated border px-4 py-3">
                 <p className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-                  Last 30 days
+                  {translateText("Last 30 days")}
                 </p>
                 <p className="text-title-sm text-foreground mt-2 font-semibold">
                   {formatAdminCurrency(summary.last30DaySettledRevenueCents)}
                 </p>
                 <p className="text-body-sm text-text-secondary mt-1">
-                  Recently settled onsite cash fees.
+                  {translateText("Recently settled onsite cash fees.")}
                 </p>
               </div>
             </div>
@@ -280,9 +312,9 @@ function AdminFinancialModule({
             <div className="grid gap-3">
               <div className="flex items-start justify-between gap-3 rounded-lg border border-transparent bg-background px-3 py-2.5">
                 <div>
-                  <p className="text-body-sm text-foreground font-medium">Settled records</p>
+                  <p className="text-body-sm text-foreground font-medium">{translateText("Settled records")}</p>
                   <p className="text-caption text-text-secondary mt-1">
-                    Borrowing fees already closed out onsite.
+                    {translateText("Borrowing fees already closed out onsite.")}
                   </p>
                 </div>
                 <span className="text-body text-foreground font-semibold">
@@ -292,9 +324,9 @@ function AdminFinancialModule({
 
               <div className="flex items-start justify-between gap-3 rounded-lg border border-transparent bg-background px-3 py-2.5">
                 <div>
-                  <p className="text-body-sm text-foreground font-medium">Open cash exposure</p>
+                  <p className="text-body-sm text-foreground font-medium">{translateText("Open cash exposure")}</p>
                   <p className="text-caption text-text-secondary mt-1">
-                    Unsettled borrowing fees still needing collection.
+                    {translateText("Unsettled borrowing fees still needing collection.")}
                   </p>
                 </div>
                 <span
@@ -309,9 +341,9 @@ function AdminFinancialModule({
 
               <div className="flex items-start justify-between gap-3 rounded-lg border border-transparent bg-background px-3 py-2.5">
                 <div>
-                  <p className="text-body-sm text-foreground font-medium">Overdue unpaid fees</p>
+                  <p className="text-body-sm text-foreground font-medium">{translateText("Overdue unpaid fees")}</p>
                   <p className="text-caption text-text-secondary mt-1">
-                    Overdue borrowing records that still show unpaid cash.
+                    {translateText("Overdue borrowing records that still show unpaid cash.")}
                   </p>
                 </div>
                 <span
@@ -331,13 +363,15 @@ function AdminFinancialModule({
   );
 }
 
-function AdminFinancialLoadingState() {
+async function AdminFinancialLoadingState() {
+  const { translateText } = await getI18n();
+
   return (
     <div className="gap-section flex flex-col">
       <AdminPageHeader
-        eyebrow="Financial"
-        title="Financial operations"
-        description="Loading fee tracking and finance review surfaces."
+        eyebrow={translateText("Financial")}
+        title={translateText("Financial operations")}
+        description={translateText("Loading fee tracking and finance review surfaces.")}
       />
       <LoadingSkeleton count={4} variant="kpi" />
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(18rem,0.9fr)]">

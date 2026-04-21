@@ -2,6 +2,7 @@
 
 import * as React from "react";
 
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 interface BorrowDurationOption {
@@ -33,6 +34,8 @@ function BorrowDurationSelector({
   value,
   ...props
 }: BorrowDurationSelectorProps) {
+  const { translateText } = useI18n();
+
   return (
     <div
       data-slot="borrow-duration-selector"
@@ -42,16 +45,20 @@ function BorrowDurationSelector({
       {label || description ? (
         <div className="space-y-1">
           {label ? (
-            <p className="text-label text-foreground font-medium">{label}</p>
+            <p className="text-label text-foreground font-medium">
+              {translateText(label)}
+            </p>
           ) : null}
           {description ? (
-            <p className="text-body-sm text-text-secondary">{description}</p>
+            <p className="text-body-sm text-text-secondary">
+              {translateText(description)}
+            </p>
           ) : null}
         </div>
       ) : null}
 
       <div
-        aria-label={label ?? "Borrow duration selector"}
+        aria-label={translateText(label ?? "Borrow duration selector")}
         className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap"
         role="radiogroup"
       >
@@ -63,7 +70,7 @@ function BorrowDurationSelector({
               key={option.value}
               aria-checked={isActive}
               className={cn(
-                "focus-visible:ring-ring flex min-h-14 min-w-32 flex-1 flex-col items-start justify-center rounded-xl border px-3 py-2 text-left transition-[border-color,background-color,color,box-shadow] duration-200 focus-visible:ring-4 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 sm:flex-none",
+                "focus-visible:ring-ring flex min-h-14 min-w-32 flex-1 flex-col items-start justify-center rounded-xl border px-3 py-2 text-start transition-[border-color,background-color,color,box-shadow] duration-200 focus-visible:ring-4 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 sm:flex-none",
                 isActive
                   ? "border-primary bg-primary text-primary-foreground shadow-sm"
                   : "border-border-subtle bg-card text-foreground hover:border-border-strong hover:bg-elevated",
@@ -75,7 +82,9 @@ function BorrowDurationSelector({
               role="radio"
               type="button"
             >
-              <span className="text-label font-medium">{option.label}</span>
+              <span className="text-label font-medium">
+                {translateText(option.label)}
+              </span>
               {option.supportingText ? (
                 <span
                   className={cn(
@@ -85,7 +94,7 @@ function BorrowDurationSelector({
                       : "text-text-secondary",
                   )}
                 >
-                  {option.supportingText}
+                  {translateText(option.supportingText)}
                 </span>
               ) : null}
             </button>

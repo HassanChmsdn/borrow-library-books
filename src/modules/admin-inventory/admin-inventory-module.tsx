@@ -10,6 +10,7 @@ import {
 import { LoadingSkeleton } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
 import { useCanManageAdminSection } from "@/lib/auth/react";
+import { useI18n } from "@/lib/i18n";
 
 import {
   InventoryCardList,
@@ -27,6 +28,7 @@ function AdminInventoryModule({
   onSaveCopy,
   records,
 }: Readonly<AdminInventoryModuleProps>) {
+  const { translateText } = useI18n();
   const canManageInventory = useCanManageAdminSection("inventory");
   const {
     clearFilters,
@@ -73,7 +75,7 @@ function AdminInventoryModule({
               {canManageInventory ? (
                 <Button type="button" size="lg" onClick={openCreateForm}>
                   <Plus aria-hidden="true" className="size-4" />
-                  Add copy
+                  {translateText("Add copy")}
                 </Button>
               ) : null}
             </div>
@@ -86,7 +88,7 @@ function AdminInventoryModule({
           actions={
             hasActiveFilters ? (
               <Button type="button" size="sm" variant="ghost" onClick={clearFilters}>
-                Reset filters
+                {translateText("Reset filters")}
               </Button>
             ) : null
           }
@@ -99,7 +101,7 @@ function AdminInventoryModule({
                 canManageInventory ? (
                   <Button type="button" size="sm" onClick={openCreateForm}>
                     <Plus aria-hidden="true" className="size-4" />
-                    Add first copy
+                    {translateText("Add first copy")}
                   </Button>
                 ) : null
               }
@@ -110,7 +112,7 @@ function AdminInventoryModule({
               description="Try another copy code, title, author, or status filter to find the physical record you need."
               action={
                 <Button type="button" size="sm" variant="outline" onClick={clearFilters}>
-                  Clear search and status
+                  {translateText("Clear search and status")}
                 </Button>
               }
             />
@@ -144,12 +146,14 @@ function AdminInventoryModule({
 }
 
 function AdminInventoryLoadingState() {
+  const { translateText } = useI18n();
+
   return (
     <div className="gap-section flex flex-col">
       <AdminPageHeader
-        eyebrow="Copies"
-        title="Inventory management"
-        description="Loading inventory management surfaces."
+        eyebrow={translateText("Copies")}
+        title={translateText("Inventory management")}
+        description={translateText("Loading inventory management surfaces.")}
       />
       <LoadingSkeleton count={2} variant="card" className="lg:hidden" />
       <LoadingSkeleton count={1} variant="table" />

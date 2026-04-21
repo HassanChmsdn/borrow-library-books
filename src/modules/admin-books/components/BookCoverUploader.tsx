@@ -4,6 +4,7 @@ import { useId, useRef } from "react";
 
 import { AdminSectionCard } from "@/components/admin";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { BookCoverArt } from "@/modules/catalog/book-cover-art";
 
@@ -39,6 +40,7 @@ function BookCoverUploader({
   onFileNameChange,
   title,
 }: BookCoverUploaderProps) {
+  const { translateText } = useI18n();
   const inputId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -48,11 +50,11 @@ function BookCoverUploader({
       description="Use the existing admin cover language for now. This upload area only captures a file name until real media storage is wired."
     >
       <div className="grid gap-4 lg:grid-cols-[minmax(12rem,14rem)_minmax(0,1fr)] lg:items-start">
-        <div className="mx-auto w-full max-w-[14rem] lg:mx-0">
+        <div className="mx-auto w-full max-w-56 lg:mx-0">
           <BookCoverArt
-            author={author || "Author name"}
+            author={author || translateText("Author name")}
             coverLabel={deriveCoverLabel(title, category)}
-            title={title || "Book title"}
+            title={title || translateText("Book title")}
             tone={deriveAdminBookCoverTone(category)}
           />
         </div>
@@ -66,12 +68,14 @@ function BookCoverUploader({
           >
             <div className="space-y-1">
               <p className="text-label text-foreground font-medium">
-                {fileName.length > 0 ? fileName : "No cover selected yet"}
+                {fileName.length > 0 ? fileName : translateText("No cover selected yet")}
               </p>
               <p className="text-body-sm text-text-secondary">
-                {mode === "create"
-                  ? "Upload a mock cover reference so the API contract already expects media metadata."
-                  : "Replace the current cover reference if this title has a refreshed edition or a cleaner asset."}
+                {translateText(
+                  mode === "create"
+                    ? "Upload a mock cover reference so the API contract already expects media metadata."
+                    : "Replace the current cover reference if this title has a refreshed edition or a cleaner asset.",
+                )}
               </p>
             </div>
 
@@ -116,15 +120,16 @@ function BookCoverUploader({
 
           <div className="grid gap-1">
             <p className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-              Helper text
+              {translateText("Helper text")}
             </p>
             <p className="text-body-sm text-text-secondary">
-              The preview tone follows the selected category so the form stays
-              visually aligned with the existing catalog and admin tables.
+              {translateText(
+                "The preview tone follows the selected category so the form stays visually aligned with the existing catalog and admin tables.",
+              )}
             </p>
             {error ? (
               <p className="text-body-sm text-danger" role="alert">
-                {error}
+                {translateText(error)}
               </p>
             ) : null}
           </div>

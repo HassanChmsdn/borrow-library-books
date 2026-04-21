@@ -26,7 +26,7 @@ function UsersTable({ canManage, users }: Readonly<UsersTableProps>) {
             <AdminTableHead>Status</AdminTableHead>
             <AdminTableHead>Joined</AdminTableHead>
             <AdminTableHead>Borrowing summary</AdminTableHead>
-            <AdminTableHead className="text-right">
+            <AdminTableHead className="text-end">
               {canManage ? "Action" : "Access"}
             </AdminTableHead>
           </AdminTableRow>

@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
 
 import { AdminErrorState, AdminPageHeader } from "@/components/admin";
-import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/link-button";
+import { useI18n } from "@/lib/i18n";
 
 interface AdminErrorPageProps {
   error: Error & { digest?: string };
@@ -15,6 +15,8 @@ export default function AdminErrorPage({
   error,
   reset,
 }: Readonly<AdminErrorPageProps>) {
+  const { translateText } = useI18n();
+
   useEffect(() => {
     console.error(error);
   }, [error]);
@@ -26,9 +28,9 @@ export default function AdminErrorPage({
         title="Admin view unavailable"
         description="A route-level error interrupted this admin screen. The surrounding admin shell is still active, so you can retry or return to another management area."
         actions={
-          <Button asChild size="sm" variant="outline">
-            <Link href="/admin">Back to dashboard</Link>
-          </Button>
+          <LinkButton href="/admin" size="sm" variant="outline">
+            {translateText("Back to dashboard")}
+          </LinkButton>
         }
       />
 
@@ -39,6 +41,7 @@ export default function AdminErrorPage({
           "Try again now. If the problem persists, return to the dashboard and reload the affected management route later."
         }
         onRetry={reset}
+        retryLabel={translateText("Try again")}
       />
     </div>
   );

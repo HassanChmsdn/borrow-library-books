@@ -1,4 +1,5 @@
-import Link from "next/link";
+"use client";
+
 import { ArrowLeft } from "lucide-react";
 
 import {
@@ -11,7 +12,9 @@ import {
   AdminUserAvatar,
 } from "@/components/admin";
 import { LoadingSkeleton } from "@/components/feedback";
-import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/link-button";
+import { useI18n } from "@/lib/i18n";
+import { translateAdminActivityText } from "@/modules/admin-shared/i18n";
 import { UserRoleBadge, UserStatusBadge } from "@/modules/admin-users/components";
 
 import type { AdminProfileModuleProps } from "./types";
@@ -20,6 +23,8 @@ function AdminProfileModule({
   profile,
   isLoading = false,
 }: Readonly<AdminProfileModuleProps>) {
+  const { translateText } = useI18n();
+
   if (isLoading) {
     return <AdminProfileLoadingState />;
   }
@@ -35,12 +40,10 @@ function AdminProfileModule({
         title={profile.fullName}
         description="Review the currently authenticated admin account, workspace scope, and recent operating activity."
         actions={
-          <Button asChild size="sm" variant="outline">
-            <Link href="/admin">
-              <ArrowLeft className="size-4" />
-              Back to dashboard
-            </Link>
-          </Button>
+          <LinkButton href="/admin" size="sm" variant="outline">
+            <ArrowLeft className="size-4" />
+            {translateText("Back to dashboard")}
+          </LinkButton>
         }
         controls={
           <div className="flex flex-wrap items-center gap-2">
@@ -85,7 +88,9 @@ function AdminProfileModule({
               columnsClassName="sm:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3"
               items={profile.metrics}
             />
-            <p className="text-body-sm text-text-secondary">{profile.accountSummaryNote}</p>
+            <p className="text-body-sm text-text-secondary">
+              {translateText(profile.accountSummaryNote)}
+            </p>
           </AdminSectionCard>
         </div>
 
@@ -102,16 +107,16 @@ function AdminProfileModule({
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0 space-y-1">
                     <p className="text-body-sm text-foreground font-medium">
-                      {item.title}
+                      {translateText(item.title)}
                     </p>
                     <p className="text-body-sm text-text-secondary text-pretty">
-                      {item.description}
+                      {translateAdminActivityText(item.description, translateText)}
                     </p>
                   </div>
                   <AdminStatusBadge label={item.statusLabel} tone={item.statusTone} />
                 </div>
                 <p className="text-caption text-text-tertiary tracking-[0.16em] uppercase">
-                  {item.occurredLabel}
+                  {translateText(item.occurredLabel)}
                 </p>
               </div>
             ))}
@@ -123,6 +128,8 @@ function AdminProfileModule({
 }
 
 function AdminProfileEmptyState() {
+  const { translateText } = useI18n();
+
   return (
     <div className="gap-section flex flex-col">
       <AdminPageHeader
@@ -135,9 +142,7 @@ function AdminProfileEmptyState() {
         title="Profile unavailable"
         description="Try returning to the dashboard and reopening the profile page. The page is wired for future Auth0 and Mongo-backed account data, but it currently depends on the mocked admin session."
         action={
-          <Button asChild>
-            <Link href="/admin">Back to dashboard</Link>
-          </Button>
+          <LinkButton href="/admin">{translateText("Back to dashboard")}</LinkButton>
         }
       />
     </div>
@@ -145,12 +150,14 @@ function AdminProfileEmptyState() {
 }
 
 function AdminProfileLoadingState() {
+  const { translateText } = useI18n();
+
   return (
     <div className="gap-section flex flex-col">
       <AdminPageHeader
-        eyebrow="Admin profile"
-        title="Current account"
-        description="Loading the authenticated admin summary, account details, and recent workspace activity."
+        eyebrow={translateText("Admin profile")}
+        title={translateText("Current account")}
+        description={translateText("Loading the authenticated admin summary, account details, and recent workspace activity.")}
       />
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">

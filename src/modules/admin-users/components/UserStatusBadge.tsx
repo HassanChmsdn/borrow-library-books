@@ -1,4 +1,7 @@
+"use client";
+
 import { AdminStatusBadge } from "@/components/admin";
+import { useI18n } from "@/lib/i18n";
 
 import type { AdminUserStatus } from "../types";
 
@@ -7,10 +10,11 @@ interface UserStatusBadgeProps {
 }
 
 function UserStatusBadge({ status }: Readonly<UserStatusBadgeProps>) {
+  const { translateText } = useI18n();
   const config =
     status === "active"
-      ? { label: "Active", tone: "success" as const }
-      : { label: "Suspended", tone: "danger" as const };
+      ? { label: translateText("Active"), tone: "success" as const }
+      : { label: translateText("Suspended"), tone: "danger" as const };
 
   return <AdminStatusBadge label={config.label} tone={config.tone} />;
 }

@@ -1,8 +1,7 @@
-import Link from "next/link";
-
 import { AdminEmptyState, AdminPageHeader } from "@/components/admin";
 import { LoadingSkeleton } from "@/components/feedback";
-import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/link-button";
+import { getI18n } from "@/lib/i18n/server";
 
 import {
   AdminDashboardActivitySection,
@@ -36,7 +35,8 @@ interface AdminDashboardModuleProps {
   };
 }
 
-function AdminDashboardModule({ data }: Readonly<AdminDashboardModuleProps>) {
+async function AdminDashboardModule({ data }: Readonly<AdminDashboardModuleProps>) {
+  const { formatMessage, translateText } = await getI18n();
   const {
     activity,
     availableSections,
@@ -68,33 +68,35 @@ function AdminDashboardModule({ data }: Readonly<AdminDashboardModuleProps>) {
         actions={
           <>
             {availableSections.borrowings ? (
-              <Button asChild size="sm" variant="outline">
-                <Link href="/admin/borrowings">Review borrowings</Link>
-              </Button>
+              <LinkButton href="/admin/borrowings" size="sm" variant="outline">
+                Review borrowings
+              </LinkButton>
             ) : null}
             {availableSections.inventory ? (
-              <Button asChild size="sm">
-                <Link href="/admin/inventory">Open inventory</Link>
-              </Button>
+              <LinkButton href="/admin/inventory" size="sm">
+                Open inventory
+              </LinkButton>
             ) : null}
           </>
         }
       />
 
-      <AdminDashboardMetricGrid metrics={metrics} />
+      <AdminDashboardMetricGrid metrics={metrics} translateText={translateText} />
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(18rem,0.92fr)] xl:items-start">
         <div className="order-2 space-y-6 xl:order-1">
           <AdminDashboardTrendSection
+            formatMessage={formatMessage}
             points={trendPoints}
             summary={trendSummary}
+            translateText={translateText}
           />
-          <AdminDashboardActivitySection items={activity} />
+          <AdminDashboardActivitySection items={activity} translateText={translateText} />
         </div>
 
         <div className="order-1 space-y-6 xl:order-2">
-          <AdminDashboardNoticeSection notices={notices} />
-          <AdminDashboardQuickActionsSection actions={quickActions} />
+          <AdminDashboardNoticeSection notices={notices} translateText={translateText} />
+          <AdminDashboardQuickActionsSection actions={quickActions} translateText={translateText} />
         </div>
       </div>
     </div>
@@ -137,9 +139,9 @@ function AdminDashboardEmptyState({
         title="No dashboard data available"
         description="KPI cards, notices, trends, and recent activity will appear here once the admin data source contains operational records again."
         action={emptyStateHref && emptyStateLabel ? (
-          <Button asChild size="sm" variant="outline">
-            <Link href={emptyStateHref}>{emptyStateLabel}</Link>
-          </Button>
+          <LinkButton href={emptyStateHref} size="sm" variant="outline">
+            {emptyStateLabel}
+          </LinkButton>
         ) : undefined}
       />
     </div>

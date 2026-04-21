@@ -25,6 +25,7 @@ import {
   type ResolvedAppSectionPermissions,
 } from "@/lib/auth";
 import { useMockAuthContext } from "@/lib/auth/react";
+import { useI18n } from "@/lib/i18n";
 
 import { updateAdminAccessControlUserAction } from "./actions";
 import type {
@@ -163,6 +164,7 @@ function AccessToggleRow(props: {
   onManageChange: (checked: boolean) => void;
   section: AppAdminSection;
 }) {
+  const { formatMessage, translateText } = useI18n();
   const {
     defaultPermission,
     draft,
@@ -184,14 +186,18 @@ function AccessToggleRow(props: {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-body text-foreground font-medium">
-            {getAdminSectionLabel(section)}
+            {translateText(getAdminSectionLabel(section))}
           </p>
           <p className="text-body-sm text-text-secondary mt-1">
-            Role default: {formatPermissionSummary(defaultPermission)}
+            {formatMessage(translateText("Role default: {summary}"), {
+              summary: translateText(formatPermissionSummary(defaultPermission)),
+            })}
           </p>
         </div>
         <AdminStatusBadge
-          label={`Effective: ${formatPermissionSummary(effectivePermission)}`}
+          label={formatMessage(translateText("Effective: {summary}"), {
+            summary: translateText(formatPermissionSummary(effectivePermission)),
+          })}
           tone={getPermissionTone(effectivePermission)}
         />
       </div>
@@ -205,7 +211,7 @@ function AccessToggleRow(props: {
             type="checkbox"
             onChange={(event) => onInheritChange(event.target.checked)}
           />
-          Use role default
+            {translateText("Use role default")}
         </label>
 
         <label className="text-body-sm text-foreground flex items-center gap-2">
@@ -220,7 +226,7 @@ function AccessToggleRow(props: {
             type="checkbox"
             onChange={(event) => onAccessChange(event.target.checked)}
           />
-          Access
+            {translateText("Access")}
         </label>
 
         <label className="text-body-sm text-foreground flex items-center gap-2">
@@ -233,7 +239,7 @@ function AccessToggleRow(props: {
             type="checkbox"
             onChange={(event) => onManageChange(event.target.checked)}
           />
-          Manage
+            {translateText("Manage")}
         </label>
       </div>
     </div>
@@ -244,6 +250,7 @@ function AdminAccessControlOverridesModule({
   initialRolePolicies,
   initialUsers,
 }: Readonly<AdminAccessControlOverridesModuleProps>) {
+  const { formatMessage, translateText } = useI18n();
   const router = useRouter();
   const authState = useMockAuthContext();
   const [users, setUsers] = useState(initialUsers);
@@ -404,8 +411,7 @@ function AdminAccessControlOverridesModule({
         title="User access management"
       >
         <p className="text-body-sm text-text-secondary">
-          Add or provision an account first, then return here to assign roles
-          and section access.
+          {translateText("Add or provision an account first, then return here to assign roles and section access.")}
         </p>
       </AdminSectionCard>
     );
@@ -427,7 +433,7 @@ function AdminAccessControlOverridesModule({
               void clearCustomAccess();
             }}
           >
-            Clear custom access
+            {translateText("Clear custom access")}
           </Button>
           <Button
             disabled={isSaving || !hasChanges}
@@ -435,7 +441,7 @@ function AdminAccessControlOverridesModule({
             variant="outline"
             onClick={resetDraft}
           >
-            Reset draft
+            {translateText("Reset draft")}
           </Button>
           <Button
             disabled={isSaving || !hasChanges || !canManageSelectedUser}
@@ -444,7 +450,7 @@ function AdminAccessControlOverridesModule({
               void saveChanges();
             }}
           >
-            {isSaving ? "Saving..." : "Save user access"}
+            {isSaving ? translateText("Saving...") : translateText("Save user access")}
           </Button>
         </div>
       }
@@ -467,7 +473,7 @@ function AdminAccessControlOverridesModule({
                 : "text-body-sm text-danger font-medium"
             }
           >
-            {feedback.message}
+            {translateText(feedback.message)}
           </p>
         </div>
       ) : null}
@@ -477,7 +483,10 @@ function AdminAccessControlOverridesModule({
           <AdminFilterSelect
             label="User account"
             options={users.map((user) => ({
-              label: `${user.fullName} (${getAppRoleDisplayLabel(user.role)})`,
+              label: formatMessage(translateText("{name} ({role})"), {
+                name: user.fullName,
+                role: translateText(getAppRoleDisplayLabel(user.role)),
+              }),
               value: user.id,
             }))}
             value={selectedUser.id}
@@ -516,32 +525,31 @@ function AdminAccessControlOverridesModule({
                 tone="info"
               />
               <AdminStatusBadge
-                label={
-                  selectedUser.status === "active" ? "Active" : "Suspended"
-                }
+                label={translateText(
+                  selectedUser.status === "active" ? "Active" : "Suspended",
+                )}
                 tone={selectedUser.status === "active" ? "success" : "warning"}
               />
               {builtSections ? (
-                <AdminStatusBadge label="Custom section access" tone="info" />
+                <AdminStatusBadge label={translateText("Custom section access")} tone="info" />
               ) : (
-                <AdminStatusBadge label="Role defaults only" tone="neutral" />
+                <AdminStatusBadge label={translateText("Role defaults only")} tone="neutral" />
               )}
             </div>
 
             <p className="text-body-sm text-text-secondary">
-              {selectedUser.subtitle}
+              {translateText(selectedUser.subtitle)}
             </p>
 
             {!canManageSelectedUser ? (
               <p className="text-body-sm text-text-secondary border-border-subtle rounded-lg border border-dashed px-3 py-2">
-                This account can be reviewed here, but the current session is not allowed to change its role or section access.
+                {translateText("This account can be reviewed here, but the current session is not allowed to change its role or section access.")}
               </p>
             ) : null}
 
             {!isStaffRole ? (
               <p className="text-body-sm text-text-secondary border-border-subtle rounded-lg border border-dashed px-3 py-2">
-                Member accounts do not receive admin workspace sections. Saving
-                this role clears any existing admin section overrides.
+                {translateText("Member accounts do not receive admin workspace sections. Saving this role clears any existing admin section overrides.")}
               </p>
             ) : null}
           </div>
@@ -589,15 +597,18 @@ function AdminAccessControlOverridesModule({
 
           <div className="rounded-card border-border-subtle bg-elevated grid gap-2 border p-4">
             <p className="text-body text-foreground font-medium">
-              Effective access summary
+              {translateText("Effective access summary")}
             </p>
             <div className="flex flex-wrap gap-2">
               {APP_ADMIN_SECTION_VALUES.map((section) => (
                 <AdminStatusBadge
                   key={`summary-${section}`}
-                  label={`${getAdminSectionLabel(section)}: ${formatPermissionSummary(
-                    effectivePermissions[section],
-                  )}`}
+                  label={formatMessage(translateText("{section}: {summary}"), {
+                    section: translateText(getAdminSectionLabel(section)),
+                    summary: translateText(
+                      formatPermissionSummary(effectivePermissions[section]),
+                    ),
+                  })}
                   tone={getPermissionTone(effectivePermissions[section])}
                 />
               ))}

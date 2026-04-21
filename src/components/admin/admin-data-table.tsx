@@ -1,5 +1,8 @@
+"use client";
+
 import * as React from "react";
 
+import { translateNode, useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 interface AdminDataTableProps extends Omit<
@@ -20,6 +23,8 @@ function AdminDataTable({
   title,
   ...props
 }: AdminDataTableProps) {
+  const { translateText } = useI18n();
+
   return (
     <section className={cn("space-y-4", className)} {...props}>
       {title || description || actions ? (
@@ -27,11 +32,13 @@ function AdminDataTable({
           <div className="space-y-1">
             {title ? (
               <h2 className="text-title-sm text-foreground font-semibold">
-                {title}
+                {translateNode(title, translateText)}
               </h2>
             ) : null}
             {description ? (
-              <p className="text-body-sm text-text-secondary">{description}</p>
+              <p className="text-body-sm text-text-secondary">
+                {translateNode(description, translateText)}
+              </p>
             ) : null}
           </div>
           {actions ? (

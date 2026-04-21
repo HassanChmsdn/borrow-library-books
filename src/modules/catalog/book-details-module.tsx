@@ -1,7 +1,6 @@
 "use client";
 
 import { startTransition, useMemo, useState } from "react";
-import Link from "next/link";
 import { ArrowLeft, BookMarked, Clock3, HandCoins } from "lucide-react";
 
 import { EmptyState, LoadingSkeleton } from "@/components/feedback";
@@ -15,6 +14,7 @@ import { buildMockSignInHref } from "@/lib/auth";
 import { useMockAuth } from "@/lib/auth/react";
 import { PageHeader } from "@/components/layout";
 import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/link-button";
 import {
   Card,
   CardContent,
@@ -23,6 +23,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useI18n } from "@/lib/i18n";
 
 import type { AllBooksItem } from "./all-books-data";
 import { createBookBorrowRequestAction } from "./actions";
@@ -37,6 +38,10 @@ import {
   getBookAvailabilityTone,
   getBookFeeTone,
 } from "./book-presentation";
+import {
+  translateCatalogAvailabilityLabel,
+  translateCatalogFeeLabel,
+} from "./i18n";
 
 const borrowDurationOptions = [
   { value: "7", label: "7 days", supportingText: "Short hold" },
@@ -50,6 +55,7 @@ interface BookDetailsModuleProps {
 }
 
 function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps) {
+  const { translateText } = useI18n();
   const [selectedDuration, setSelectedDuration] = useState("14");
   const [customDurationRequest, setCustomDurationRequest] = useState("");
   const [requestState, setRequestState] = useState<BookBorrowRequestState>(
@@ -61,8 +67,14 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
   const { hasAdminAccess, isMember } = useMockAuth();
 
   const availabilityTone = getBookAvailabilityTone(book);
-  const availabilityLabel = formatBookAvailabilityLabel(book);
-  const feeLabel = formatBookFeeLabel(book.feeCents);
+  const availabilityLabel = translateCatalogAvailabilityLabel(
+    formatBookAvailabilityLabel(book),
+    translateText,
+  );
+  const feeLabel = translateCatalogFeeLabel(
+    formatBookFeeLabel(book.feeCents),
+    translateText,
+  );
   const feeTone = getBookFeeTone(book.feeCents);
   const isUnavailable = book.availableCopies === 0;
   const customDurationAllowed = useMemo(() => allowCustomDuration, [allowCustomDuration]);
@@ -97,7 +109,9 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
     if (mode === "custom") {
       if (!customDurationAllowed) {
         setRequestState({
-          message: "Custom duration requests are not available for this title.",
+          message: translateText(
+            "Custom duration requests are not available for this title.",
+          ),
           status: "error",
         });
         return;
@@ -105,8 +119,9 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
 
       if (customDurationRequest.trim().length === 0) {
         setRequestState({
-          message:
+          message: translateText(
             "Enter the number of days you want to request before submitting a custom duration.",
+          ),
           status: "error",
         });
         return;
@@ -142,12 +157,10 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
         title={book.title}
         description="Review availability, borrowing duration options, and onsite fee policy before placing a borrowing request."
         actions={
-          <Button asChild size="sm" variant="outline">
-            <Link href="/books">
+          <LinkButton href="/books" size="sm" variant="outline">
               <ArrowLeft className="size-4" />
               Back to catalog
-            </Link>
-          </Button>
+          </LinkButton>
         }
       />
 
@@ -192,15 +205,15 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
                 <dl className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <dt className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-                      Category
+                      {translateText("Category")}
                     </dt>
                     <dd className="text-body text-foreground font-medium">
-                      {book.category}
+                      {translateText(book.category)}
                     </dd>
                   </div>
                   <div className="space-y-1.5">
                     <dt className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-                      Borrow fee
+                      {translateText("Borrow fee")}
                     </dt>
                     <dd className="text-body text-foreground font-medium">
                       {feeLabel}
@@ -210,7 +223,7 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
 
                 <div className="space-y-2">
                   <h2 className="text-title-sm text-foreground font-semibold">
-                    Description
+                    {translateText("Description")}
                   </h2>
                   <p className="text-body text-text-secondary text-pretty">
                     {book.description}
@@ -221,15 +234,18 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
 
             <Card>
               <CardHeader>
-                <CardTitle>Borrowing details</CardTitle>
+                <CardTitle>{translateText("Borrowing details")}</CardTitle>
                 <CardDescription>
-                  Choose a standard duration or request a custom number of days
-                  for staff review.
+                  {translateText(
+                    "Choose a standard duration or request a custom number of days for staff review.",
+                  )}
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-5">
                 <BorrowDurationSelector
-                  description="Predefined durations keep the selection quick on mobile while still scaling to larger screens."
+                  description={translateText(
+                    "Predefined durations keep the selection quick on mobile while still scaling to larger screens.",
+                  )}
                   label="Borrow duration"
                   options={borrowDurationOptions}
                   onValueChange={setSelectedDuration}
@@ -238,7 +254,7 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
 
                 <label className="grid gap-1.5">
                   <span className="text-label text-foreground font-medium">
-                    Custom duration request
+                    {translateText("Custom duration request")}
                   </span>
                   <Input
                     disabled={!customDurationAllowed}
@@ -248,15 +264,17 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
                     }
                     placeholder={
                       customDurationAllowed
-                        ? "Request a custom number of days"
-                        : "Custom requests are unavailable for this title"
+                        ? translateText("Request a custom number of days")
+                        : translateText("Custom requests are unavailable for this title")
                     }
                     value={customDurationRequest}
                   />
                   <span className="text-body-sm text-text-secondary">
                     {customDurationAllowed
-                      ? "Leave blank to use the predefined option above. The first available copy is assigned automatically."
-                      : "This title uses predefined borrowing durations only."}
+                      ? translateText(
+                          "Leave blank to use the predefined option above. The first available copy is assigned automatically.",
+                        )
+                      : translateText("This title uses predefined borrowing durations only.")}
                   </span>
                 </label>
               </CardContent>
@@ -267,10 +285,11 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
         <div className="xl:sticky xl:top-28">
           <Card>
             <CardHeader>
-              <CardTitle>Borrow action</CardTitle>
+              <CardTitle>{translateText("Borrow action")}</CardTitle>
               <CardDescription>
-                Payment is collected onsite in cash only when the book is picked
-                up from the library desk.
+                {translateText(
+                  "Payment is collected onsite in cash only when the book is picked up from the library desk.",
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
@@ -281,11 +300,12 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
                   </div>
                   <div className="space-y-1.5">
                     <p className="text-label text-foreground font-medium">
-                      Onsite cash payment only
+                      {translateText("Onsite cash payment only")}
                     </p>
                     <p className="text-body-sm text-text-secondary">
-                      Bring the exact amount when collecting your book. Online
-                      checkout and card payments are not available yet.
+                      {translateText(
+                        "Bring the exact amount when collecting your book. Online checkout and card payments are not available yet.",
+                      )}
                     </p>
                   </div>
                 </div>
@@ -294,19 +314,19 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
               <div className="grid gap-3 rounded-2xl border border-dashed border-black/5 p-4">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-body-sm text-text-secondary">
-                    Selected duration
+                    {translateText("Selected duration")}
                   </span>
                   <span className="text-body text-foreground font-medium">
-                    {
+                    {translateText(
                       borrowDurationOptions.find(
                         (option) => option.value === selectedDuration,
-                      )?.label
-                    }
+                      )?.label ?? "",
+                    )}
                   </span>
                 </div>
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-body-sm text-text-secondary">
-                    Fee due onsite
+                    {translateText("Fee due onsite")}
                   </span>
                   <span className="text-body text-foreground font-medium">
                     {feeLabel}
@@ -314,7 +334,7 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
                 </div>
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-body-sm text-text-secondary">
-                    Availability
+                    {translateText("Availability")}
                   </span>
                   <span className="text-body text-foreground font-medium">
                     {availabilityLabel}
@@ -322,10 +342,10 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
                 </div>
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-body-sm text-text-secondary">
-                    Copy assignment
+                    {translateText("Copy assignment")}
                   </span>
                   <span className="text-body text-foreground font-medium">
-                    First available copy
+                    {translateText("First available copy")}
                   </span>
                 </div>
               </div>
@@ -340,9 +360,9 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
                 >
                   <p className="text-body-sm font-medium">{requestState.message}</p>
                   {requestState.status === "success" ? (
-                    <Button asChild className="mt-3" size="sm" variant="outline">
-                      <Link href="/account/borrowings">View My Borrowings</Link>
-                    </Button>
+                    <LinkButton className="mt-3" href="/account/borrowings" size="sm" variant="outline">
+                      View My Borrowings
+                    </LinkButton>
                   ) : null}
                 </div>
               ) : null}
@@ -351,7 +371,7 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
                 {isUnavailable ? (
                   <Button disabled size="lg" type="button">
                     <BookMarked className="size-4" />
-                    Currently unavailable
+                    {translateText("Currently unavailable")}
                   </Button>
                 ) : isMember ? (
                   <Button
@@ -362,16 +382,14 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
                   >
                     <BookMarked className="size-4" />
                     {submittingMode === "predefined"
-                      ? "Creating request..."
+                      ? translateText("Creating request...")
                       : borrowPrimaryLabel}
                   </Button>
                 ) : (
-                  <Button asChild size="lg">
-                    <Link href={borrowHref}>
+                  <LinkButton href={borrowHref} size="lg">
                       <BookMarked className="size-4" />
                       {borrowPrimaryLabel}
-                    </Link>
-                  </Button>
+                  </LinkButton>
                 )}
 
                 {isMember ? (
@@ -384,23 +402,21 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
                   >
                     <Clock3 className="size-4" />
                     {submittingMode === "custom"
-                      ? "Submitting request..."
+                      ? translateText("Submitting request...")
                       : customDurationAllowed
                         ? customDurationLabel
-                        : "Custom duration unavailable"}
+                        : translateText("Custom duration unavailable")}
                   </Button>
                 ) : (
-                  <Button asChild size="lg" variant="outline">
-                    <Link href={borrowHref}>
+                  <LinkButton href={borrowHref} size="lg" variant="outline">
                       <Clock3 className="size-4" />
                       {customDurationLabel}
-                    </Link>
-                  </Button>
+                  </LinkButton>
                 )}
               </div>
 
               <p className="text-body-sm text-text-secondary">
-                {borrowHelperText}
+                {translateText(borrowHelperText)}
               </p>
             </CardContent>
           </Card>
@@ -421,9 +437,7 @@ function BookDetailsEmptyState() {
 
       <EmptyState
         action={
-          <Button asChild>
-            <Link href="/books">Return to all books</Link>
-          </Button>
+          <LinkButton href="/books">Browse Books</LinkButton>
         }
         description="Try another book from the catalog grid. This state is rendered locally so it can be iterated on safely before any backend wiring exists."
         title="Book not available in the mock catalog"

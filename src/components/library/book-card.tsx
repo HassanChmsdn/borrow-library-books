@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 import { cva } from "class-variance-authority";
 
@@ -7,6 +9,7 @@ import {
 } from "./availability-badge";
 import { FeeBadge, type FeeBadgeTone } from "./fee-badge";
 
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import {
   Card,
@@ -65,6 +68,8 @@ function BookCard({
   statusTone = "neutral",
   title,
 }: BookCardProps) {
+  const { translateText } = useI18n();
+
   return (
     <Card className={cn("overflow-hidden", className)}>
       {cover ? (
@@ -78,10 +83,10 @@ function BookCard({
           <div className="flex items-start justify-between gap-3">
             {statusLabel ? (
               <span className={bookCardStatusVariants({ tone: statusTone })}>
-                {statusLabel}
+                {translateText(statusLabel)}
               </span>
             ) : (
-              <span className="sr-only">Book fee</span>
+              <span className="sr-only">{translateText("Book fee")}</span>
             )}
             {feeLabel ? <FeeBadge label={feeLabel} tone={feeTone} /> : null}
           </div>
@@ -96,7 +101,7 @@ function BookCard({
       <CardContent className="border-border-subtle flex items-center justify-between gap-3 border-t border-dashed pt-4">
         <div className="min-w-0 space-y-2">
           <p className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-            {category}
+            {translateText(category)}
           </p>
           <AvailabilityBadge
             label={availabilityLabel}

@@ -1,5 +1,6 @@
 import { BookDetailsEmptyState, BookDetailsModule } from "@/modules/catalog";
 import { getCatalogBookDetailsById, listCatalogBooks } from "@/modules/catalog/server";
+import { getI18n } from "@/lib/i18n/server";
 
 type BookDetailsPageProps = {
   params: Promise<{
@@ -8,11 +9,12 @@ type BookDetailsPageProps = {
 };
 
 export async function generateMetadata(props: BookDetailsPageProps) {
+  const { translateText } = await getI18n();
   const { bookId } = await props.params;
   const book = await getCatalogBookDetailsById(bookId);
 
   return {
-    title: book ? `${book.book.title} | Book Details` : "Book Details",
+    title: book ? `${book.book.title} | ${translateText("Book Details")}` : translateText("Book Details"),
   };
 }
 

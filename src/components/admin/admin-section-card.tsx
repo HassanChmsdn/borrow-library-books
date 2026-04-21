@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 
 import {
@@ -8,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { translateNode, useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 interface AdminSectionCardProps extends Omit<
@@ -32,15 +35,19 @@ function AdminSectionCard({
   title,
   ...props
 }: AdminSectionCardProps) {
+  const { translateText } = useI18n();
+
   return (
     <Card className={className} {...props}>
       {title || description || actions ? (
         <CardHeader>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0 flex-1 space-y-1.5">
-              {title ? <CardTitle>{title}</CardTitle> : null}
+              {title ? <CardTitle>{translateNode(title, translateText)}</CardTitle> : null}
               {description ? (
-                <CardDescription>{description}</CardDescription>
+                <CardDescription>
+                  {translateNode(description, translateText)}
+                </CardDescription>
               ) : null}
             </div>
             {actions ? (

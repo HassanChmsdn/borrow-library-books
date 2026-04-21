@@ -1,5 +1,4 @@
 import * as React from "react";
-import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import {
@@ -11,8 +10,12 @@ import {
   AdminStatusBadge,
   AdminUserAvatar,
 } from "@/components/admin";
-import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/link-button";
 import { cn } from "@/lib/utils";
+import {
+  translateAdminActivityText,
+  translateAdminDashboardText,
+} from "@/modules/admin-shared/i18n";
 
 import type {
   AdminDashboardActivityItem,
@@ -22,6 +25,12 @@ import type {
   AdminDashboardTrendPoint,
   AdminDashboardTrendSummaryItem,
 } from "./types";
+
+type TranslateText = (text: string) => string;
+type FormatMessage = (
+  template: string,
+  variables: Record<string, string | number>,
+) => string;
 
 function getToneClasses(tone: AdminDashboardMetric["tone"]) {
   switch (tone) {
@@ -80,18 +89,29 @@ function getBarHeight(value: number, maxValue: number) {
 function ChartLegendItem({
   className,
   label,
-}: Readonly<{ className: string; label: string }>) {
+  translateText,
+}: Readonly<{
+  className: string;
+  label: string;
+  translateText: TranslateText;
+}>) {
+
   return (
     <div className="flex items-center gap-2">
       <span className={cn("size-2.5 rounded-full", className)} />
-      <span className="text-body-sm text-text-secondary">{label}</span>
+      <span className="text-body-sm text-text-secondary">{translateText(label)}</span>
     </div>
   );
 }
 
 function AdminDashboardMetricGrid({
   metrics,
-}: Readonly<{ metrics: ReadonlyArray<AdminDashboardMetric> }>) {
+  translateText,
+}: Readonly<{
+  metrics: ReadonlyArray<AdminDashboardMetric>;
+  translateText: TranslateText;
+}>) {
+
   return (
     <AdminMetricStrip
       columnsClassName="sm:grid-cols-2 xl:grid-cols-5"
@@ -114,7 +134,7 @@ function AdminDashboardMetricGrid({
           supportingText: metric.supportingText,
           trend: metric.trend ? (
             <span className={cn("font-medium", toneClasses.trendClassName)}>
-              {metric.trend}
+              {translateAdminDashboardText(metric.trend, translateText)}
             </span>
           ) : undefined,
           value: metric.value,
@@ -126,7 +146,12 @@ function AdminDashboardMetricGrid({
 
 function AdminDashboardNoticeSection({
   notices,
-}: Readonly<{ notices: ReadonlyArray<AdminDashboardNoticeItem> }>) {
+  translateText,
+}: Readonly<{
+  notices: ReadonlyArray<AdminDashboardNoticeItem>;
+  translateText: TranslateText;
+}>) {
+
   return (
     <AdminSectionCard
       title="Operational notices"
@@ -146,7 +171,7 @@ function AdminDashboardNoticeSection({
                 <div className="min-w-0 space-y-1.5">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-title-sm text-foreground font-semibold">
-                      {item.title}
+                      {translateText(item.title)}
                     </p>
                     <AdminStatusBadge
                       label={item.badgeLabel ?? item.title}
@@ -154,19 +179,19 @@ function AdminDashboardNoticeSection({
                     />
                   </div>
                   <p className="max-w-[32ch] text-body-sm text-text-secondary">
-                    {item.description}
+                    {translateText(item.description)}
                   </p>
                 </div>
-                <p className="text-foreground text-balance text-[1.9rem] leading-[0.92] font-semibold tracking-[-0.04em] lg:max-w-[10ch] lg:justify-self-end lg:text-right xl:text-[2.2rem]">
-                  {item.countLabel}
+                <p className="text-foreground text-balance text-[1.9rem] leading-[0.92] font-semibold tracking-[-0.04em] lg:max-w-[10ch] lg:justify-self-end lg:text-end xl:text-[2.2rem]">
+                    {translateAdminDashboardText(item.countLabel, translateText)}
                 </p>
               </div>
 
-              <p className="text-caption text-text-tertiary">{item.meta}</p>
+                <p className="text-caption text-text-tertiary">{translateAdminDashboardText(item.meta, translateText)}</p>
 
-              <Button asChild size="sm" variant="outline" className="w-full sm:w-auto">
-                <Link href={item.actionHref}>{item.actionLabel}</Link>
-              </Button>
+              <LinkButton href={item.actionHref} size="sm" variant="outline" className="w-full sm:w-auto">
+                {translateText(item.actionLabel)}
+              </LinkButton>
             </div>
           ))}
         </div>
@@ -181,11 +206,15 @@ function AdminDashboardNoticeSection({
 }
 
 function AdminDashboardTrendSection({
+  formatMessage,
   points,
   summary,
+  translateText,
 }: Readonly<{
+  formatMessage: FormatMessage;
   points: ReadonlyArray<AdminDashboardTrendPoint>;
   summary: ReadonlyArray<AdminDashboardTrendSummaryItem>;
+  translateText: TranslateText;
 }>) {
   const maxValue = Math.max(
     1,
@@ -198,15 +227,15 @@ function AdminDashboardTrendSection({
     <AdminSectionCard
       title="Borrowing trends"
       description="Seven-day circulation movement for borrowings, returns, and overdue escalation using mock operational data."
-      actions={<p className="text-caption text-text-tertiary">Last 7 days</p>}
+      actions={<p className="text-caption text-text-tertiary">{translateText("Last 7 days")}</p>}
     >
       {points.length > 0 ? (
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_17rem] xl:items-start">
           <div className="rounded-card border-border-subtle bg-elevated grid gap-4 border p-4">
             <div className="flex flex-wrap items-center gap-4">
-              <ChartLegendItem className="bg-brand-500" label="Borrowings" />
-              <ChartLegendItem className="bg-success" label="Returns" />
-              <ChartLegendItem className="bg-danger" label="Overdue" />
+              <ChartLegendItem className="bg-brand-500" label="Borrowings" translateText={translateText} />
+              <ChartLegendItem className="bg-success" label="Returns" translateText={translateText} />
+              <ChartLegendItem className="bg-danger" label="Overdue" translateText={translateText} />
             </div>
 
             <div className="grid min-h-72 grid-cols-7 items-end gap-2 sm:gap-3">
@@ -231,17 +260,26 @@ function AdminDashboardTrendSection({
                         style={{
                           height: getBarHeight(point.borrowings, maxValue),
                         }}
-                        title={`${point.label}: ${point.borrowings} borrowings`}
+                        title={formatMessage(translateText("{label}: {count} borrowings"), {
+                          count: point.borrowings,
+                          label: translateText(point.label),
+                        })}
                       />
                       <span
                         className="bg-success w-2 rounded-t-[0.4rem] sm:w-2.5"
                         style={{ height: getBarHeight(point.returns, maxValue) }}
-                        title={`${point.label}: ${point.returns} returns`}
+                        title={formatMessage(translateText("{label}: {count} returns"), {
+                          count: point.returns,
+                          label: translateText(point.label),
+                        })}
                       />
                       <span
                         className="bg-danger w-2 rounded-t-[0.4rem] sm:w-2.5"
                         style={{ height: getBarHeight(point.overdue, maxValue) }}
-                        title={`${point.label}: ${point.overdue} overdue`}
+                        title={formatMessage(translateText("{label}: {count} overdue"), {
+                          count: point.overdue,
+                          label: translateText(point.label),
+                        })}
                       />
                     </div>
                   </div>
@@ -251,7 +289,7 @@ function AdminDashboardTrendSection({
                       {point.label}
                     </p>
                     <p className="text-caption text-text-tertiary">
-                      {point.borrowings} out
+                      {formatMessage(translateText("{count} out"), { count: point.borrowings })}
                     </p>
                   </div>
                 </div>
@@ -265,14 +303,14 @@ function AdminDashboardTrendSection({
               label: item.label,
               value: item.statusLabel ? (
                 <div className="flex flex-wrap items-center gap-2">
-                  <span>{item.value}</span>
+                  <span>{translateAdminDashboardText(item.value, translateText)}</span>
                   <AdminStatusBadge
                     label={item.statusLabel}
                     tone={item.statusTone}
                   />
                 </div>
               ) : (
-                item.value
+                translateAdminDashboardText(item.value, translateText)
               ),
             }))}
           />
@@ -289,15 +327,20 @@ function AdminDashboardTrendSection({
 
 function AdminDashboardQuickActionsSection({
   actions,
-}: Readonly<{ actions: ReadonlyArray<AdminDashboardQuickAction> }>) {
+  translateText,
+}: Readonly<{
+  actions: ReadonlyArray<AdminDashboardQuickAction>;
+  translateText: TranslateText;
+}>) {
+
   return (
     <section className="space-y-4">
       <div className="space-y-1">
         <h2 className="text-title-sm text-foreground font-semibold">
-          Quick actions
+          {translateText("Quick actions")}
         </h2>
         <p className="text-body-sm text-text-secondary">
-          Fast entry points into the highest-traffic management areas.
+          {translateText("Fast entry points into the highest-traffic management areas.")}
         </p>
       </div>
 
@@ -330,18 +373,21 @@ function AdminDashboardQuickActionsSection({
 
 function AdminDashboardActivitySection({
   items,
-}: Readonly<{ items: ReadonlyArray<AdminDashboardActivityItem> }>) {
+  translateText,
+}: Readonly<{
+  items: ReadonlyArray<AdminDashboardActivityItem>;
+  translateText: TranslateText;
+}>) {
+
   return (
     <AdminSectionCard
       title="Recent activity"
       description="A running panel of the latest circulation, catalog, and member support changes."
       footer={
-        <Button asChild type="button" variant="ghost" className="justify-between">
-          <Link href="/admin/borrowings">
-            Open borrowings queue
-            <ArrowRight className="size-4" />
-          </Link>
-        </Button>
+        <LinkButton href="/admin/borrowings" variant="ghost" className="justify-between">
+          {translateText("Open borrowings queue")}
+          <ArrowRight className="size-4" />
+        </LinkButton>
       }
     >
       {items.length > 0 ? (
@@ -354,10 +400,10 @@ function AdminDashboardActivitySection({
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="space-y-2">
                   <p className="text-body text-foreground font-medium">
-                    {item.title}
+                    {translateText(item.title)}
                   </p>
                   <p className="text-body-sm text-text-secondary">
-                    {item.description}
+                    {translateAdminActivityText(item.description, translateText)}
                   </p>
                 </div>
                 <AdminStatusBadge
@@ -367,10 +413,10 @@ function AdminDashboardActivitySection({
               </div>
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                 <AdminUserAvatar
-                  meta={item.meta}
+                  meta={translateText(item.meta)}
                   name={item.actor}
                   size="sm"
-                  subtitle={item.actorRole}
+                  subtitle={translateText(item.actorRole)}
                 />
               </div>
             </div>

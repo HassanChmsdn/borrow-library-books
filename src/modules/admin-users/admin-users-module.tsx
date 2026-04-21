@@ -18,6 +18,7 @@ import {
   UsersTable,
   UsersToolbar,
 } from "./components";
+import { useI18n } from "@/lib/i18n";
 import { useAdminUsersModuleState } from "./hooks";
 import {
   adminUserFormDefaults,
@@ -31,6 +32,7 @@ function AdminUsersModule({
   isLoading = false,
   records = adminUserRecords,
 }: Readonly<AdminUsersModuleProps>) {
+  const { translateText } = useI18n();
   const authState = useMockAuthContext();
   const canManageUsersSection = useCanManageAdminSection("users");
   const canCreateUsers = canCreateAppUsers(authState);
@@ -87,7 +89,7 @@ function AdminUsersModule({
                 }}
               >
                 <Plus aria-hidden="true" className="size-4" />
-                Add account
+                {translateText("Add account")}
               </Button>
               ) : undefined
             }
@@ -99,14 +101,14 @@ function AdminUsersModule({
         <div className="rounded-card border border-success/20 bg-success/5 flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1">
             <p className="text-body-sm text-foreground font-medium">
-              Account created
+              {translateText("Account created")}
             </p>
             <p className="text-body-sm text-text-secondary">
               {createFeedback.message}
             </p>
           </div>
           <Button type="button" size="sm" variant="ghost" onClick={dismissCreateFeedback}>
-            Dismiss
+            {translateText("Dismiss")}
           </Button>
         </div>
       ) : null}
@@ -117,7 +119,7 @@ function AdminUsersModule({
         actions={
           hasActiveFilters ? (
             <Button type="button" size="sm" variant="ghost" onClick={clearFilters}>
-              Reset filters
+              {translateText("Reset filters")}
             </Button>
           ) : null
         }
@@ -133,7 +135,7 @@ function AdminUsersModule({
             description="Try another name, email, or role filter to bring matching staff and member accounts back into view."
             action={
               <Button type="button" size="sm" variant="outline" onClick={clearFilters}>
-                Clear search and role
+                {translateText("Clear search and role")}
               </Button>
             }
           />
@@ -166,12 +168,14 @@ function AdminUsersModule({
 }
 
 function AdminUsersLoadingState() {
+  const { translateText } = useI18n();
+
   return (
     <div className="gap-section flex flex-col">
       <AdminPageHeader
-        eyebrow="Accounts"
-        title="User management"
-        description="Loading account management surfaces."
+        eyebrow={translateText("Accounts")}
+        title={translateText("User management")}
+        description={translateText("Loading account management surfaces.")}
       />
       <LoadingSkeleton count={2} variant="card" className="lg:hidden" />
       <LoadingSkeleton count={1} variant="table" />

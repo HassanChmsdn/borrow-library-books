@@ -1,4 +1,5 @@
 import { AdminSectionCard } from "@/components/admin";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 import type {
@@ -23,6 +24,8 @@ function BookDurationSettings({
   options,
   selectedDays,
 }: BookDurationSettingsProps) {
+  const { dir, translateText } = useI18n();
+
   return (
     <AdminSectionCard
       title="Borrowing durations"
@@ -39,7 +42,7 @@ function BookDurationSettings({
                 type="button"
                 aria-pressed={isSelected}
                 className={cn(
-                  "rounded-card border-border-subtle bg-card grid gap-1.5 border p-4 text-left transition-colors",
+                  "rounded-card border-border-subtle bg-card grid gap-1.5 border p-4 text-start transition-colors",
                   isSelected
                     ? "border-border-strong bg-elevated shadow-xs"
                     : "hover:border-border-strong",
@@ -47,10 +50,10 @@ function BookDurationSettings({
                 onClick={() => onToggleDuration(option.days)}
               >
                 <span className="text-label text-foreground font-medium">
-                  {option.label}
+                  {translateText(option.label)}
                 </span>
                 <span className="text-body-sm text-text-secondary">
-                  {option.helperText}
+                  {translateText(option.helperText)}
                 </span>
               </button>
             );
@@ -60,10 +63,12 @@ function BookDurationSettings({
         <div className="grid gap-3 rounded-card border border-dashed border-black/5 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4">
           <div className="space-y-1">
             <p className="text-label text-foreground font-medium">
-              Allow custom duration requests
+              {translateText("Allow custom duration requests")}
             </p>
             <p className="text-body-sm text-text-secondary">
-              Turn this on when staff may approve a non-standard duration after review.
+              {translateText(
+                "Turn this on when staff may approve a non-standard duration after review.",
+              )}
             </p>
           </div>
 
@@ -79,8 +84,12 @@ function BookDurationSettings({
           >
             <span
               className={cn(
-                "bg-card absolute top-1 left-1 size-6 rounded-full shadow-sm transition-transform",
-                allowCustomDuration ? "translate-x-6" : undefined,
+                "bg-card absolute top-1 start-1 size-6 rounded-full shadow-sm transition-transform",
+                allowCustomDuration
+                  ? dir === "rtl"
+                    ? "-translate-x-6"
+                    : "translate-x-6"
+                  : undefined,
               )}
             />
           </button>
@@ -88,11 +97,11 @@ function BookDurationSettings({
 
         <div className="grid gap-1">
           <p className="text-body-sm text-text-secondary">
-            Selected presets: {selectedDays.length > 0 ? selectedDays.join(", ") : "None"} day{selectedDays.length === 1 ? "" : "s"}
+            {translateText("Selected presets:")} {selectedDays.length > 0 ? selectedDays.join(", ") : translateText("None")} {translateText(selectedDays.length === 1 ? "day" : "days")}
           </p>
           {error ? (
             <p className="text-body-sm text-danger" role="alert">
-              {error}
+              {translateText(error)}
             </p>
           ) : null}
         </div>

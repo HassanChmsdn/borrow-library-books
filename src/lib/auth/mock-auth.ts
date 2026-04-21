@@ -440,14 +440,10 @@ export function buildMockSignOutHref(redirectTo = "/books") {
 }
 
 export function buildSignOutHref(
-  authState: Pick<AppAuthState, "authSource">,
+  _authState: Pick<AppAuthState, "authSource">,
   redirectTo = "/books",
 ) {
   const params = new URLSearchParams({ returnTo: redirectTo, redirectTo });
 
-  if (authState.authSource === "auth0") {
-    return `/auth/logout?${params.toString()}`;
-  }
-
-  return buildMockSignOutHref(redirectTo);
+  return `/auth/logout?${params.toString()}`;
 }

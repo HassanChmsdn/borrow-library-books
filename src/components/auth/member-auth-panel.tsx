@@ -18,6 +18,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useI18n } from "@/lib/i18n";
 
 type MemberAuthMode = "login" | "register";
 
@@ -48,6 +49,7 @@ export function MemberAuthPanel({
   redirectTo,
   signupHref,
 }: MemberAuthPanelProps) {
+  const { formatMessage, translateText } = useI18n();
   const [values, setValues] = useState<MemberAuthValues>(defaultValues);
   const [errors, setErrors] = useState<MemberAuthErrors>({});
   const [isPending, setIsPending] = useState(false);
@@ -155,7 +157,7 @@ export function MemberAuthPanel({
                 ) : (
                   <UserPlus className="size-4" />
                 )}
-                {option === "login" ? "Login" : "Register"}
+                {translateText(option === "login" ? "Login" : "Register")}
               </Link>
             );
           })}
@@ -165,7 +167,10 @@ export function MemberAuthPanel({
           <CardTitle>{heading}</CardTitle>
           <CardDescription className="mt-2 max-w-prose">{helperCopy}</CardDescription>
           <p className="text-body-sm text-text-tertiary mt-3 break-all">
-            After Auth0 completes, you will return to {redirectTo}.
+            {formatMessage(
+              translateText("After Auth0 completes, you will return to {redirectTo}."),
+              { redirectTo },
+            )}
           </p>
         </div>
       </CardHeader>

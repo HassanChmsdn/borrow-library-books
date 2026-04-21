@@ -1,4 +1,4 @@
-import Link from "next/link";
+"use client";
 import {
   Bell,
   BookCopy,
@@ -16,6 +16,7 @@ import { EmptyState, LoadingSkeleton } from "@/components/feedback";
 import { BorrowStatusBadge } from "@/components/library";
 import { PageHeader } from "@/components/layout";
 import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/link-button";
 import {
   Card,
   CardContent,
@@ -23,6 +24,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useI18n } from "@/lib/i18n";
 
 import type { ProfileData, ProfileSummaryMetricKey } from "./data";
 
@@ -44,6 +46,8 @@ function metricIcon(metricKey: ProfileSummaryMetricKey) {
 }
 
 function ProfileModule({ profile }: ProfileModuleProps) {
+  const { translateText } = useI18n();
+
   return (
     <div className="gap-section flex flex-col">
       <PageHeader
@@ -52,12 +56,12 @@ function ProfileModule({ profile }: ProfileModuleProps) {
         description="Review personal details, account information, and borrowing preferences in the member shell."
         actions={
           <>
-            <Button asChild size="sm" variant="outline">
-              <Link href="/account/borrowings">My Borrowings</Link>
-            </Button>
-            <Button asChild size="sm">
-              <Link href="/books">Browse Books</Link>
-            </Button>
+            <LinkButton href="/account/borrowings" size="sm" variant="outline">
+              My Borrowings
+            </LinkButton>
+            <LinkButton href="/books" size="sm">
+              Browse Books
+            </LinkButton>
           </>
         }
       />
@@ -81,9 +85,8 @@ function ProfileModule({ profile }: ProfileModuleProps) {
                       tone="success"
                     />
                   </div>
-
                   <p className="text-body text-text-secondary max-w-3xl text-pretty">
-                    {profile.person.bio}
+                    {translateText(profile.person.bio)}
                   </p>
                 </div>
 
@@ -92,7 +95,7 @@ function ProfileModule({ profile }: ProfileModuleProps) {
                     <div className="text-text-tertiary mb-2 flex items-center gap-2">
                       <Mail className="size-4" />
                       <span className="text-caption font-medium tracking-[0.16em] uppercase">
-                        Email
+                        {translateText("Email")}
                       </span>
                     </div>
                     <p className="text-body text-foreground font-medium break-all">
@@ -104,11 +107,11 @@ function ProfileModule({ profile }: ProfileModuleProps) {
                     <div className="text-text-tertiary mb-2 flex items-center gap-2">
                       <Phone className="size-4" />
                       <span className="text-caption font-medium tracking-[0.16em] uppercase">
-                        Phone
+                        {translateText("Phone")}
                       </span>
                     </div>
                     <p className="text-body text-foreground font-medium">
-                      {profile.person.phone}
+                      {translateText(profile.person.phone)}
                     </p>
                   </div>
 
@@ -116,11 +119,11 @@ function ProfileModule({ profile }: ProfileModuleProps) {
                     <div className="text-text-tertiary mb-2 flex items-center gap-2">
                       <MapPin className="size-4" />
                       <span className="text-caption font-medium tracking-[0.16em] uppercase">
-                        Membership location
+                        {translateText("Membership location")}
                       </span>
                     </div>
                     <p className="text-body text-foreground font-medium">
-                      {profile.person.location}
+                      {translateText(profile.person.location)}
                     </p>
                   </div>
                 </div>
@@ -142,10 +145,11 @@ function ProfileModule({ profile }: ProfileModuleProps) {
 
           <Card>
             <CardHeader>
-              <CardTitle>Settings</CardTitle>
+              <CardTitle>{translateText("Settings")}</CardTitle>
               <CardDescription>
-                A clean, mobile-first settings layout for future self-service
-                flows. The current values are ready for progressive account wiring.
+                {translateText(
+                  "A clean, mobile-first settings layout for future self-service flows. The current values are ready for progressive account wiring.",
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-6">
@@ -153,10 +157,10 @@ function ProfileModule({ profile }: ProfileModuleProps) {
                 <section key={section.title} className="grid gap-3">
                   <div className="space-y-1">
                     <h2 className="text-title-sm text-foreground font-semibold">
-                      {section.title}
+                      {translateText(section.title)}
                     </h2>
                     <p className="text-body-sm text-text-secondary">
-                      {section.description}
+                      {translateText(section.description)}
                     </p>
                   </div>
 
@@ -169,20 +173,20 @@ function ProfileModule({ profile }: ProfileModuleProps) {
                         <div className="space-y-1.5">
                           <div className="flex flex-wrap items-center gap-2">
                             <p className="text-body text-foreground font-medium">
-                              {item.title}
+                              {translateText(item.title)}
                             </p>
                             <span className="bg-muted text-text-secondary rounded-pill px-2.5 py-1 text-[11px] font-medium tracking-[0.08em] uppercase">
-                              {item.value}
+                              {translateText(item.value)}
                             </span>
                           </div>
                           <p className="text-body-sm text-text-secondary max-w-2xl">
-                            {item.description}
+                            {translateText(item.description)}
                           </p>
                         </div>
 
                         <div className="flex justify-start lg:justify-end">
                           <Button size="sm" type="button" variant="outline">
-                            {item.actionLabel}
+                            {translateText(item.actionLabel)}
                           </Button>
                         </div>
 
@@ -201,10 +205,11 @@ function ProfileModule({ profile }: ProfileModuleProps) {
         <div className="grid gap-5 xl:sticky xl:top-28">
           <Card>
             <CardHeader>
-              <CardTitle>Account details</CardTitle>
+              <CardTitle>{translateText("Account details")}</CardTitle>
               <CardDescription>
-                A clear reference for branch preferences, payment policy, and
-                member metadata.
+                {translateText(
+                  "A clear reference for branch preferences, payment policy, and member metadata.",
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
@@ -214,10 +219,10 @@ function ProfileModule({ profile }: ProfileModuleProps) {
                   className="flex items-start justify-between gap-4 rounded-2xl border border-dashed border-black/5 p-4"
                 >
                   <span className="text-body-sm text-text-secondary">
-                    {detail.label}
+                    {translateText(detail.label)}
                   </span>
-                  <span className="text-body text-foreground max-w-[14rem] text-right font-medium text-balance">
-                    {detail.value}
+                  <span className="text-body text-foreground max-w-56 text-end font-medium text-balance">
+                    {translateText(detail.value)}
                   </span>
                 </div>
               ))}
@@ -226,10 +231,11 @@ function ProfileModule({ profile }: ProfileModuleProps) {
 
           <Card>
             <CardHeader>
-              <CardTitle>Account support</CardTitle>
+              <CardTitle>{translateText("Account support")}</CardTitle>
               <CardDescription>
-                Guidance that stays visible on mobile without adding decorative
-                complexity.
+                {translateText(
+                  "Guidance that stays visible on mobile without adding decorative complexity.",
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
@@ -240,12 +246,12 @@ function ProfileModule({ profile }: ProfileModuleProps) {
                   </div>
                   <div className="space-y-1.5">
                     <p className="text-label text-foreground font-medium">
-                      Onsite cash payments only
+                      {translateText("Onsite cash payments only")}
                     </p>
                     <p className="text-body-sm text-text-secondary">
-                      Fee-bearing borrowings are paid in person at pickup or
-                      return. Online payment is intentionally out of scope for
-                      this mock phase.
+                      {translateText(
+                        "Fee-bearing borrowings are paid in person at pickup or return. Online payment is intentionally out of scope for this mock phase.",
+                      )}
                     </p>
                   </div>
                 </div>
@@ -258,12 +264,12 @@ function ProfileModule({ profile }: ProfileModuleProps) {
                   </div>
                   <div className="space-y-1.5">
                     <p className="text-label text-foreground font-medium">
-                      Staff-assisted updates
+                      {translateText("Staff-assisted updates")}
                     </p>
                     <p className="text-body-sm text-text-secondary">
-                      Member profile edits are represented here visually first.
-                      Real editing flows can attach to this layout later without
-                      redesigning the shell.
+                      {translateText(
+                        "Member profile edits are represented here visually first. Real editing flows can attach to this layout later without redesigning the shell.",
+                      )}
                     </p>
                   </div>
                 </div>
@@ -277,6 +283,8 @@ function ProfileModule({ profile }: ProfileModuleProps) {
 }
 
 function ProfileEmptyState() {
+  const { translateText } = useI18n();
+
   return (
     <div className="gap-section flex flex-col">
       <PageHeader
@@ -289,9 +297,7 @@ function ProfileEmptyState() {
         title="Profile unavailable in mock data"
         description="Reopen the member profile once local account data is available again. The empty state is kept simple so it can evolve safely before backend wiring."
         action={
-          <Button asChild>
-            <Link href="/books">Browse books</Link>
-          </Button>
+          <LinkButton href="/books">Browse books</LinkButton>
         }
       />
     </div>

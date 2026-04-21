@@ -1,5 +1,8 @@
+"use client";
+
 import * as React from "react";
 
+import { translateNode, useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 function Card({ className, ...props }: React.ComponentProps<"div">) {
@@ -26,6 +29,8 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
+  const { translateText } = useI18n();
+
   return (
     <div
       data-slot="card-title"
@@ -34,17 +39,23 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
         className,
       )}
       {...props}
-    />
+    >
+      {translateNode(props.children, translateText)}
+    </div>
   );
 }
 
 function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
+  const { translateText } = useI18n();
+
   return (
     <div
       data-slot="card-description"
       className={cn("text-body-sm text-text-secondary", className)}
       {...props}
-    />
+    >
+      {translateNode(props.children, translateText)}
+    </div>
   );
 }
 

@@ -1,10 +1,14 @@
+"use client";
+
 import {
   AdminEmptyState,
   AdminSectionCard,
   AdminStatusBadge,
 } from "@/components/admin";
 import { FeeBadge } from "@/components/library";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { translateAdminUserText } from "../i18n";
 
 import type {
   AdminUserBorrowingRecord,
@@ -70,6 +74,8 @@ function UserBorrowingHistory({
   records,
   title,
 }: Readonly<UserBorrowingHistoryProps>) {
+  const { translateText } = useI18n();
+
   return (
     <AdminSectionCard title={title} description={description}>
       {records.length === 0 ? (
@@ -89,25 +95,25 @@ function UserBorrowingHistory({
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0 space-y-1">
                         <p className="text-body text-foreground font-semibold">
-                          {record.bookTitle}
+                          {translateText(record.bookTitle)}
                         </p>
                         <p className="text-body-sm text-text-secondary">
-                          {record.bookAuthor}
+                          {translateText(record.bookAuthor)}
                         </p>
                       </div>
                       <div className="flex flex-wrap justify-end gap-2">
                         <AdminStatusBadge
-                          label={getBorrowingLabel(record.status)}
+                          label={translateText(getBorrowingLabel(record.status))}
                           tone={getBorrowingTone(record.status)}
                         />
                         {record.customDurationRequested ? (
-                          <AdminStatusBadge label="Custom duration" tone="warning" />
+                          <AdminStatusBadge label={translateText("Custom duration")} tone="warning" />
                         ) : null}
                       </div>
                     </div>
                     {record.note ? (
                       <p className="text-body-sm text-text-secondary">
-                        {record.note}
+                        {translateText(record.note)}
                       </p>
                     ) : null}
                   </div>
@@ -115,35 +121,39 @@ function UserBorrowingHistory({
                   <div className="grid gap-2 sm:grid-cols-2">
                     <div className="space-y-1">
                       <p className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-                        Duration
+                          {translateText("Duration")}
                       </p>
                       <p className="text-body-sm text-foreground font-medium">
-                        {record.durationLabel}
+                        {translateAdminUserText(record.durationLabel, translateText)}
                       </p>
                     </div>
                     <div className="space-y-1">
                       <p className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-                        Dates
+                          {translateText("Dates")}
                       </p>
                       <p className="text-body-sm text-foreground font-medium">
-                        {record.startedDateLabel}
+                        {translateAdminUserText(record.startedDateLabel, translateText)}
                       </p>
                       <p className="text-body-sm text-text-secondary">
-                        {record.completedDateLabel ?? record.dueDateLabel ?? "No date recorded"}
+                        {record.completedDateLabel
+                          ? translateAdminUserText(record.completedDateLabel, translateText)
+                          : record.dueDateLabel
+                            ? translateAdminUserText(record.dueDateLabel, translateText)
+                            : translateText("No date recorded")}
                       </p>
                     </div>
                     <div className="space-y-1">
                       <p className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-                        Fee
+                        {translateText("Fee")}
                       </p>
-                      <FeeBadge label={record.feeLabel} tone={getFeeTone(record)} />
+                      <FeeBadge label={translateAdminUserText(record.feeLabel, translateText)} tone={getFeeTone(record)} />
                     </div>
                     <div className="space-y-1">
                       <p className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-                        Payment
+                        {translateText("Payment")}
                       </p>
                       <AdminStatusBadge
-                        label={paymentConfig.label}
+                        label={translateText(paymentConfig.label)}
                         tone={paymentConfig.tone}
                       />
                     </div>
@@ -155,13 +165,13 @@ function UserBorrowingHistory({
 
           <div className="hidden 2xl:block overflow-hidden rounded-card border border-black/5">
             <div className="overflow-x-auto">
-              <div className="min-w-[58rem]">
+              <div className="min-w-232">
                 <div className="bg-elevated text-text-tertiary grid grid-cols-[minmax(0,2fr)_minmax(8rem,0.85fr)_minmax(11rem,1.05fr)_minmax(10rem,0.95fr)_minmax(8rem,0.8fr)] gap-4 px-4 py-3 text-[0.6875rem] leading-4 font-medium tracking-[0.16em] uppercase">
-                  <span>Book</span>
-                  <span>Duration</span>
-                  <span>Dates</span>
-                  <span>Fee</span>
-                  <span>Status</span>
+                  <span>{translateText("Book")}</span>
+                  <span>{translateText("Duration")}</span>
+                  <span>{translateText("Dates")}</span>
+                  <span>{translateText("Fee")}</span>
+                  <span>{translateText("Status")}</span>
                 </div>
                 {records.map((record, index) => {
                   const paymentConfig = getPaymentConfig(record.paymentStatus);
@@ -176,43 +186,47 @@ function UserBorrowingHistory({
                     >
                       <div className="min-w-0 space-y-1.5">
                         <p className="text-body-sm text-foreground font-semibold">
-                          {record.bookTitle}
+                          {translateText(record.bookTitle)}
                         </p>
                         <p className="text-body-sm text-text-secondary">
-                          {record.bookAuthor}
+                          {translateText(record.bookAuthor)}
                         </p>
                         <div className="flex flex-wrap items-center gap-2">
                           {record.customDurationRequested ? (
-                            <AdminStatusBadge label="Custom duration" tone="warning" />
+                            <AdminStatusBadge label={translateText("Custom duration")} tone="warning" />
                           ) : null}
                           {record.note ? (
-                            <p className="text-caption text-text-tertiary">{record.note}</p>
+                            <p className="text-caption text-text-tertiary">{translateText(record.note)}</p>
                           ) : null}
                         </div>
                       </div>
                       <div className="space-y-1">
                         <p className="text-body-sm text-foreground font-medium">
-                          {record.durationLabel}
+                          {translateAdminUserText(record.durationLabel, translateText)}
                         </p>
                       </div>
                       <div className="space-y-1">
                         <p className="text-body-sm text-foreground font-medium">
-                          {record.startedDateLabel}
+                          {translateAdminUserText(record.startedDateLabel, translateText)}
                         </p>
                         <p className="text-body-sm text-text-secondary">
-                          {record.completedDateLabel ?? record.dueDateLabel ?? "No date recorded"}
+                          {record.completedDateLabel
+                            ? translateAdminUserText(record.completedDateLabel, translateText)
+                            : record.dueDateLabel
+                              ? translateAdminUserText(record.dueDateLabel, translateText)
+                              : translateText("No date recorded")}
                         </p>
                       </div>
                       <div className="space-y-2">
-                        <FeeBadge label={record.feeLabel} tone={getFeeTone(record)} />
+                        <FeeBadge label={translateAdminUserText(record.feeLabel, translateText)} tone={getFeeTone(record)} />
                         <AdminStatusBadge
-                          label={paymentConfig.label}
+                          label={translateText(paymentConfig.label)}
                           tone={paymentConfig.tone}
                         />
                       </div>
                       <div className="space-y-2">
                         <AdminStatusBadge
-                          label={getBorrowingLabel(record.status)}
+                          label={translateText(getBorrowingLabel(record.status))}
                           tone={getBorrowingTone(record.status)}
                         />
                       </div>

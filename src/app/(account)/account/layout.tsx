@@ -2,9 +2,10 @@ import type { ReactNode } from "react";
 
 import { buildSignOutHref, getCurrentUser } from "@/lib/auth";
 import { MockAuthProvider } from "@/lib/auth/react";
-import { PublicShell, ShellBrand } from "@/components/layout";
-import { Button } from "@/components/ui/button";
+import { LanguageSwitcher, PublicShell, ShellBrand } from "@/components/layout";
+import { AnchorButton } from "@/components/ui/anchor-button";
 import { requireAuthorizedRoute } from "@/lib/auth/server";
+import { getI18n } from "@/lib/i18n/server";
 
 const accountNavigationItems = [
   {
@@ -24,12 +25,19 @@ const accountNavigationItems = [
   },
 ];
 
-function AccountUtilitySlot({ signOutHref }: { signOutHref: string }) {
+function AccountUtilitySlot({
+  signOutHref,
+  signOutLabel,
+}: {
+  signOutHref: string;
+  signOutLabel: string;
+}) {
   return (
     <>
-      <Button asChild size="sm" variant="secondary">
-        <a href={signOutHref}>Sign out</a>
-      </Button>
+      <LanguageSwitcher />
+      <AnchorButton href={signOutHref} size="sm" variant="secondary">
+        {signOutLabel}
+      </AnchorButton>
     </>
   );
 }
@@ -39,6 +47,7 @@ export default async function AccountSectionLayout({
 }: Readonly<{
   children: ReactNode;
 }>) {
+  const { messages, translateText } = await getI18n();
   const session = await requireAuthorizedRoute("/account");
   const currentUser = getCurrentUser(session);
 
@@ -49,12 +58,17 @@ export default async function AccountSectionLayout({
           <ShellBrand
             href="/books"
             monogram={currentUser?.monogram ?? "BL"}
-            subtitle={currentUser?.subtitle ?? "Member Account"}
-            title={currentUser?.fullName ?? "Borrow Library Books"}
+            subtitle={currentUser?.subtitle ?? translateText("Account")}
+            title={currentUser?.fullName ?? messages.ui.appName}
           />
         }
         navigationItems={accountNavigationItems}
-        utilitySlot={<AccountUtilitySlot signOutHref={buildSignOutHref(session, "/books")} />}
+        utilitySlot={
+          <AccountUtilitySlot
+            signOutHref={buildSignOutHref(session, "/books")}
+            signOutLabel={translateText("Sign out")}
+          />
+        }
       >
         {children}
       </PublicShell>

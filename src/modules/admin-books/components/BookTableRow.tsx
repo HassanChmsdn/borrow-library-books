@@ -1,3 +1,5 @@
+"use client";
+
 import {
   AdminRowActions,
   AdminStatusBadge,
@@ -5,6 +7,7 @@ import {
   AdminTableRow,
 } from "@/components/admin";
 import { AvailabilityBadge, FeeBadge } from "@/components/library";
+import { formatTemplate, useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { BookCoverArt } from "@/modules/catalog/book-cover-art";
 import {
@@ -21,16 +24,21 @@ interface BookTableRowProps {
   onEditBook?: (book: AdminBookRecord) => void;
 }
 
-function formatCopiesSummary(book: AdminBookRecord) {
+function formatCopiesSummary(
+  book: AdminBookRecord,
+  translateText: (value: string) => string,
+) {
   const borrowedCopies = Math.max(book.totalCopies - book.availableCopies, 0);
 
-  return `${book.availableCopies} available · ${borrowedCopies} borrowed`;
+  return `${book.availableCopies} ${translateText("available")} · ${borrowedCopies} ${translateText("borrowed")}`;
 }
 
 function CategoryBadge({
   category,
   className,
 }: Readonly<{ category: AdminBookRecord["category"]; className?: string }>) {
+  const { translateText } = useI18n();
+
   return (
     <span
       className={cn(
@@ -38,7 +46,7 @@ function CategoryBadge({
         className,
       )}
     >
-      {category}
+      {translateText(category)}
     </span>
   );
 }
@@ -49,6 +57,8 @@ function BookTableRow({
   onDeleteBook,
   onEditBook,
 }: BookTableRowProps) {
+  const { translateText } = useI18n();
+
   return (
     <AdminTableRow>
       <AdminTableCell>
@@ -83,18 +93,18 @@ function BookTableRow({
       <AdminTableCell>
         <div className="space-y-1">
           <AvailabilityBadge
-            label={`${book.availableCopies}/${book.totalCopies} available`}
+            label={`${book.availableCopies}/${book.totalCopies} ${translateText("available")}`}
             tone={book.availabilityTone}
           />
           <p className="text-body-sm text-text-secondary">
-            {formatCopiesSummary(book)}
+            {formatCopiesSummary(book, translateText)}
           </p>
         </div>
       </AdminTableCell>
       <AdminTableCell>
         <AdminStatusBadge label={book.statusLabel} tone={book.statusTone} />
       </AdminTableCell>
-      <AdminTableCell className="text-right">
+      <AdminTableCell className="text-end">
         {canManage ? (
           <AdminRowActions
             align="end"
@@ -114,7 +124,9 @@ function BookTableRow({
                 label: "Delete",
                 variant: "ghost",
                 confirm: {
-                  title: `Delete ${book.title}?`,
+                  title: formatTemplate(translateText("Delete {title}?"), {
+                    title: book.title,
+                  }),
                   description:
                     "Delete this catalog title. Books with borrowing history remain protected from destructive removal.",
                   confirmLabel: "Delete book",
@@ -125,7 +137,9 @@ function BookTableRow({
             ]}
           />
         ) : (
-          <p className="text-body-sm text-text-tertiary">View only</p>
+          <p className="text-body-sm text-text-tertiary">
+            {translateText("View only")}
+          </p>
         )}
       </AdminTableCell>
     </AdminTableRow>

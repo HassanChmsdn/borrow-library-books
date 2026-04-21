@@ -11,23 +11,6 @@ import type {
 
 export const adminSharedNow = new Date("2026-04-03T12:30:00.000Z");
 
-const monthShortLabels = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-] as const;
-
-const weekdayShortLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
-
 function toUtcDate(value: string) {
   return new Date(value);
 }
@@ -39,58 +22,27 @@ function padNumber(value: number) {
 export function formatAdminShortDate(value: string) {
   const date = toUtcDate(value);
 
-  return `${padNumber(date.getUTCDate())} ${monthShortLabels[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
+  return `${padNumber(date.getUTCDate())}.${padNumber(date.getUTCMonth() + 1)}.${date.getUTCFullYear()}`;
 }
 
 export function formatAdminDateTime(value: string) {
   const date = toUtcDate(value);
-  const hours = date.getUTCHours();
+  const hours = padNumber(date.getUTCHours());
   const minutes = padNumber(date.getUTCMinutes());
-  const normalizedHour = hours % 12 || 12;
-  const meridiem = hours >= 12 ? "PM" : "AM";
 
-  return `${monthShortLabels[date.getUTCMonth()]} ${date.getUTCDate()}, ${normalizedHour}:${minutes} ${meridiem}`;
+  return `${formatAdminShortDate(value)}, ${hours}:${minutes}`;
 }
 
 export function formatAdminJoinedDate(value: string) {
-  return `Joined ${formatAdminShortDate(value)}`;
+  return formatAdminShortDate(value);
 }
 
 export function formatAdminRelativeAuditLabel(value: string) {
-  const date = toUtcDate(value);
-  const diffInDays = Math.floor(
-    (adminSharedNow.getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
-  );
-
-  if (diffInDays <= 0) {
-    return "Audited today";
-  }
-
-  if (diffInDays === 1) {
-    return "Audited yesterday";
-  }
-
-  return `Audited ${diffInDays} days ago`;
+  return formatAdminShortDate(value);
 }
 
 export function formatAdminActivityMeta(value: string) {
-  const diffInMinutes = Math.max(
-    1,
-    Math.floor((adminSharedNow.getTime() - toUtcDate(value).getTime()) / 60000),
-  );
-
-  if (diffInMinutes < 60) {
-    return `${diffInMinutes} minutes ago`;
-  }
-
-  const diffInHours = Math.floor(diffInMinutes / 60);
-
-  if (diffInHours < 24) {
-    return `${diffInHours} hour${diffInHours === 1 ? "" : "s"} ago`;
-  }
-
-  const diffInDays = Math.floor(diffInHours / 24);
-  return `${diffInDays} day${diffInDays === 1 ? "" : "s"} ago`;
+  return formatAdminDateTime(value);
 }
 
 export function formatAdminCurrency(cents: number) {
@@ -103,11 +55,7 @@ export function getAdminBorrowingLateLabel(dueOn: string) {
     Math.floor((adminSharedNow.getTime() - toUtcDate(dueOn).getTime()) / (1000 * 60 * 60 * 24)),
   );
 
-  if (diffInDays === 1) {
-    return "1 day late";
-  }
-
-  return `${diffInDays} days late`;
+  return `+${diffInDays}d`;
 }
 
 export function getAdminBorrowingWindowLabel(record: AdminSharedBorrowingRecord) {
@@ -1296,5 +1244,5 @@ export function getAdminSharedPaymentLabel(status: AdminSharedPaymentStatus) {
 }
 
 export function getAdminSharedWeekdayLabel(value: string) {
-  return weekdayShortLabels[toUtcDate(value).getUTCDay()];
+  return padNumber(toUtcDate(value).getUTCDate());
 }

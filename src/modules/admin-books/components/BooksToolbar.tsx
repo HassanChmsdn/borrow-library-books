@@ -3,6 +3,7 @@ import {
   AdminSearchBar,
   type AdminFilterOption,
 } from "@/components/admin";
+import { useI18n } from "@/lib/i18n";
 
 import type { AdminBooksCategory } from "../types";
 
@@ -25,6 +26,8 @@ function BooksToolbar({
   totalCount,
   visibleCount,
 }: BooksToolbarProps) {
+  const { formatMessage, translateText } = useI18n();
+
   const categoryOptions: ReadonlyArray<AdminFilterOption<AdminBooksCategory>> =
     categories.map((item) => ({
       label: item,
@@ -48,8 +51,11 @@ function BooksToolbar({
         />
       </div>
       <p className="text-body-sm text-text-secondary">
-        Showing {visibleCount} of {totalCount} catalog
-        {totalCount === 1 ? " record" : " records"}.
+        {formatMessage(translateText("Showing {visibleCount} of {totalCount} catalog {recordLabel}."), {
+          recordLabel: translateText(totalCount === 1 ? "record" : "records"),
+          totalCount,
+          visibleCount,
+        })}
       </p>
     </div>
   );

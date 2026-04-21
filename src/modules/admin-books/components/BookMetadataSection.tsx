@@ -1,5 +1,8 @@
+"use client";
+
 import { AdminSectionCard, AdminStatusBadge } from "@/components/admin";
 import { Input } from "@/components/ui/input";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 import type {
@@ -28,28 +31,36 @@ function BookMetadataSection({
   onStatusChange,
   status,
 }: BookMetadataSectionProps) {
+  const { translateText } = useI18n();
+
   return (
     <AdminSectionCard
-      title="Publication metadata"
-      description="Capture optional publication context now so real API integration later has a typed surface for editor metadata and operational status."
+      title={translateText("Publication metadata")}
+      description={translateText(
+        "Capture optional publication context now so real API integration later has a typed surface for editor metadata and operational status.",
+      )}
       actions={
         <AdminStatusBadge
-          label={status === "active" ? "Active" : "Inactive"}
+          label={translateText(status === "active" ? "Active" : "Inactive")}
           tone={status === "active" ? "success" : "warning"}
         />
       }
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="grid gap-1.5">
-          <span className="text-label text-foreground font-medium">Publisher</span>
+          <span className="text-label text-foreground font-medium">
+            {translateText("Publisher")}
+          </span>
           <Input
             value={metadata.publisher}
             aria-invalid={errors["metadata.publisher"] ? true : undefined}
             onChange={(event) => onMetadataChange("publisher", event.target.value)}
-            placeholder="Publisher or imprint"
+            placeholder={translateText("Publisher or imprint")}
           />
           <span className="text-body-sm text-text-secondary">
-            Leave blank when this metadata is not yet available from the catalog source.
+            {translateText(
+              "Leave blank when this metadata is not yet available from the catalog source.",
+            )}
           </span>
           {errors["metadata.publisher"] ? (
             <span className="text-body-sm text-danger" role="alert">
@@ -59,16 +70,18 @@ function BookMetadataSection({
         </label>
 
         <label className="grid gap-1.5">
-          <span className="text-label text-foreground font-medium">Publication year</span>
+          <span className="text-label text-foreground font-medium">
+            {translateText("Publication year")}
+          </span>
           <Input
             inputMode="numeric"
             value={metadata.publishedYear}
             aria-invalid={errors["metadata.publishedYear"] ? true : undefined}
             onChange={(event) => onMetadataChange("publishedYear", event.target.value)}
-            placeholder="e.g. 2015"
+            placeholder={translateText("e.g. 2015")}
           />
           <span className="text-body-sm text-text-secondary">
-            Use a four-digit year when known.
+            {translateText("Use a four-digit year when known.")}
           </span>
           {errors["metadata.publishedYear"] ? (
             <span className="text-body-sm text-danger" role="alert">
@@ -78,12 +91,14 @@ function BookMetadataSection({
         </label>
 
         <label className="grid gap-1.5">
-          <span className="text-label text-foreground font-medium">Language</span>
+          <span className="text-label text-foreground font-medium">
+            {translateText("Language")}
+          </span>
           <Input
             value={metadata.language}
             aria-invalid={errors["metadata.language"] ? true : undefined}
             onChange={(event) => onMetadataChange("language", event.target.value)}
-            placeholder="Primary language"
+            placeholder={translateText("Primary language")}
           />
           {errors["metadata.language"] ? (
             <span className="text-body-sm text-danger" role="alert">
@@ -93,12 +108,14 @@ function BookMetadataSection({
         </label>
 
         <label className="grid gap-1.5">
-          <span className="text-label text-foreground font-medium">Edition</span>
+          <span className="text-label text-foreground font-medium">
+            {translateText("Edition")}
+          </span>
           <Input
             value={metadata.edition}
             aria-invalid={errors["metadata.edition"] ? true : undefined}
             onChange={(event) => onMetadataChange("edition", event.target.value)}
-            placeholder="Edition or format"
+            placeholder={translateText("Edition or format")}
           />
           {errors["metadata.edition"] ? (
             <span className="text-body-sm text-danger" role="alert">
@@ -110,7 +127,7 @@ function BookMetadataSection({
 
       <label className="grid gap-1.5">
         <span className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-          Record status
+          {translateText("Record status")}
         </span>
         <select
           className={cn(selectClassName, errors.status ? "border-danger" : undefined)}
@@ -118,11 +135,13 @@ function BookMetadataSection({
           aria-invalid={errors.status ? true : undefined}
           onChange={(event) => onStatusChange(event.target.value as AdminBookFormStatus)}
         >
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
+          <option value="active">{translateText("Active")}</option>
+          <option value="inactive">{translateText("Inactive")}</option>
         </select>
         <span className="text-body-sm text-text-secondary">
-          Inactive records remain in admin management but can later be hidden from public discovery.
+          {translateText(
+            "Inactive records remain in admin management but can later be hidden from public discovery.",
+          )}
         </span>
         {errors.status ? (
           <span className="text-body-sm text-danger" role="alert">

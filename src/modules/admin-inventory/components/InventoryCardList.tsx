@@ -1,4 +1,5 @@
 import { AdminRowActions, AdminSectionCard } from "@/components/admin";
+import { useI18n } from "@/lib/i18n";
 
 import { InventoryConditionBadge } from "./InventoryConditionBadge";
 import { InventoryStatusBadge } from "./InventoryStatusBadge";
@@ -14,6 +15,8 @@ function InventoryCardList({
   onEditCopy,
   records,
 }: Readonly<InventoryCardListProps>) {
+  const { translateText } = useI18n();
+
   return (
     <div className="grid gap-3 lg:hidden">
       {records.map((record) => (
@@ -58,7 +61,7 @@ function InventoryCardList({
               ]}
             />
           ) : (
-            <p className="text-body-sm text-text-tertiary text-right">View only</p>
+            <p className="text-body-sm text-text-tertiary text-end">{translateText("View only")}</p>
           )}
         </AdminSectionCard>
       ))}

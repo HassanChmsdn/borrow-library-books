@@ -1,3 +1,5 @@
+"use client";
+
 import {
   AdminEmptyState,
   AdminRowActions,
@@ -11,6 +13,7 @@ import {
 import { AvailabilityBadge, FeeBadge } from "@/components/library";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useI18n } from "@/lib/i18n";
 import { BookCoverArt } from "@/modules/catalog/book-cover-art";
 import {
   formatBookFeeLabel,
@@ -43,6 +46,8 @@ function MobileBookCard({
   onDeleteBook?: (book: AdminBookRecord) => void;
   onEditBook?: (book: AdminBookRecord) => void;
 }>) {
+  const { translateText } = useI18n();
+
   return (
     <Card>
       <CardContent className="grid gap-4 p-4 sm:p-5">
@@ -75,16 +80,16 @@ function MobileBookCard({
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1">
             <p className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-              Copies
+              {translateText("Copies")}
             </p>
             <AvailabilityBadge
-              label={`${book.availableCopies}/${book.totalCopies} available`}
+              label={`${book.availableCopies}/${book.totalCopies} ${translateText("available")}`}
               tone={book.availabilityTone}
             />
           </div>
           <div className="space-y-1">
             <p className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-              Shelf code
+              {translateText("Shelf code")}
             </p>
             <p className="text-body-sm text-text-secondary">{book.shelfCode}</p>
           </div>
@@ -120,7 +125,9 @@ function MobileBookCard({
             ]}
           />
         ) : (
-          <p className="text-body-sm text-text-tertiary text-right">View only</p>
+          <p className="text-body-sm text-text-tertiary text-end">
+            {translateText("View only")}
+          </p>
         )}
       </CardContent>
     </Card>
@@ -137,6 +144,8 @@ function BooksTable({
   onEditBook,
   totalRecords,
 }: BooksTableProps) {
+  const { translateText } = useI18n();
+
   if (totalRecords === 0) {
     return (
       <AdminEmptyState
@@ -145,7 +154,7 @@ function BooksTable({
         action={
           canManage ? (
           <Button type="button" size="sm" onClick={onAddBook}>
-            Add book
+            {translateText("Add book")}
           </Button>
           ) : null
         }
@@ -161,7 +170,7 @@ function BooksTable({
         action={
           hasActiveFilters ? (
             <Button type="button" size="sm" variant="outline" onClick={onClearFilters}>
-              Clear filters
+              {translateText("Clear filters")}
             </Button>
           ) : null
         }
@@ -190,9 +199,9 @@ function BooksTable({
               <AdminTableHead>Book</AdminTableHead>
               <AdminTableHead>Category</AdminTableHead>
               <AdminTableHead>Fee</AdminTableHead>
-              <AdminTableHead>Copies</AdminTableHead>
+              <AdminTableHead>{translateText("Copies")}</AdminTableHead>
               <AdminTableHead>Status</AdminTableHead>
-              <AdminTableHead className="text-right">
+              <AdminTableHead className="text-end">
                 {canManage ? "Actions" : "Access"}
               </AdminTableHead>
             </AdminTableRow>

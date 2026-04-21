@@ -80,11 +80,11 @@ function BookCoverArt({
       style={bookCoverAspectRatioStyle}
       {...props}
     >
-      <div className={cn("absolute inset-y-0 left-0 w-3", coverTone.accent)} />
+      <div className={cn("absolute inset-y-0 start-0 w-3", coverTone.accent)} />
       <div
         className={cn(
           "flex h-full flex-col justify-between",
-          size === "detail" ? "pl-5 sm:pl-6" : "pl-4",
+          size === "detail" ? "ps-5 sm:ps-6" : "ps-4",
         )}
       >
         <p

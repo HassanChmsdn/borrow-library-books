@@ -1,13 +1,17 @@
+"use client";
+
 import {
   AdminDetailSection,
   AdminMetricStrip,
   AdminSectionCard,
   AdminUserAvatar,
 } from "@/components/admin";
+import { useI18n } from "@/lib/i18n";
 import { getAppRoleDisplayLabel, hasAdminAccessRole } from "@/lib/auth/roles";
 
 import { UserRoleBadge } from "./UserRoleBadge";
 import { UserStatusBadge } from "./UserStatusBadge";
+import { translateAdminUserText } from "../i18n";
 
 import type { AdminUserProfileRecord } from "../types";
 
@@ -16,6 +20,8 @@ interface UserProfileSummaryProps {
 }
 
 function UserProfileSummary({ user }: Readonly<UserProfileSummaryProps>) {
+  const { translateText } = useI18n();
+
   return (
     <AdminSectionCard
       title="Profile summary"
@@ -28,8 +34,8 @@ function UserProfileSummary({ user }: Readonly<UserProfileSummaryProps>) {
             subtitle={user.email}
             meta={
               hasAdminAccessRole(user.role)
-                ? `${getAppRoleDisplayLabel(user.role)} account`
-                : "Member account"
+                ? translateText(getAppRoleDisplayLabel(user.role))
+                : translateText("Member account")
             }
           />
           <div className="flex flex-wrap items-center gap-2 sm:justify-end">
@@ -60,8 +66,8 @@ function UserProfileSummary({ user }: Readonly<UserProfileSummaryProps>) {
             },
             {
               label: "Borrowing overview",
-              value: user.borrowingSummaryLabel,
-              hint: user.borrowingSummaryMeta,
+              value: translateAdminUserText(user.borrowingSummaryLabel, translateText),
+              hint: translateAdminUserText(user.borrowingSummaryMeta, translateText),
             },
           ]}
         />
@@ -90,7 +96,9 @@ function UserProfileSummary({ user }: Readonly<UserProfileSummaryProps>) {
           ]}
         />
 
-        <p className="text-body-sm text-text-secondary">{user.profileSummaryNote}</p>
+        <p className="text-body-sm text-text-secondary">
+          {translateText(user.profileSummaryNote)}
+        </p>
       </div>
     </AdminSectionCard>
   );

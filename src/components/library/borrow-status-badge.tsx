@@ -1,6 +1,9 @@
+"use client";
+
 import * as React from "react";
 import { cva } from "class-variance-authority";
 
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 type BorrowStatus =
@@ -63,6 +66,7 @@ function BorrowStatusBadge({
   tone,
   ...props
 }: BorrowStatusBadgeProps) {
+  const { translateText } = useI18n();
   const resolvedLabel =
     label ?? (status ? borrowStatusConfig[status].label : "Status");
   const resolvedTone =
@@ -77,7 +81,7 @@ function BorrowStatusBadge({
       )}
       {...props}
     >
-      {resolvedLabel}
+      {translateText(resolvedLabel)}
     </span>
   );
 }

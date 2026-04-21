@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { AdminFilterSelect } from "@/components/admin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 import {
@@ -41,6 +42,7 @@ function InventoryForm({
   onSubmit,
   open,
 }: Readonly<InventoryFormProps>) {
+  const { translateText } = useI18n();
   const [mounted, setMounted] = React.useState(false);
   const [values, setValues] = React.useState(initialValues);
   const [errors, setErrors] = React.useState<AdminInventoryFormFieldErrors>({});
@@ -150,10 +152,10 @@ function InventoryForm({
         <div className="border-b border-black/5 p-5 sm:p-6">
           <div className="space-y-1.5">
             <h2 className="text-title text-foreground font-semibold">
-              {dialogTitle}
+              {translateText(dialogTitle)}
             </h2>
             <p className="text-body-sm text-text-secondary">
-              {dialogDescription}
+              {translateText(dialogDescription)}
             </p>
           </div>
         </div>
@@ -163,18 +165,18 @@ function InventoryForm({
             <div className="grid gap-4 sm:grid-cols-2">
               <label className={fieldClassName}>
                 <span className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-                  Copy code
+                  {translateText("Copy code")}
                 </span>
                 <Input
                   value={values.copyCode}
                   aria-invalid={Boolean(errors.copyCode)}
                   onChange={(event) => updateField("copyCode", event.target.value)}
-                  placeholder="DT-FIC-1984-04"
+                  placeholder={translateText("DT-FIC-1984-04")}
                 />
                 <span className={cn(helperClassName, errors.copyCode && "hidden")}>
-                  Use a clear branch and shelf-safe identifier.
+                  {translateText("Use a clear branch and shelf-safe identifier.")}
                 </span>
-                {errors.copyCode ? <span className={errorClassName}>{errors.copyCode}</span> : null}
+                {errors.copyCode ? <span className={errorClassName}>{translateText(errors.copyCode)}</span> : null}
               </label>
 
               <label className={fieldClassName}>
@@ -186,14 +188,16 @@ function InventoryForm({
                   className={cn(errors.bookId ? "aria-invalid:border-destructive" : undefined)}
                 />
                 <span className={cn(helperClassName, errors.bookId && "hidden")}>
-                  Select an existing catalog record so this copy stays linked to the canonical book entry.
+                  {translateText(
+                    "Select an existing catalog record so this copy stays linked to the canonical book entry.",
+                  )}
                 </span>
                 {selectedBook ? (
                   <span className={cn(helperClassName, errors.bookId && "hidden")}>
-                    {selectedBook.description}
+                    {translateText(selectedBook.description)}
                   </span>
                 ) : null}
-                {errors.bookId ? <span className={errorClassName}>{errors.bookId}</span> : null}
+                {errors.bookId ? <span className={errorClassName}>{translateText(errors.bookId)}</span> : null}
               </label>
 
               <div className={fieldClassName}>
@@ -211,7 +215,7 @@ function InventoryForm({
                   value={values.condition}
                   onValueChange={(value) => updateField("condition", value)}
                 />
-                {errors.condition ? <span className={errorClassName}>{errors.condition}</span> : null}
+                {errors.condition ? <span className={errorClassName}>{translateText(errors.condition)}</span> : null}
               </div>
 
               <div className={fieldClassName}>
@@ -229,9 +233,9 @@ function InventoryForm({
                   onValueChange={(value) => updateField("status", value)}
                 />
                 <span className={cn(helperClassName, errors.status && "hidden")}>
-                  Use maintenance for staff-held or repair-bound copies.
+                  {translateText("Use maintenance for staff-held or repair-bound copies.")}
                 </span>
-                {errors.status ? <span className={errorClassName}>{errors.status}</span> : null}
+                {errors.status ? <span className={errorClassName}>{translateText(errors.status)}</span> : null}
               </div>
             </div>
           </div>
@@ -241,7 +245,9 @@ function InventoryForm({
               Cancel
             </Button>
             <Button type="submit">
-              {mode === "create" ? "Save copy" : "Save changes"}
+              {mode === "create"
+                ? translateText("Save copy")
+                : translateText("Save changes")}
             </Button>
           </div>
         </form>

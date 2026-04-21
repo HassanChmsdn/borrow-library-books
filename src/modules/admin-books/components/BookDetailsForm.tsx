@@ -1,12 +1,12 @@
-import Link from "next/link";
-
 import {
   AdminDetailSection,
   AdminSectionCard,
   ConfirmActionDialog,
 } from "@/components/admin";
 import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/link-button";
 import { Input } from "@/components/ui/input";
+import { formatTemplate, translateNode, useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 import type {
@@ -72,19 +72,23 @@ function FormField({
   label,
   required = false,
 }: FormFieldProps) {
+  const { translateText } = useI18n();
+
   return (
     <label className="grid gap-1.5">
       <span className="text-label text-foreground font-medium">
-        {label}
+        {translateNode(label, translateText)}
         {required ? <span className="text-danger"> *</span> : null}
       </span>
       {children}
       {error ? (
         <span className="text-body-sm text-danger" role="alert">
-          {error}
+          {translateText(error)}
         </span>
       ) : helperText ? (
-        <span className="text-body-sm text-text-secondary">{helperText}</span>
+        <span className="text-body-sm text-text-secondary">
+          {translateNode(helperText, translateText)}
+        </span>
       ) : null}
     </label>
   );
@@ -111,6 +115,8 @@ function BookDetailsForm({
   submissionState,
   values,
 }: BookDetailsFormProps) {
+  const { translateText } = useI18n();
+
   return (
     <form
       className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(18rem,22rem)]"
@@ -181,14 +187,14 @@ function BookDetailsForm({
                   onBasicInfoChange("category", event.target.value as AdminBookFormValues["basicInfo"]["category"])
                 }
               >
-                <option value="Fiction">Fiction</option>
-                <option value="Science">Science</option>
-                <option value="History">History</option>
-                <option value="Philosophy">Philosophy</option>
-                <option value="Technology">Technology</option>
-                <option value="Art & Design">Art & Design</option>
-                <option value="Business">Business</option>
-                <option value="Travel">Travel</option>
+                <option value="Fiction">{translateText("Fiction")}</option>
+                <option value="Science">{translateText("Science")}</option>
+                <option value="History">{translateText("History")}</option>
+                <option value="Philosophy">{translateText("Philosophy")}</option>
+                <option value="Technology">{translateText("Technology")}</option>
+                <option value="Art & Design">{translateText("Art & Design")}</option>
+                <option value="Business">{translateText("Business")}</option>
+                <option value="Travel">{translateText("Travel")}</option>
               </select>
             </FormField>
           </div>
@@ -209,7 +215,9 @@ function BookDetailsForm({
               onChange={(event) =>
                 onBasicInfoChange("description", event.target.value)
               }
-              placeholder="Describe the title, its audience, and any operational notes that matter to staff."
+              placeholder={translateText(
+                "Describe the title, its audience, and any operational notes that matter to staff.",
+              )}
             />
           </FormField>
         </AdminSectionCard>
@@ -265,8 +273,8 @@ function BookDetailsForm({
                 },
                 {
                   label: "Copies",
-                  value: `${book.inventorySummary.availableCopies}/${book.inventorySummary.totalCopies} available`,
-                  hint: `${book.inventorySummary.borrowedCopies} borrowed · ${book.inventorySummary.reservedCopies} reserved`,
+                  value: `${book.inventorySummary.availableCopies}/${book.inventorySummary.totalCopies} ${translateText("available")}`,
+                  hint: `${book.inventorySummary.borrowedCopies} ${translateText("borrowed")} · ${book.inventorySummary.reservedCopies} ${translateText("reserved")}`,
                 },
                 {
                   label: "Last audit",
@@ -291,9 +299,9 @@ function BookDetailsForm({
                   ? "Save new book"
                   : "Save changes"}
             </Button>
-            <Button asChild type="button" size="lg" variant="outline">
-              <Link href={cancelHref}>Cancel</Link>
-            </Button>
+            <LinkButton href={cancelHref} size="lg" variant="outline">
+              Cancel
+            </LinkButton>
             {mode === "edit" && book ? (
               <ConfirmActionDialog
                 trigger={
@@ -306,7 +314,9 @@ function BookDetailsForm({
                     {isDeleting ? "Deleting..." : "Delete book"}
                   </Button>
                 }
-                title={`Delete ${book.title}?`}
+                title={formatTemplate(translateText("Delete {title}?"), {
+                  title: book.title,
+                })}
                 description="Deleting removes the book and any orphaned copy records. Books with borrowing history stay protected from deletion."
                 confirmLabel="Delete book"
                 tone="danger"
@@ -325,17 +335,19 @@ function BookDetailsForm({
               )}
             >
               <p className="text-label text-foreground font-medium">
-                {submissionState.title}
+                {translateText(submissionState.title)}
               </p>
               <p className="text-body-sm text-text-secondary">
-                {submissionState.description}
+                {translateText(submissionState.description)}
               </p>
             </div>
           ) : (
             <p className="text-body-sm text-text-secondary">
-              {mode === "create"
-                ? "Create mode saves a new book record immediately and then routes to its detail page."
-                : "Edit mode keeps the current inventory summary visible while catalog changes are persisted and revalidated."}
+              {translateText(
+                mode === "create"
+                  ? "Create mode saves a new book record immediately and then routes to its detail page."
+                  : "Edit mode keeps the current inventory summary visible while catalog changes are persisted and revalidated.",
+              )}
             </p>
           )}
         </AdminSectionCard>

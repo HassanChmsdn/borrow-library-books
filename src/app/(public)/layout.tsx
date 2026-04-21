@@ -11,45 +11,53 @@ import {
   type AppAuthState,
 } from "@/lib/auth";
 import { MockAuthProvider } from "@/lib/auth/react";
-import { PublicShell, ShellBrand } from "@/components/layout";
-import { Button } from "@/components/ui/button";
+import {
+  LanguageSwitcher,
+  PublicShell,
+  ShellBrand,
+} from "@/components/layout";
+import { AnchorButton } from "@/components/ui/anchor-button";
+import { LinkButton } from "@/components/ui/link-button";
 import { listCatalogBooks } from "@/modules/catalog/server";
 import { getCurrentSession } from "@/lib/auth/server";
+import { getI18n } from "@/lib/i18n/server";
 
 function PublicUtilitySlot({
   session,
+  translateText,
 }: {
   session: AppAuthState;
+  translateText: (text: string) => string;
 }) {
   if (!isAuthenticated(session)) {
     return (
-      <Button asChild size="sm" variant="outline">
-        <Link
+      <>
+        <LanguageSwitcher />
+        <LinkButton
           href={buildMockSignInHref({
             role: "member",
             redirectTo: "/books",
           })}
+          size="sm"
+          variant="outline"
         >
-          Member sign in
-        </Link>
-      </Button>
+          {translateText("Member sign in")}
+        </LinkButton>
+      </>
     );
   }
 
   return (
     <>
+      <LanguageSwitcher />
       {hasAdminAccess(session) ? (
-        <Button asChild size="sm" variant="outline">
-          <Link href="/admin">Admin console</Link>
-        </Button>
-      ) : isMember(session) ? (
-        <Button asChild size="sm" variant="outline">
-          <Link href="/account/borrowings">My account</Link>
-        </Button>
+        <LinkButton href="/admin" size="sm" variant="outline">
+          {translateText("Admin console")}
+        </LinkButton>
       ) : null}
-      <Button asChild size="sm" variant="secondary">
-        <a href={buildSignOutHref(session, "/books")}>Sign out</a>
-      </Button>
+      <AnchorButton href={buildSignOutHref(session, "/books")} size="sm" variant="secondary">
+        {translateText("Sign out")}
+      </AnchorButton>
     </>
   );
 }
@@ -59,19 +67,39 @@ export default async function PublicSectionLayout({
 }: Readonly<{
   children: ReactNode;
 }>) {
+  const { messages, translateText } = await getI18n();
   const [session, books] = await Promise.all([
     getCurrentSession(),
     listCatalogBooks(),
   ]);
   const currentUser = getCurrentUser(session);
-  const publicNavigationItems = [
-    {
-      href: "/books",
-      label: "All Books",
-      badge: String(books.length),
-      matchStrategy: "prefix" as const,
-    },
-  ];
+  const publicNavigationItems = isMember(session)
+    ? [
+        {
+          href: "/books",
+          label: translateText("All Books"),
+          badge: String(books.length),
+          matchStrategy: "prefix" as const,
+        },
+        {
+          href: "/account/borrowings",
+          label: translateText("My Borrowings"),
+          matchStrategy: "prefix" as const,
+        },
+        {
+          href: "/account/profile",
+          label: translateText("Profile"),
+          matchStrategy: "prefix" as const,
+        },
+      ]
+    : [
+        {
+          href: "/books",
+          label: translateText("All Books"),
+          badge: String(books.length),
+          matchStrategy: "prefix" as const,
+        },
+      ];
 
   return (
     <MockAuthProvider value={session}>
@@ -80,12 +108,14 @@ export default async function PublicSectionLayout({
           <ShellBrand
             href="/books"
             monogram="BL"
-            subtitle={currentUser?.subtitle ?? "Community Library"}
-            title={currentUser?.fullName ?? "Borrow Library Books"}
+            subtitle={currentUser?.subtitle ?? messages.ui.publicLibraryName}
+            title={currentUser?.fullName ?? messages.ui.appName}
           />
         }
         navigationItems={publicNavigationItems}
-        utilitySlot={<PublicUtilitySlot session={session} />}
+        utilitySlot={
+          <PublicUtilitySlot session={session} translateText={translateText} />
+        }
       >
         {children}
       </PublicShell>

@@ -1,12 +1,16 @@
+"use client";
+
 import {
   AdminRowActions,
   AdminTableCell,
   AdminTableRow,
   AdminUserAvatar,
 } from "@/components/admin";
+import { useI18n } from "@/lib/i18n";
 
 import { UserRoleBadge } from "./UserRoleBadge";
 import { UserStatusBadge } from "./UserStatusBadge";
+import { translateAdminUserText } from "../i18n";
 
 import type { AdminUserRecord } from "../types";
 
@@ -16,6 +20,8 @@ interface UserTableRowProps {
 }
 
 function UserTableRow({ canManage, user }: Readonly<UserTableRowProps>) {
+  const { translateText } = useI18n();
+
   const actions = canManage && user.profileHref
     ? [
         {
@@ -53,18 +59,18 @@ function UserTableRow({ canManage, user }: Readonly<UserTableRowProps>) {
       <AdminTableCell>
         <div className="space-y-1">
           <p className="text-body-sm text-foreground font-medium">
-            {user.borrowingSummaryLabel}
+            {translateAdminUserText(user.borrowingSummaryLabel, translateText)}
           </p>
           <p className="text-body-sm text-text-secondary">
-            {user.borrowingSummaryMeta}
+            {translateAdminUserText(user.borrowingSummaryMeta, translateText)}
           </p>
         </div>
       </AdminTableCell>
-      <AdminTableCell className="text-right">
+      <AdminTableCell className="text-end">
         {canManage ? (
           <AdminRowActions align="end" actions={actions} />
         ) : (
-          <p className="text-body-sm text-text-tertiary">View only</p>
+          <p className="text-body-sm text-text-tertiary">{translateText("View only")}</p>
         )}
       </AdminTableCell>
     </AdminTableRow>

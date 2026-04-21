@@ -1,7 +1,10 @@
+"use client";
+
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Slot } from "radix-ui";
 
+import { translateNode, useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
@@ -52,6 +55,8 @@ function Button({
     asChild?: boolean;
   }) {
   const Comp = asChild ? Slot.Root : "button";
+  const { translateText } = useI18n();
+  const translatedChildren = translateNode(props.children, translateText);
 
   return (
     <Comp
@@ -60,7 +65,9 @@ function Button({
       data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
-    />
+    >
+      {translatedChildren}
+    </Comp>
   );
 }
 

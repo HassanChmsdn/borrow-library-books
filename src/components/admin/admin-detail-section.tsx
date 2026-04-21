@@ -1,5 +1,8 @@
+"use client";
+
 import * as React from "react";
 
+import { translateNode, useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 interface AdminDetailItem {
@@ -19,6 +22,8 @@ function AdminDetailSection({
   items,
   ...props
 }: AdminDetailSectionProps) {
+  const { translateText } = useI18n();
+
   return (
     <div
       className={cn(
@@ -30,12 +35,16 @@ function AdminDetailSection({
     >
       {items.map((item, index) => (
         <div key={`${String(item.label)}-${index}`} className="space-y-1">
-          <p className="text-body-sm text-text-secondary">{item.label}</p>
+          <p className="text-body-sm text-text-secondary">
+            {translateNode(item.label, translateText)}
+          </p>
           <div className="text-body-sm text-foreground font-medium">
-            {item.value}
+            {translateNode(item.value, translateText)}
           </div>
           {item.hint ? (
-            <p className="text-caption text-text-tertiary">{item.hint}</p>
+            <p className="text-caption text-text-tertiary">
+              {translateNode(item.hint, translateText)}
+            </p>
           ) : null}
         </div>
       ))}

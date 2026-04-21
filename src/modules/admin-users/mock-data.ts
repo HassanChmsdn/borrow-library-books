@@ -9,7 +9,6 @@ import {
 } from "@/lib/auth/roles";
 import {
   formatAdminCurrency,
-  formatAdminJoinedDate,
   formatAdminShortDate,
 } from "@/modules/admin-shared/mock-data";
 import type { AdminFilterOption } from "@/components/admin";
@@ -188,7 +187,7 @@ export const adminUserProfileRecords: ReadonlyArray<AdminUserProfileRecord> =
       email: user.email,
       role: user.role,
       status: user.status,
-      joinedDateLabel: formatAdminJoinedDate(user.joinedOn),
+      joinedDateLabel: formatAdminShortDate(user.joinedOn),
       profileHref: `/admin/users/${user.id}`,
       borrowingSummaryLabel: getBorrowingSummaryLabel(
         activeCount,
@@ -265,7 +264,7 @@ export function createMockAdminUserRecord(
     email: normalizedEmail,
     fullName: trimmedName,
     id: `${createdId}-${Date.now().toString(36)}`,
-    joinedDateLabel: formatAdminJoinedDate(new Date().toISOString()),
+    joinedDateLabel: formatAdminShortDate(new Date().toISOString()),
     role: values.role,
     status: values.accountStatus,
   };

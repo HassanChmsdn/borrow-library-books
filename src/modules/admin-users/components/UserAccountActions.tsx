@@ -9,6 +9,7 @@ import {
   ConfirmActionDialog,
 } from "@/components/admin";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n";
 
 import { UserRoleBadge } from "./UserRoleBadge";
 import { UserStatusBadge } from "./UserStatusBadge";
@@ -43,6 +44,7 @@ function UserAccountActions({
   role,
   status,
 }: Readonly<UserAccountActionsProps>) {
+  const { translateText } = useI18n();
   const [isRoleDialogOpen, setIsRoleDialogOpen] = React.useState(false);
   const [nextRole, setNextRole] = React.useState(role);
 
@@ -56,19 +58,21 @@ function UserAccountActions({
 
   return (
     <AdminSectionCard
-      title="Account actions"
-      description="Existing account controls now run through the shared admin user-management flow."
+      title={translateText("Account actions")}
+      description={translateText(
+        "Existing account controls now run through the shared admin user-management flow.",
+      )}
     >
       <AdminDetailSection
         columns={2}
         className="sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2"
         items={[
           {
-            label: "Current role",
+            label: translateText("Current role"),
             value: <UserRoleBadge role={role} />,
           },
           {
-            label: "Current status",
+            label: translateText("Current status"),
             value: <UserStatusBadge status={status} />,
           },
         ]}
@@ -77,16 +81,18 @@ function UserAccountActions({
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
         {status === "active" ? (
           <ConfirmActionDialog
-            title="Suspend this user?"
-            description="Suspend the selected account while preserving its linked identity record and borrowing history."
-            confirmLabel="Suspend user"
+            title={translateText("Suspend this user?")}
+            description={translateText(
+              "Suspend the selected account while preserving its linked identity record and borrowing history.",
+            )}
+            confirmLabel={translateText("Suspend user")}
             trigger={
               <Button
                 type="button"
                 variant="destructive"
                 disabled={isMutating || !canChangeStatus}
               >
-                Suspend user
+                {translateText("Suspend user")}
               </Button>
             }
             onConfirm={onSuspendUser}
@@ -97,14 +103,16 @@ function UserAccountActions({
             disabled={isMutating || !canChangeStatus}
             onClick={onReactivateUser}
           >
-            Reactivate user
+            {translateText("Reactivate user")}
           </Button>
         )}
 
         <ConfirmActionDialog
-          title="Change account role?"
-          description="Select the application role that should be assigned to this account. Super-admin assignment remains restricted to explicitly authorized operators."
-          confirmLabel="Save role"
+          title={translateText("Change account role?")}
+          description={translateText(
+            "Select the application role that should be assigned to this account. Super-admin assignment remains restricted to explicitly authorized operators.",
+          )}
+          confirmLabel={translateText("Save role")}
           confirmDisabled={isMutating || !canChangeRole || nextRole === role}
           tone="default"
           open={isRoleDialogOpen}
@@ -121,13 +129,13 @@ function UserAccountActions({
               variant="outline"
               disabled={isMutating || !canChangeRole || roleOptions.length === 0}
             >
-              Change role
+              {translateText("Change role")}
             </Button>
           }
           onConfirm={() => onChangeRole?.(nextRole)}
         >
           <AdminFilterSelect
-            label="Assigned role"
+            label={translateText("Assigned role")}
             options={roleOptions}
             value={nextRole}
             onValueChange={setNextRole}
@@ -138,8 +146,12 @@ function UserAccountActions({
       <p className="text-body-sm text-text-secondary">
         {lastActionMessage ??
           (canChangeRole || canChangeStatus
-            ? "Suspend, reactivate, and role changes now use the shared admin user-management actions."
-            : "This account can be reviewed here, but the current session is not allowed to change its role or status.")}
+            ? translateText(
+                "Suspend, reactivate, and role changes now use the shared admin user-management actions.",
+              )
+            : translateText(
+                "This account can be reviewed here, but the current session is not allowed to change its role or status.",
+              ))}
       </p>
     </AdminSectionCard>
   );

@@ -114,17 +114,18 @@ function canAccessAdminNavigationItem(
 
 export function getAuthorizedAdminNavigationSections(
   authState: AppAuthState,
+  translateText: (text: string) => string,
 ): ReadonlyArray<ShellNavSection> {
   return adminNavigationSections
     .map((section) => ({
-      title: section.title,
+      title: translateText(section.title),
       items: section.items
         .filter((item) => canAccessAdminNavigationItem(authState, item))
         .map((item) => ({
-          description: item.description,
+          description: item.description ? translateText(item.description) : undefined,
           href: item.href,
           icon: item.icon,
-          label: item.label,
+          label: translateText(item.label),
           matchStrategy: item.matchStrategy,
         })),
     }))

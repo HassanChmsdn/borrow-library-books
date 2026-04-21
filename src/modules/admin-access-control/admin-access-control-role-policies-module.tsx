@@ -18,6 +18,7 @@ import {
   type AppAdminSectionAccess,
 } from "@/lib/auth";
 import { useMockAuthContext } from "@/lib/auth/react";
+import { useI18n } from "@/lib/i18n";
 
 import { updateAdminAccessControlRolePolicyAction } from "./actions";
 import type { AdminAccessControlRolePolicyRecord } from "./types";
@@ -102,6 +103,7 @@ function getDraftSignature(draft: RolePolicyDraft) {
 function AdminAccessControlRolePoliciesModule({
   initialRolePolicies,
 }: Readonly<AdminAccessControlRolePoliciesModuleProps>) {
+  const { formatMessage, translateText } = useI18n();
   const router = useRouter();
   const authState = useMockAuthContext();
   const [rolePolicies, setRolePolicies] = useState(initialRolePolicies);
@@ -225,7 +227,7 @@ function AdminAccessControlRolePoliciesModule({
         title="Role access policies"
       >
         <p className="text-body-sm text-text-secondary">
-          Review user-specific access only, or sign in with a session that has broader access-control authority.
+          {translateText("Review user-specific access only, or sign in with a session that has broader access-control authority.")}
         </p>
       </AdminSectionCard>
     );
@@ -243,7 +245,7 @@ function AdminAccessControlRolePoliciesModule({
               void restoreBaselineDefaults();
             }}
           >
-            Restore baseline defaults
+            {translateText("Restore baseline defaults")}
           </Button>
           <Button
             disabled={isSaving || !hasChanges}
@@ -251,7 +253,7 @@ function AdminAccessControlRolePoliciesModule({
             variant="outline"
             onClick={resetDraft}
           >
-            Reset draft
+            {translateText("Reset draft")}
           </Button>
           <Button
             disabled={isSaving || !hasChanges}
@@ -260,7 +262,7 @@ function AdminAccessControlRolePoliciesModule({
               void saveRolePolicy();
             }}
           >
-            {isSaving ? "Saving..." : "Save role defaults"}
+            {isSaving ? translateText("Saving...") : translateText("Save role defaults")}
           </Button>
         </div>
       }
@@ -283,7 +285,7 @@ function AdminAccessControlRolePoliciesModule({
                 : "text-body-sm text-danger font-medium"
             }
           >
-            {feedback.message}
+            {translateText(feedback.message)}
           </p>
         </div>
       ) : null}
@@ -315,15 +317,17 @@ function AdminAccessControlRolePoliciesModule({
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-body text-foreground font-medium">
-                      {getAdminSectionLabel(section)}
+                      {translateText(getAdminSectionLabel(section))}
                     </p>
                     <p className="text-body-sm text-text-secondary mt-1">
-                      Configure the default access granted to the{" "}
-                      {getAppRoleDisplayLabel(selectedPolicy.role)} role.
+                      {formatMessage(
+                        translateText("Configure the default access granted to the {role} role."),
+                        { role: translateText(getAppRoleDisplayLabel(selectedPolicy.role)) },
+                      )}
                     </p>
                   </div>
                   <AdminStatusBadge
-                    label={formatPermissionSummary(effectivePermission)}
+                    label={translateText(formatPermissionSummary(effectivePermission))}
                     tone={getPermissionTone(effectivePermission)}
                   />
                 </div>
@@ -348,7 +352,7 @@ function AdminAccessControlRolePoliciesModule({
                         }));
                       }}
                     />
-                    Access
+                    {translateText("Access")}
                   </label>
 
                   <label className="text-body-sm text-foreground flex items-center gap-2">
@@ -368,7 +372,7 @@ function AdminAccessControlRolePoliciesModule({
                         }));
                       }}
                     />
-                    Manage
+                    {translateText("Manage")}
                   </label>
                 </div>
               </div>

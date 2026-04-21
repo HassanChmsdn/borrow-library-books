@@ -4,6 +4,7 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 
 import { Button } from "@/components/ui/button";
+import { translateNode, useI18n } from "@/lib/i18n";
 
 interface ConfirmActionDialogProps {
   cancelLabel?: string;
@@ -36,6 +37,7 @@ function ConfirmActionDialog({
   tone = "danger",
   trigger,
 }: ConfirmActionDialogProps) {
+  const { translateText } = useI18n();
   const [internalOpen, setInternalOpen] = React.useState(defaultOpen);
   const [mounted, setMounted] = React.useState(false);
 
@@ -104,10 +106,10 @@ function ConfirmActionDialog({
                 <div className="grid gap-3 p-5 sm:p-6">
                   <div className="space-y-1.5">
                     <h3 className="text-title-sm text-foreground font-semibold">
-                      {title}
+                      {translateNode(title, translateText)}
                     </h3>
                     <p className="text-body-sm text-text-secondary">
-                      {description}
+                      {translateNode(description, translateText)}
                     </p>
                   </div>
                   {children}

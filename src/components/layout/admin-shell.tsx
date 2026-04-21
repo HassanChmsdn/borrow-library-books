@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 import type { ShellNavItem, ShellNavSection } from "./types";
@@ -51,6 +52,8 @@ function AdminTopHeader({
   className,
   ...props
 }: AdminTopHeaderProps) {
+  const { translateText } = useI18n();
+
   return (
     <div
       data-slot="admin-top-header"
@@ -63,17 +66,19 @@ function AdminTopHeader({
       <div className="min-w-0 space-y-1">
         {eyebrow ? (
           <p className="text-caption text-text-tertiary truncate font-medium tracking-[0.24em] uppercase">
-            {eyebrow}
+            {typeof eyebrow === "string" ? translateText(eyebrow) : eyebrow}
           </p>
         ) : null}
         {title ? (
           <h1 className="text-title-sm text-foreground truncate font-semibold">
-            {title}
+            {typeof title === "string" ? translateText(title) : title}
           </h1>
         ) : null}
         {description ? (
           <p className="text-body-sm text-text-secondary truncate md:max-w-2xl">
-            {description}
+            {typeof description === "string"
+              ? translateText(description)
+              : description}
           </p>
         ) : null}
       </div>
@@ -112,8 +117,10 @@ function AdminNavigation({
   currentPath?: string;
   onNavigate?: () => void;
 }) {
+  const { translateText } = useI18n();
+
   return (
-    <nav aria-label="Admin" className="flex flex-col gap-6">
+    <nav aria-label={translateText("Admin")} className="flex flex-col gap-6">
       {navigationSections.map((section, sectionIndex) => (
         <div
           key={section.title ?? `section-${sectionIndex}`}
@@ -121,7 +128,9 @@ function AdminNavigation({
         >
           {section.title ? (
             <p className="text-caption text-text-tertiary px-3 font-medium tracking-[0.24em] uppercase">
-              {section.title}
+              {typeof section.title === "string"
+                ? translateText(section.title)
+                : section.title}
             </p>
           ) : null}
 
@@ -151,7 +160,9 @@ function AdminNavigation({
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-2">
                         <span className="text-body-sm font-medium">
-                          {item.label}
+                          {typeof item.label === "string"
+                            ? translateText(item.label)
+                            : item.label}
                         </span>
                         {item.badge ? (
                           <span
@@ -169,7 +180,9 @@ function AdminNavigation({
 
                       {item.description ? (
                         <span className="text-caption text-text-tertiary mt-1 block text-pretty">
-                          {item.description}
+                          {typeof item.description === "string"
+                            ? translateText(item.description)
+                            : item.description}
                         </span>
                       ) : null}
                     </span>
@@ -199,6 +212,7 @@ function AdminShell({
 }: AdminShellProps) {
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
   const pathname = usePathname();
+  const { dir, translateText } = useI18n();
   const activePath = currentPath ?? pathname;
 
   return (
@@ -243,8 +257,13 @@ function AdminShell({
           id="admin-mobile-drawer"
           aria-hidden={!mobileNavOpen}
           className={cn(
-            "border-border-subtle bg-card fixed inset-y-0 left-0 z-50 flex w-(--layout-admin-drawer-width) max-w-full flex-col border-r shadow-lg transition-transform duration-200 lg:hidden",
-            mobileNavOpen ? "translate-x-0" : "-translate-x-full",
+            "border-border-subtle bg-card fixed inset-y-0 z-50 flex w-(--layout-admin-drawer-width) max-w-full flex-col border-r shadow-lg transition-transform duration-200 lg:hidden",
+            dir === "rtl" ? "right-0 border-l border-r-0" : "left-0",
+            mobileNavOpen
+              ? "translate-x-0"
+              : dir === "rtl"
+                ? "translate-x-full"
+                : "-translate-x-full",
           )}
         >
           <div className="border-border-subtle flex min-h-(--layout-admin-header-height) items-center justify-between gap-3 border-b px-5">
@@ -253,7 +272,7 @@ function AdminShell({
               type="button"
               variant="ghost"
               size="icon-sm"
-              aria-label="Close navigation"
+              aria-label={translateText("Close navigation")}
               onClick={() => setMobileNavOpen(false)}
             >
               <X />
@@ -287,7 +306,7 @@ function AdminShell({
                 className="lg:hidden"
                 aria-controls="admin-mobile-drawer"
                 aria-expanded={mobileNavOpen}
-                aria-label="Open navigation"
+                aria-label={translateText("Open navigation")}
                 onClick={() => setMobileNavOpen(true)}
               >
                 <Menu />

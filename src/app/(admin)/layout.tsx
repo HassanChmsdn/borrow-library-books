@@ -11,21 +11,26 @@ import { MockAuthProvider } from "@/lib/auth/react";
 import {
   AdminShell,
   AdminTopHeader,
+  LanguageSwitcher,
   ShellBrand,
 } from "@/components/layout";
-import { Button } from "@/components/ui/button";
+import { AnchorButton } from "@/components/ui/anchor-button";
+import { LinkButton } from "@/components/ui/link-button";
 import { requireAdminSession } from "@/lib/auth/server";
+import { getI18n } from "@/lib/i18n/server";
 
 function AdminFooter({
   monogram,
   subtitle,
   fullName,
   signOutHref,
+  translateText,
 }: {
   monogram: string;
   subtitle: string;
   fullName: string;
   signOutHref: string;
+  translateText: (text: string) => string;
 }) {
 
   return (
@@ -40,23 +45,25 @@ function AdminFooter({
             {fullName}
           </p>
           <p className="text-caption text-text-tertiary truncate">
-            {subtitle}
+            {translateText(subtitle)}
           </p>
         </div>
       </div>
 
       <p className="text-caption text-text-tertiary mt-3 text-pretty">
-        Mock-data admin workspace. Backend integration is intentionally deferred.
+        {translateText(
+          "Mock-data admin workspace. Backend integration is intentionally deferred.",
+        )}
       </p>
 
       <div className="mt-3 grid gap-2">
-        <Button asChild size="sm" variant="outline">
-          <Link href="/admin/profile">View profile</Link>
-        </Button>
+        <LinkButton href="/admin/profile" size="sm" variant="outline">
+          {translateText("View profile")}
+        </LinkButton>
 
-        <Button asChild className="w-full" size="sm" variant="secondary">
-          <a href={signOutHref}>Sign out</a>
-        </Button>
+        <AnchorButton className="w-full" href={signOutHref} size="sm" variant="secondary">
+          {translateText("Sign out")}
+        </AnchorButton>
       </div>
     </div>
   );
@@ -68,8 +75,12 @@ export default async function AdminSectionLayout({
   children: ReactNode;
 }>) {
   const session = await requireAdminSession();
+  const { messages, translateText } = await getI18n();
   const currentUser = getCurrentUser(session);
-  const navigationSections = getAuthorizedAdminNavigationSections(session);
+  const navigationSections = getAuthorizedAdminNavigationSections(
+    session,
+    translateText,
+  );
   const canAccessBooks = canAccessAdminSection(session, "books");
 
   return (
@@ -79,25 +90,28 @@ export default async function AdminSectionLayout({
           <ShellBrand
             href="/admin"
             monogram="BL"
-            subtitle="Admin Console"
-            title="Borrow Library Books"
+            subtitle={messages.ui.adminConsoleName}
+            title={messages.ui.appName}
           />
         }
         navigationSections={navigationSections}
         topHeader={
           <AdminTopHeader
-            eyebrow="Library Admin"
-            title="Operations Workspace"
-            description="A shared admin frame for dashboard, catalog, borrowing, inventory, category, and member management modules built on the existing token and shell system."
+            eyebrow={translateText("Library Admin")}
+            title={translateText("Operations Workspace")}
+            description={translateText(
+              "A shared admin frame for dashboard, catalog, borrowing, inventory, category, and member management modules built on the existing token and shell system.",
+            )}
             actions={
               <>
-                <Button asChild size="sm" variant="outline">
-                  <Link href="/books">Reader Experience</Link>
-                </Button>
+                <LanguageSwitcher />
+                <LinkButton href="/books" size="sm" variant="outline">
+                  {translateText("Reader Experience")}
+                </LinkButton>
                 {canAccessBooks ? (
-                  <Button asChild size="sm" variant="secondary">
-                    <Link href="/admin/books">Catalog queue</Link>
-                  </Button>
+                  <LinkButton href="/admin/books" size="sm" variant="secondary">
+                    {translateText("Catalog queue")}
+                  </LinkButton>
                 ) : null}
               </>
             }
@@ -106,11 +120,12 @@ export default async function AdminSectionLayout({
         userSlot={
           <div className="bg-secondary rounded-xl px-3 py-3">
             <p className="text-label text-primary font-medium tracking-[0.18em] uppercase">
-              {currentUser?.subtitle ?? "Shift lead account"}
+              {translateText(currentUser?.subtitle ?? "Shift lead account")}
             </p>
             <p className="text-body-sm text-text-secondary mt-1">
-              {currentUser?.fullName ?? "Samir Chahine"} is covering catalog,
-              circulation, and member operations this afternoon.
+              {currentUser?.fullName ?? "Samir Chahine"} {translateText(
+                "is covering catalog, circulation, and member operations this afternoon.",
+              )}
             </p>
           </div>
         }
@@ -120,6 +135,7 @@ export default async function AdminSectionLayout({
             monogram={currentUser?.monogram ?? "SC"}
             signOutHref={buildSignOutHref(session, "/books")}
             subtitle={currentUser?.subtitle ?? "Shift lead account"}
+            translateText={translateText}
           />
         }
       >

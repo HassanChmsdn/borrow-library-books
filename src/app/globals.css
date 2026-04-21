@@ -9,10 +9,27 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   html {
     @apply font-sans;
   }
+
+  html[dir="rtl"] {
+    --font-body: var(--font-body-ar);
+    --font-display: var(--font-body-ar);
+  }
+
   body {
     @apply bg-background text-foreground font-sans;
+  }
+
+  html[dir="rtl"] body {
+    direction: rtl;
+  }
+
+  html[dir="rtl"] input,
+  html[dir="rtl"] textarea,
+  html[dir="rtl"] select {
+    text-align: right;
   }
 }

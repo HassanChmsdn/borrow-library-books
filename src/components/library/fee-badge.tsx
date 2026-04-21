@@ -1,6 +1,9 @@
+"use client";
+
 import * as React from "react";
 import { cva } from "class-variance-authority";
 
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 type FeeBadgeTone = "free" | "paid" | "neutral";
@@ -32,13 +35,15 @@ function FeeBadge({
   tone = "paid",
   ...props
 }: FeeBadgeProps) {
+  const { translateText } = useI18n();
+
   return (
     <span
       data-slot="fee-badge"
       className={cn(feeBadgeVariants({ tone }), className)}
       {...props}
     >
-      {label}
+      {translateText(label)}
     </span>
   );
 }

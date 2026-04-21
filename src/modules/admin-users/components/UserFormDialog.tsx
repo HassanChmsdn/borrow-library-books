@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { AdminFilterSelect } from "@/components/admin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 import {
@@ -69,6 +70,7 @@ function UserFormDialog({
   roleOptions,
   submissionError,
 }: Readonly<UserFormDialogProps>) {
+  const { translateText } = useI18n();
   const [mounted, setMounted] = React.useState(false);
   const [values, setValues] = React.useState(initialValues);
   const [errors, setErrors] = React.useState<AdminUserFormFieldErrors>({});
@@ -143,12 +145,12 @@ function UserFormDialog({
           <div className="border-b border-black/5 p-5 sm:p-6">
             <div className="space-y-1.5">
               <h2 className="text-title text-foreground font-semibold">
-                Create account
+                {translateText("Create account")}
               </h2>
               <p className="text-body-sm text-text-secondary max-w-[60ch]">
-                Add a new member or staff account using the existing admin flow.
-                The same form now supports local mock creation and safe Auth0-linked
-                provisioning for persisted environments.
+                {translateText(
+                  "Add a new member or staff account using the existing admin flow. The same form now supports local mock creation and safe Auth0-linked provisioning for persisted environments.",
+                )}
               </p>
             </div>
           </div>
@@ -160,7 +162,7 @@ function UserFormDialog({
                 role="alert"
               >
                 <p className="text-body-sm text-danger font-medium">
-                  {submissionError}
+                  {translateText(submissionError)}
                 </p>
               </div>
             ) : null}
@@ -168,13 +170,13 @@ function UserFormDialog({
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="grid gap-1.5">
                 <span className="text-label text-foreground font-medium">
-                  Full name
+                  {translateText("Full name")}
                 </span>
                 <Input
                   value={values.fullName}
                   aria-invalid={errors.fullName ? true : undefined}
                   disabled={isSubmitting}
-                  placeholder="Enter the user full name"
+                  placeholder={translateText("Enter the user full name")}
                   onChange={(event) =>
                     setValues((current) => ({
                       ...current,
@@ -184,19 +186,20 @@ function UserFormDialog({
                 />
                 {errors.fullName ? (
                   <span className="text-body-sm text-danger" role="alert">
-                    {errors.fullName}
+                    {translateText(errors.fullName)}
                   </span>
                 ) : (
                   <span className="text-body-sm text-text-secondary">
-                    Use the name that will appear in account-facing borrowing,
-                    admin, and profile views.
+                    {translateText(
+                      "Use the name that will appear in account-facing borrowing, admin, and profile views.",
+                    )}
                   </span>
                 )}
               </label>
 
               <label className="grid gap-1.5">
                 <span className="text-label text-foreground font-medium">
-                  Email
+                  {translateText("Email")}
                 </span>
                 <Input
                   type="email"
@@ -213,19 +216,20 @@ function UserFormDialog({
                 />
                 {errors.email ? (
                   <span className="text-body-sm text-danger" role="alert">
-                    {errors.email}
+                    {translateText(errors.email)}
                   </span>
                 ) : (
                   <span className="text-body-sm text-text-secondary">
-                    The mocked flow checks this email for duplicates before
-                    creating a local roster entry.
+                    {translateText(
+                      "The mocked flow checks this email for duplicates before creating a local roster entry.",
+                    )}
                   </span>
                 )}
               </label>
 
               <label className="grid gap-1.5 sm:col-span-2">
                 <span className="text-label text-foreground font-medium">
-                  Auth0 user id
+                  {translateText("Auth0 user id")}
                 </span>
                 <Input
                   value={values.auth0UserId}
@@ -241,19 +245,19 @@ function UserFormDialog({
                 />
                 {errors.auth0UserId ? (
                   <span className="text-body-sm text-danger" role="alert">
-                    {errors.auth0UserId}
+                    {translateText(errors.auth0UserId)}
                   </span>
                 ) : (
                   <span className="text-body-sm text-text-secondary">
-                    Optional in the mock flow. Required when this account should
-                    be persisted against an existing Auth0 identity, including
-                    manual super-admin bootstrap.
+                    {translateText(
+                      "Optional in the mock flow. Required when this account should be persisted against an existing Auth0 identity, including manual super-admin bootstrap.",
+                    )}
                   </span>
                 )}
               </label>
 
               <AdminFilterSelect
-                label="Role"
+                label={translateText("Role")}
                 options={roleOptions}
                 value={values.role}
                 onValueChange={(value) =>
@@ -265,7 +269,7 @@ function UserFormDialog({
               />
 
               <AdminFilterSelect
-                label="Account status"
+                label={translateText("Account status")}
                 options={adminUserStatusFieldOptions}
                 value={values.accountStatus}
                 onValueChange={(value) =>
@@ -278,13 +282,13 @@ function UserFormDialog({
 
               <label className="grid gap-1.5 sm:col-span-2">
                 <span className="text-label text-foreground font-medium">
-                  Temporary password
+                  {translateText("Temporary password")}
                 </span>
                 <Input
                   value={values.temporaryPassword}
                   aria-invalid={errors.temporaryPassword ? true : undefined}
                   disabled={isSubmitting}
-                  placeholder="Optional mocked temporary password"
+                  placeholder={translateText("Optional mocked temporary password")}
                   onChange={(event) =>
                     setValues((current) => ({
                       ...current,
@@ -294,19 +298,20 @@ function UserFormDialog({
                 />
                 {errors.temporaryPassword ? (
                   <span className="text-body-sm text-danger" role="alert">
-                    {errors.temporaryPassword}
+                    {translateText(errors.temporaryPassword)}
                   </span>
                 ) : (
                   <span className="text-body-sm text-text-secondary">
-                    Optional. Keep this for mocked onboarding only until Auth0
-                    owns invitation and password flows for each account type.
+                    {translateText(
+                      "Optional. Keep this for mocked onboarding only until Auth0 owns invitation and password flows for each account type.",
+                    )}
                   </span>
                 )}
               </label>
 
               <label className="grid gap-1.5 sm:col-span-2">
                 <span className="text-label text-foreground font-medium">
-                  Onboarding note
+                  {translateText("Onboarding note")}
                 </span>
                 <textarea
                   value={values.onboardingNote}
@@ -316,7 +321,9 @@ function UserFormDialog({
                     errors.onboardingNote ? "border-danger" : undefined,
                   )}
                   disabled={isSubmitting}
-                  placeholder="Optional staff note about this mock account or onboarding context."
+                  placeholder={translateText(
+                    "Optional staff note about this mock account or onboarding context.",
+                  )}
                   onChange={(event) =>
                     setValues((current) => ({
                       ...current,
@@ -326,12 +333,13 @@ function UserFormDialog({
                 />
                 {errors.onboardingNote ? (
                   <span className="text-body-sm text-danger" role="alert">
-                    {errors.onboardingNote}
+                    {translateText(errors.onboardingNote)}
                   </span>
                 ) : (
                   <span className="text-body-sm text-text-secondary">
-                    Optional. Use this to capture placeholder onboarding context
-                    until real invites and staff notes are wired to persistent data.
+                    {translateText(
+                      "Optional. Use this to capture placeholder onboarding context until real invites and staff notes are wired to persistent data.",
+                    )}
                   </span>
                 )}
               </label>
@@ -348,7 +356,9 @@ function UserFormDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Creating account..." : "Create account"}
+              {isSubmitting
+                ? translateText("Creating account...")
+                : translateText("Create account")}
             </Button>
           </div>
         </form>

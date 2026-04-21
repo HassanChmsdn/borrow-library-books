@@ -1,6 +1,7 @@
 import { AdminPageHeader, AdminSectionCard } from "@/components/admin";
 import { getAppRoleDisplayLabel, getCurrentUser } from "@/lib/auth";
 import { requireAuthorizedRoute } from "@/lib/auth/server";
+import { getI18n } from "@/lib/i18n/server";
 import {
   AdminAccessControlRolePoliciesModule,
   AdminAccessControlOverridesModule,
@@ -13,6 +14,7 @@ export const metadata = {
 };
 
 export default async function AdminAccessControlPage() {
+  const { translateText } = await getI18n();
   const session = await requireAuthorizedRoute(
     "/admin/settings/access-control",
   );
@@ -37,20 +39,20 @@ export default async function AdminAccessControlPage() {
         <div className="grid gap-2 sm:grid-cols-2">
           <div>
             <p className="text-caption text-text-tertiary tracking-[0.18em] uppercase">
-              Name
+              {translateText("Name")}
             </p>
             <p className="text-body-sm text-foreground mt-1 font-medium">
-              {currentUser?.fullName ?? "Unknown staff member"}
+              {currentUser?.fullName ?? translateText("Unknown staff member")}
             </p>
           </div>
           <div>
             <p className="text-caption text-text-tertiary tracking-[0.18em] uppercase">
-              Authorized role
+              {translateText("Authorized role")}
             </p>
             <p className="text-body-sm text-foreground mt-1 font-medium">
               {currentUser
-                ? getAppRoleDisplayLabel(currentUser.role)
-                : "Staff account"}
+                ? translateText(getAppRoleDisplayLabel(currentUser.role))
+                : translateText("Staff account")}
             </p>
           </div>
         </div>

@@ -1,5 +1,8 @@
+"use client";
+
 import * as React from "react";
 
+import { translateNode, useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 const pageHeaderContentStyle = {
@@ -25,6 +28,8 @@ function PageHeader({
   children,
   ...props
 }: PageHeaderProps) {
+  const { translateText } = useI18n();
+
   return (
     <header
       data-slot="page-header"
@@ -35,16 +40,16 @@ function PageHeader({
         <div className="space-y-3" style={pageHeaderContentStyle}>
           {eyebrow ? (
             <p className="text-caption text-text-tertiary font-medium tracking-[0.24em] uppercase">
-              {eyebrow}
+              {translateNode(eyebrow, translateText)}
             </p>
           ) : null}
           <div className="space-y-2">
             <h1 className="font-heading text-title text-foreground lg:text-title-lg font-semibold text-balance">
-              {title}
+              {translateNode(title, translateText)}
             </h1>
             {description ? (
               <p className="text-body text-text-secondary max-w-3xl text-pretty">
-                {description}
+                {translateNode(description, translateText)}
               </p>
             ) : null}
           </div>

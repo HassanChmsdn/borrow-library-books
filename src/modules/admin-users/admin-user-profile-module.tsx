@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 import {
@@ -8,7 +7,7 @@ import {
   AdminPageHeader,
 } from "@/components/admin";
 import { LoadingSkeleton } from "@/components/feedback";
-import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/link-button";
 import {
   canManageAppUserRecord,
   getAssignableAppUserRoles,
@@ -60,12 +59,10 @@ function AdminUserProfileModule({
         title={user.fullName}
         description="Review account posture, live circulation exposure, and staff actions from one account management screen built for future server integration."
         actions={
-          <Button asChild size="sm" variant="outline">
-            <Link href="/admin/users">
-              <ArrowLeft className="size-4" />
-              Back to users
-            </Link>
-          </Button>
+          <LinkButton href="/admin/users" size="sm" variant="outline">
+            <ArrowLeft className="size-4" />
+            Back to users
+          </LinkButton>
         }
         controls={
           <div className="flex flex-wrap items-center gap-2">
@@ -127,9 +124,7 @@ function AdminUserProfileEmptyState() {
         title="User not found"
         description="Return to the users management page and choose another record. This fallback is local so the route can be safely refined before backend wiring exists."
         action={
-          <Button asChild>
-            <Link href="/admin/users">Back to users</Link>
-          </Button>
+          <LinkButton href="/admin/users">Back to users</LinkButton>
         }
       />
     </div>

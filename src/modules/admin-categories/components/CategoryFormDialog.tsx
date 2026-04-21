@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { translateNode, useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 import {
@@ -62,16 +63,22 @@ function mapCategoryFormErrors(
 }
 
 function FormField({ children, error, helperText, label }: FormFieldProps) {
+  const { translateText } = useI18n();
+
   return (
     <label className="grid gap-1.5">
-      <span className="text-label text-foreground font-medium">{label}</span>
+      <span className="text-label text-foreground font-medium">
+        {translateNode(label, translateText)}
+      </span>
       {children}
       {error ? (
         <span className="text-body-sm text-danger" role="alert">
-          {error}
+          {translateText(error)}
         </span>
       ) : helperText ? (
-        <span className="text-body-sm text-text-secondary">{helperText}</span>
+        <span className="text-body-sm text-text-secondary">
+          {translateNode(helperText, translateText)}
+        </span>
       ) : null}
     </label>
   );
@@ -85,6 +92,7 @@ function CategoryFormDialog({
   onSubmit,
   open,
 }: CategoryFormDialogProps) {
+  const { translateText } = useI18n();
   const [mounted, setMounted] = React.useState(false);
   const [values, setValues] = React.useState(initialValues);
   const [errors, setErrors] = React.useState<AdminCategoryFormFieldErrors>({});
@@ -165,10 +173,10 @@ function CategoryFormDialog({
           <div className="grid gap-4 p-5 sm:p-6">
             <div className="space-y-1.5">
               <h2 className="text-title-sm text-foreground font-semibold">
-                {title}
+                {translateText(title)}
               </h2>
               <p className="text-body-sm text-text-secondary max-w-[56ch]">
-                {description}
+                {translateText(description)}
               </p>
             </div>
 
@@ -181,7 +189,7 @@ function CategoryFormDialog({
                 value={values.name}
                 aria-invalid={errors.name ? true : undefined}
                 disabled={isSubmitting}
-                placeholder="Enter category name"
+                placeholder={translateText("Enter category name")}
                 onChange={(event) =>
                   setValues((current) => ({
                     ...current,
@@ -204,7 +212,9 @@ function CategoryFormDialog({
                   errors.description ? "border-danger" : undefined,
                 )}
                 disabled={isSubmitting}
-                placeholder="Describe how this category is used across the catalog and admin management flows."
+                placeholder={translateText(
+                  "Describe how this category is used across the catalog and admin management flows.",
+                )}
                 onChange={(event) =>
                   setValues((current) => ({
                     ...current,
@@ -227,11 +237,11 @@ function CategoryFormDialog({
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting
                 ? mode === "create"
-                  ? "Saving category..."
-                  : "Updating category..."
+                  ? translateText("Saving category...")
+                  : translateText("Updating category...")
                 : mode === "create"
-                  ? "Save category"
-                  : "Save changes"}
+                  ? translateText("Save category")
+                  : translateText("Save changes")}
             </Button>
           </div>
         </form>

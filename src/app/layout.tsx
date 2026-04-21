@@ -1,5 +1,15 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Inter, Playfair_Display } from "next/font/google";
+import {
+  Geist_Mono,
+  Inter,
+  Noto_Kufi_Arabic,
+  Playfair_Display,
+} from "next/font/google";
+
+import { I18nProvider } from "@/lib/i18n";
+import { getI18nDictionary } from "@/lib/i18n/dictionaries";
+import { getRequestLocale } from "@/lib/i18n/server";
+
 import "./globals.css";
 
 const inter = Inter({
@@ -21,30 +31,41 @@ const geistMono = Geist_Mono({
   preload: false,
 });
 
+const notoKufiArabic = Noto_Kufi_Arabic({
+  variable: "--font-body-ar",
+  subsets: ["arabic"],
+  preload: false,
+  weight: ["400", "500", "600", "700"],
+});
+
 export const metadata: Metadata = {
   title: {
-    default: "Borrow Library Books",
-    template: "%s | Borrow Library Books",
+    default: "Bibliotheksbücher ausleihen",
+    template: "%s | Bibliotheksbücher ausleihen",
   },
   description:
-    "Production-ready Next.js starter for a library book borrowing platform.",
+    "Produktionsreifer Next.js-Starter für eine Bibliotheksplattform zur Buchausleihe.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getRequestLocale();
+  const dictionary = getI18nDictionary(locale);
+
   return (
     <html
-      lang="en"
-      className={`${inter.variable} ${playfairDisplay.variable} ${geistMono.variable} h-full antialiased`}
+      lang={dictionary.locale}
+      dir={dictionary.dir}
+      className={`${inter.variable} ${playfairDisplay.variable} ${geistMono.variable} ${notoKufiArabic.variable} h-full antialiased`}
     >
       <body
         suppressHydrationWarning
         className="bg-background text-foreground min-h-full font-sans"
       >
-        {children}
+        <I18nProvider dictionary={dictionary}>{children}</I18nProvider>
       </body>
     </html>
   );

@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 import { ShellContainer } from "./shell-container";
@@ -46,6 +47,7 @@ function PublicTopNavigation({
   ...props
 }: PublicTopNavigationProps) {
   const pathname = usePathname();
+  const { translateText } = useI18n();
   const activePath = currentPath ?? pathname;
 
   return (
@@ -60,16 +62,11 @@ function PublicTopNavigation({
       <ShellContainer className="flex flex-col gap-4 py-4 md:min-h-(--layout-public-nav-height) md:flex-row md:items-center md:justify-between md:py-0">
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">{brand}</div>
-          {utilitySlot ? (
-            <div className="flex shrink-0 items-center gap-2 md:hidden">
-              {utilitySlot}
-            </div>
-          ) : null}
         </div>
 
         <div className="flex flex-col gap-3 md:flex-1 md:flex-row md:items-center md:justify-end md:gap-6">
           <nav
-            aria-label="Primary"
+            aria-label={translateText("Primary")}
             className="overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             <ul className="flex min-w-max items-center gap-2">
@@ -88,7 +85,7 @@ function PublicTopNavigation({
                           : "text-text-secondary hover:bg-secondary hover:text-foreground",
                       )}
                     >
-                      <span>{item.label}</span>
+                      <span>{typeof item.label === "string" ? translateText(item.label) : item.label}</span>
                       {item.badge ? (
                         <span
                           className={cn(
@@ -109,7 +106,13 @@ function PublicTopNavigation({
           </nav>
 
           {utilitySlot ? (
-            <div className="hidden shrink-0 items-center gap-2 md:flex">
+            <div className="flex flex-wrap items-center gap-2 md:hidden">
+              {utilitySlot}
+            </div>
+          ) : null}
+
+          {utilitySlot ? (
+            <div className="hidden shrink-0 flex-wrap items-center justify-end gap-2 md:flex">
               {utilitySlot}
             </div>
           ) : null}

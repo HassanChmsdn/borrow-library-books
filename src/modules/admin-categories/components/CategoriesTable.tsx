@@ -1,3 +1,5 @@
+"use client";
+
 import {
   AdminEmptyState,
   AdminRowActions,
@@ -10,6 +12,7 @@ import {
 } from "@/components/admin";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatTemplate, useI18n } from "@/lib/i18n";
 
 import type { AdminCategoryRecord } from "../types";
 
@@ -25,9 +28,11 @@ interface CategoriesTableProps {
 }
 
 function CategoryBookCountBadge({ count }: Readonly<{ count: number }>) {
+  const { translateText } = useI18n();
+
   return (
     <span className="rounded-pill border-border-subtle bg-elevated text-caption text-text-secondary inline-flex items-center border px-2.5 py-1 font-medium whitespace-nowrap">
-      {count} {count === 1 ? "book" : "books"}
+      {count} {translateText(count === 1 ? "book" : "books")}
     </span>
   );
 }
@@ -43,6 +48,8 @@ function MobileCategoryCard({
   onDeleteCategory?: (category: AdminCategoryRecord) => void;
   onEditCategory?: (category: AdminCategoryRecord) => void;
 }>) {
+  const { translateText } = useI18n();
+
   return (
     <Card>
       <CardContent className="grid gap-4 p-4 sm:p-5">
@@ -57,7 +64,7 @@ function MobileCategoryCard({
               </p>
             ) : (
               <p className="text-body-sm text-text-tertiary">
-                No description added yet.
+                {translateText("No description added yet.")}
               </p>
             )}
           </div>
@@ -76,7 +83,9 @@ function MobileCategoryCard({
                 label: "Delete",
                 onAction: onDeleteCategory ? () => onDeleteCategory(category) : undefined,
                 confirm: {
-                  title: `Delete ${category.name}?`,
+                  title: formatTemplate(translateText("Delete {title}?"), {
+                    title: category.name,
+                  }),
                   description:
                     "This is still a mock delete flow. Later it can be connected to a real category removal request.",
                   confirmLabel: "Delete category",
@@ -87,7 +96,9 @@ function MobileCategoryCard({
             ]}
           />
         ) : (
-          <p className="text-body-sm text-text-tertiary text-right">View only</p>
+          <p className="text-body-sm text-text-tertiary text-end">
+            {translateText("View only")}
+          </p>
         )}
       </CardContent>
     </Card>
@@ -104,6 +115,8 @@ function CategoriesTable({
   onEditCategory,
   totalRecords,
 }: Readonly<CategoriesTableProps>) {
+  const { translateText } = useI18n();
+
   if (totalRecords === 0) {
     return (
       <AdminEmptyState
@@ -112,7 +125,7 @@ function CategoriesTable({
         action={
           canManage ? (
             <Button size="sm" type="button" onClick={onAddCategory}>
-              Add category
+              {translateText("Add category")}
             </Button>
           ) : null
         }
@@ -128,7 +141,7 @@ function CategoriesTable({
         action={
           hasActiveFilters ? (
             <Button size="sm" type="button" variant="outline" onClick={onClearFilters}>
-              Clear search
+              {translateText("Clear search")}
             </Button>
           ) : null
         }
@@ -156,8 +169,8 @@ function CategoriesTable({
             <AdminTableRow>
               <AdminTableHead>Category name</AdminTableHead>
               <AdminTableHead>Description</AdminTableHead>
-              <AdminTableHead>Book count</AdminTableHead>
-              <AdminTableHead className="text-right">
+              <AdminTableHead>{translateText("Book count")}</AdminTableHead>
+              <AdminTableHead className="text-end">
                 {canManage ? "Actions" : "Access"}
               </AdminTableHead>
             </AdminTableRow>
@@ -172,13 +185,13 @@ function CategoriesTable({
                 </AdminTableCell>
                 <AdminTableCell>
                   <p className="text-body-sm text-text-secondary max-w-[48ch] text-pretty">
-                    {category.description || "No description added yet."}
+                    {category.description || translateText("No description added yet.")}
                   </p>
                 </AdminTableCell>
                 <AdminTableCell>
                   <CategoryBookCountBadge count={category.bookCount} />
                 </AdminTableCell>
-                <AdminTableCell className="text-right">
+                <AdminTableCell className="text-end">
                   {canManage ? (
                     <AdminRowActions
                       align="end"
@@ -191,7 +204,9 @@ function CategoriesTable({
                           label: "Delete",
                           onAction: onDeleteCategory ? () => onDeleteCategory(category) : undefined,
                           confirm: {
-                            title: `Delete ${category.name}?`,
+                            title: formatTemplate(translateText("Delete {title}?"), {
+                              title: category.name,
+                            }),
                             description:
                               "This is still a mock delete flow. Later it can be connected to a real category removal request.",
                             confirmLabel: "Delete category",
@@ -202,7 +217,9 @@ function CategoriesTable({
                       ]}
                     />
                   ) : (
-                    <p className="text-body-sm text-text-tertiary">View only</p>
+                    <p className="text-body-sm text-text-tertiary">
+                      {translateText("View only")}
+                    </p>
                   )}
                 </AdminTableCell>
               </AdminTableRow>

@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/link-button";
+import { translateNode, useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 import { ConfirmActionDialog } from "./confirm-action-dialog";
@@ -47,6 +48,7 @@ function AdminRowActions({
   size = "xs",
   stretch = false,
 }: AdminRowActionsProps) {
+  const { translateText } = useI18n();
   const buttonClassName = cn(
     stretch ? "w-full justify-center" : undefined,
     orientation === "column" ? "min-w-[5.75rem]" : undefined,
@@ -73,7 +75,7 @@ function AdminRowActions({
         const content = (
           <>
             {action.icon}
-            {action.label}
+            {translateNode(action.label, translateText)}
           </>
         );
 
@@ -91,10 +93,10 @@ function AdminRowActions({
                   {content}
                 </Button>
               }
-              title={action.confirm.title}
-              description={action.confirm.description}
-              cancelLabel={action.confirm.cancelLabel}
-              confirmLabel={action.confirm.confirmLabel}
+              title={translateNode(action.confirm.title, translateText)}
+              description={translateNode(action.confirm.description, translateText)}
+              cancelLabel={action.confirm.cancelLabel ? translateText(action.confirm.cancelLabel) : undefined}
+              confirmLabel={action.confirm.confirmLabel ? translateText(action.confirm.confirmLabel) : undefined}
               tone={action.confirm.tone}
               onConfirm={action.onAction}
             />
@@ -103,16 +105,15 @@ function AdminRowActions({
 
         if (action.href) {
           return (
-            <Button
+            <LinkButton
               key={key}
-              asChild
-              type="button"
+              href={action.href}
               size={size}
               variant={variant}
               className={buttonClassName}
             >
-              <Link href={action.href}>{content}</Link>
-            </Button>
+              {content}
+            </LinkButton>
           );
         }
 

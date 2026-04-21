@@ -1,12 +1,16 @@
+"use client";
+
 import {
   AdminDetailSection,
   AdminRowActions,
   AdminUserAvatar,
 } from "@/components/admin";
 import { Card, CardContent } from "@/components/ui/card";
+import { useI18n } from "@/lib/i18n";
 
 import { UserRoleBadge } from "./UserRoleBadge";
 import { UserStatusBadge } from "./UserStatusBadge";
+import { translateAdminUserText } from "../i18n";
 
 import type { AdminUserRecord } from "../types";
 
@@ -16,6 +20,8 @@ interface UsersCardListProps {
 }
 
 function UsersCardList({ canManage, users }: Readonly<UsersCardListProps>) {
+  const { translateText } = useI18n();
+
   return (
     <div className="grid gap-3 lg:hidden">
       {users.map((user) => {
@@ -52,12 +58,12 @@ function UsersCardList({ canManage, users }: Readonly<UsersCardListProps>) {
                   {
                     label: "Borrowing",
                     value: (
-                      <div className="space-y-1 text-right sm:text-left">
+                      <div className="space-y-1 text-end sm:text-start">
                         <p className="text-body-sm text-foreground font-medium">
-                          {user.borrowingSummaryLabel}
+                          {translateAdminUserText(user.borrowingSummaryLabel, translateText)}
                         </p>
                         <p className="text-body-sm text-text-secondary">
-                          {user.borrowingSummaryMeta}
+                          {translateAdminUserText(user.borrowingSummaryMeta, translateText)}
                         </p>
                       </div>
                     ),
@@ -68,7 +74,9 @@ function UsersCardList({ canManage, users }: Readonly<UsersCardListProps>) {
               {canManage ? (
                 <AdminRowActions align="end" actions={actions} />
               ) : (
-                <p className="text-body-sm text-text-tertiary text-right">View only</p>
+                <p className="text-body-sm text-text-tertiary text-end">
+                  {translateText("View only")}
+                </p>
               )}
             </CardContent>
           </Card>

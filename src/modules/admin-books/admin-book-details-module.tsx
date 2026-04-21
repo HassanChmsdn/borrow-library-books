@@ -1,12 +1,12 @@
 "use client";
 
 import { useMemo } from "react";
-import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 import { AdminEmptyState, AdminPageHeader } from "@/components/admin";
 import { LoadingSkeleton } from "@/components/feedback";
-import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/link-button";
+import { formatTemplate, useI18n } from "@/lib/i18n";
 
 import {
   adminBookCreateDefaults,
@@ -24,6 +24,7 @@ function AdminBookDetailsModule({
   onDeleteBook,
   onSaveBook,
 }: AdminBookDetailsModuleProps) {
+  const { translateText } = useI18n();
   const initialValues = useMemo(() => {
     if (mode === "edit" && book) {
       return createAdminBookFormValues(book);
@@ -70,19 +71,23 @@ function AdminBookDetailsModule({
     <div className="gap-section flex flex-col">
       <AdminPageHeader
         eyebrow="Catalog"
-        title={isCreateMode ? "Add new book" : `Edit ${book?.title ?? "book"}`}
+        title={
+          isCreateMode
+            ? "Add new book"
+            : formatTemplate(translateText("Edit {title}"), {
+                title: book?.title ?? "",
+              })
+        }
         description={
           isCreateMode
             ? "Create a new catalog record with fee, duration, metadata, and cover details stored directly in MongoDB."
             : "Update catalog details, fee behavior, and circulation settings while keeping the admin record synchronized with the live data store."
         }
         actions={
-          <Button asChild size="sm" variant="outline">
-            <Link href="/admin/books">
-              <ArrowLeft className="size-4" />
-              Back to books
-            </Link>
-          </Button>
+          <LinkButton href="/admin/books" size="sm" variant="outline">
+            <ArrowLeft className="size-4" />
+            Back to books
+          </LinkButton>
         }
       />
 
@@ -123,9 +128,7 @@ function AdminBookDetailsEmptyState() {
         title="Book not found"
         description="Return to the books table and choose another record. The selected book no longer exists in the current catalog data."
         action={
-          <Button asChild>
-            <Link href="/admin/books">Back to books</Link>
-          </Button>
+          <LinkButton href="/admin/books">Back to books</LinkButton>
         }
       />
     </div>

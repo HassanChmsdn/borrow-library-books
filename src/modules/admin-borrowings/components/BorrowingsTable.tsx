@@ -7,7 +7,9 @@ import {
   AdminTableRow,
   AdminUserAvatar,
 } from "@/components/admin";
+import { useI18n } from "@/lib/i18n";
 import { FeeBadge } from "@/components/library";
+import { translateAdminBorrowingText } from "@/modules/admin-shared/i18n";
 import { BookCoverArt } from "@/modules/catalog/book-cover-art";
 import {
   formatBookFeeLabel,
@@ -34,6 +36,8 @@ function BorrowingsTable({
   onSendReminder,
   records,
 }: Readonly<BorrowingsTableProps>) {
+  const { translateText } = useI18n();
+
   return (
     <div className="hidden lg:block">
       <AdminTable className="min-w-0 table-fixed">
@@ -44,7 +48,7 @@ function BorrowingsTable({
             <AdminTableHead className="w-[19%]">Duration and dates</AdminTableHead>
             <AdminTableHead className="w-[18%]">Fee and payment</AdminTableHead>
             <AdminTableHead className="w-[10%] whitespace-nowrap">Status</AdminTableHead>
-            <AdminTableHead className="w-[12%] whitespace-nowrap text-right">Actions</AdminTableHead>
+            <AdminTableHead className="w-[12%] whitespace-nowrap text-end">Actions</AdminTableHead>
           </AdminTableRow>
         </AdminTableHeader>
         <AdminTableBody>
@@ -53,24 +57,24 @@ function BorrowingsTable({
               <AdminTableCell>
                 <div className="flex items-start gap-3">
                   <BookCoverArt
-                    author={record.bookAuthor}
+                    author={translateText(record.bookAuthor)}
                     className="w-11 shrink-0 rounded-xl"
-                    coverLabel={record.bookCoverLabel}
-                    title={record.bookTitle}
+                    coverLabel={translateText(record.bookCoverLabel)}
+                    title={translateText(record.bookTitle)}
                     tone={record.bookCoverTone}
                   />
                   <div className="min-w-0 space-y-1">
                     <p
                       className="text-body-sm text-foreground truncate font-medium"
-                      title={record.bookTitle}
+                      title={translateText(record.bookTitle)}
                     >
-                      {record.bookTitle}
+                      {translateText(record.bookTitle)}
                     </p>
                     <p
                       className="text-body-sm text-text-secondary truncate"
-                      title={record.bookAuthor}
+                      title={translateText(record.bookAuthor)}
                     >
-                      {record.bookAuthor}
+                      {translateText(record.bookAuthor)}
                     </p>
                   </div>
                 </div>
@@ -78,8 +82,8 @@ function BorrowingsTable({
               <AdminTableCell>
                 <AdminUserAvatar
                   className="gap-2.5"
-                  meta={record.memberMembership}
-                  name={record.memberName}
+                  meta={translateText(record.memberMembership)}
+                  name={translateText(record.memberName)}
                   size="sm"
                   subtitle={
                     <span className="block truncate" title={record.memberEmail}>
@@ -91,24 +95,24 @@ function BorrowingsTable({
               <AdminTableCell>
                 <div className="space-y-1.5">
                   <p className="text-body-sm text-foreground font-medium">
-                    {record.durationLabel}
+                    {translateAdminBorrowingText(record.durationLabel, translateText)}
                   </p>
                   {record.isCustomDuration ? (
                     <p className="text-caption text-info font-medium uppercase tracking-[0.14em]">
-                      Custom duration
+                      {translateText("Custom duration")}
                     </p>
                   ) : null}
                   <div className="space-y-0.5">
                     <p className="text-caption text-text-secondary">
                       <span className="font-medium uppercase tracking-[0.14em]">
-                        {record.timeline.primaryLabel}
+                        {translateText(record.timeline.primaryLabel)}
                       </span>{" "}
                       {record.timeline.primaryValue}
                     </p>
                   {record.timeline.secondaryLabel && record.timeline.secondaryValue ? (
                     <p className="text-caption text-text-tertiary">
                       <span className="font-medium uppercase tracking-[0.14em]">
-                        {record.timeline.secondaryLabel}
+                        {translateText(record.timeline.secondaryLabel)}
                       </span>{" "}
                       {record.timeline.secondaryValue}
                     </p>
@@ -138,7 +142,7 @@ function BorrowingsTable({
                   tone={record.borrowingStatusTone}
                 />
               </AdminTableCell>
-              <AdminTableCell className="text-right">
+              <AdminTableCell className="text-end">
                 <BorrowingActions
                   align="end"
                   density="table"

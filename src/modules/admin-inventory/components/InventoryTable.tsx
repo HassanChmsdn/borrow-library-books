@@ -7,6 +7,7 @@ import {
   AdminTableHeader,
   AdminTableRow,
 } from "@/components/admin";
+import { useI18n } from "@/lib/i18n";
 
 import { InventoryConditionBadge } from "./InventoryConditionBadge";
 import { InventoryStatusBadge } from "./InventoryStatusBadge";
@@ -22,6 +23,8 @@ function InventoryTable({
   onEditCopy,
   records,
 }: Readonly<InventoryTableProps>) {
+  const { translateText } = useI18n();
+
   return (
     <div className="hidden lg:block">
       <AdminTable>
@@ -31,7 +34,7 @@ function InventoryTable({
             <AdminTableHead>Book</AdminTableHead>
             <AdminTableHead>Condition</AdminTableHead>
             <AdminTableHead>Status</AdminTableHead>
-            <AdminTableHead className="text-right">
+            <AdminTableHead className="text-end">
               {onEditCopy ? "Actions" : "Access"}
             </AdminTableHead>
           </AdminTableRow>
@@ -52,10 +55,10 @@ function InventoryTable({
               <AdminTableCell>
                 <div className="space-y-1">
                   <p className="text-body text-foreground font-medium text-balance">
-                    {record.bookTitle}
+                    {translateText(record.bookTitle)}
                   </p>
                   <p className="text-body-sm text-text-secondary">
-                    {record.bookAuthor}
+                    {translateText(record.bookAuthor)}
                   </p>
                 </div>
               </AdminTableCell>
@@ -65,7 +68,7 @@ function InventoryTable({
               <AdminTableCell>
                 <InventoryStatusBadge status={record.status} />
               </AdminTableCell>
-              <AdminTableCell className="text-right">
+              <AdminTableCell className="text-end">
                 {onEditCopy ? (
                   <AdminRowActions
                     align="end"
@@ -78,7 +81,7 @@ function InventoryTable({
                     ]}
                   />
                 ) : (
-                  <p className="text-body-sm text-text-tertiary">View only</p>
+                  <p className="text-body-sm text-text-tertiary">{translateText("View only")}</p>
                 )}
               </AdminTableCell>
             </AdminTableRow>

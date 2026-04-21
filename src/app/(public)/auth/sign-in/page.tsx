@@ -17,6 +17,7 @@ import {
   isAuth0Configured,
 } from "@/lib/auth/auth0";
 import { getCurrentSession } from "@/lib/auth/server";
+import { getI18n } from "@/lib/i18n/server";
 
 interface SignInPageProps {
   searchParams: Promise<{
@@ -30,9 +31,14 @@ export const metadata = {
   title: "Member Sign In",
 };
 
-function getMemberAuthErrorMessage(error?: string) {
+function getMemberAuthErrorMessage(
+  error: string | undefined,
+  translateText: (text: string) => string,
+) {
   if (error === "auth0-not-configured") {
-    return "Member authentication is unavailable until Auth0 is configured for this environment.";
+    return translateText(
+      "Member authentication is unavailable until Auth0 is configured for this environment.",
+    );
   }
 
   return null;
@@ -43,11 +49,12 @@ function sanitizeMemberAuthMode(mode?: string) {
 }
 
 export default async function MemberSignInPage({ searchParams }: SignInPageProps) {
+  const { translateText } = await getI18n();
   const params = await searchParams;
   const mode = sanitizeMemberAuthMode(params.mode);
   const redirectTo = sanitizeRedirectTo(params.redirectTo, "/books");
   const signupRedirectTo = buildMemberSignupConfirmationRedirect(redirectTo);
-  const errorMessage = getMemberAuthErrorMessage(params.error);
+  const errorMessage = getMemberAuthErrorMessage(params.error, translateText);
   const session = await getCurrentSession();
 
   if (isAuthenticated(session)) {

@@ -1,19 +1,19 @@
 "use client";
 
-import Link from "next/link";
-
 import {
   AdminDataTable,
   AdminPageHeader,
 } from "@/components/admin";
 import { LoadingSkeleton } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/link-button";
 import { useCanManageAdminSection } from "@/lib/auth/react";
 
 import {
   BooksTable,
   BooksToolbar,
 } from "./components";
+import { useI18n } from "@/lib/i18n";
 import { useAdminBooksModuleState } from "./hooks";
 import type { AdminBooksModuleProps } from "./types";
 
@@ -24,6 +24,7 @@ function AdminBooksModule({
   onEditBook,
   records,
 }: AdminBooksModuleProps) {
+  const { translateText } = useI18n();
   const canManageBooks = useCanManageAdminSection("books");
   const {
     allRecordsCount,
@@ -51,12 +52,12 @@ function AdminBooksModule({
           canManageBooks
             ? onAddBook ? (
                 <Button size="sm" type="button" onClick={onAddBook}>
-                  Add book
+                  {translateText("Add book")}
                 </Button>
               ) : (
-                <Button asChild size="sm">
-                  <Link href="/admin/books/new">Add book</Link>
-                </Button>
+                <LinkButton href="/admin/books/new" size="sm">
+                  {translateText("Add book")}
+                </LinkButton>
               )
             : undefined
         }
@@ -84,7 +85,7 @@ function AdminBooksModule({
               variant="ghost"
               onClick={clearFilters}
             >
-              Clear filters
+              {translateText("Clear filters")}
             </Button>
           ) : null
         }
@@ -105,12 +106,14 @@ function AdminBooksModule({
 }
 
 function AdminBooksLoadingState() {
+  const { translateText } = useI18n();
+
   return (
     <div className="gap-section flex flex-col">
       <AdminPageHeader
-        eyebrow="Catalog"
-        title="Book management"
-        description="Loading catalog management surfaces."
+        eyebrow={translateText("Catalog")}
+        title={translateText("Book management")}
+        description={translateText("Loading catalog management surfaces.")}
       />
       <LoadingSkeleton count={1} variant="table" />
       <LoadingSkeleton count={2} variant="card" className="lg:hidden" />

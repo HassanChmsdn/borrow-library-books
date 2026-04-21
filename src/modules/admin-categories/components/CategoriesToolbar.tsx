@@ -1,4 +1,5 @@
 import { AdminSearchBar } from "@/components/admin";
+import { useI18n } from "@/lib/i18n";
 
 interface CategoriesToolbarProps {
   onSearchValueChange: (value: string) => void;
@@ -13,6 +14,8 @@ function CategoriesToolbar({
   totalCount,
   visibleCount,
 }: Readonly<CategoriesToolbarProps>) {
+  const { formatMessage, translateText } = useI18n();
+
   return (
     <div className="grid gap-3">
       <AdminSearchBar
@@ -22,7 +25,11 @@ function CategoriesToolbar({
         placeholder="Search category name or description..."
       />
       <p className="text-body-sm text-text-secondary">
-        Showing {visibleCount} of {totalCount} categor{totalCount === 1 ? "y" : "ies"}.
+        {formatMessage(translateText("Showing {visibleCount} of {totalCount} {categoryLabel}."), {
+          categoryLabel: translateText(totalCount === 1 ? "category" : "categories"),
+          totalCount,
+          visibleCount,
+        })}
       </p>
     </div>
   );

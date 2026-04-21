@@ -8,6 +8,7 @@ import {
 } from "@/components/admin";
 import { LoadingSkeleton } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n";
 
 import {
   BorrowingsCardList,
@@ -26,6 +27,7 @@ function AdminBorrowingsModule({
   onSendReminder,
   records: sourceRecords,
 }: AdminBorrowingsModuleProps) {
+  const { translateText } = useI18n();
   const {
     activeTab,
     clearSearch,
@@ -44,6 +46,28 @@ function AdminBorrowingsModule({
 
   const isEmptyTab = recordsInActiveTabCount === 0;
   const isNoResults = recordsInActiveTabCount > 0 && records.length === 0;
+  const emptyStateByTab = {
+    active: {
+      description:
+        "Borrowing records in the active queue will appear here once circulation data is available.",
+      title: "No active borrowings",
+    },
+    overdue: {
+      description:
+        "Borrowing records in the overdue queue will appear here once circulation data is available.",
+      title: "No overdue borrowings",
+    },
+    pending: {
+      description:
+        "Borrowing records in the pending queue will appear here once circulation data is available.",
+      title: "No pending borrowings",
+    },
+    returned: {
+      description:
+        "Borrowing records in the returned queue will appear here once circulation data is available.",
+      title: "No returned borrowings",
+    },
+  } as const;
 
   return (
     <div className="gap-section flex flex-col">
@@ -74,15 +98,15 @@ function AdminBorrowingsModule({
         actions={
           hasSearchValue ? (
             <Button type="button" size="sm" variant="ghost" onClick={clearSearch}>
-              Clear search
+              {translateText("Clear search")}
             </Button>
           ) : null
         }
       >
         {isEmptyTab ? (
           <AdminEmptyState
-            title={`No ${adminBorrowingsTabLabels[activeTab].toLowerCase()} borrowings`}
-            description={`Borrowing records in the ${adminBorrowingsTabLabels[activeTab].toLowerCase()} queue will appear here once circulation data is available.`}
+            title={emptyStateByTab[activeTab].title}
+            description={emptyStateByTab[activeTab].description}
           />
         ) : isNoResults ? (
           <AdminEmptyState
@@ -90,7 +114,7 @@ function AdminBorrowingsModule({
             description="Try a different member name, book title, email, or branch to find the borrowing record you need."
             action={
               <Button type="button" size="sm" variant="outline" onClick={clearSearch}>
-                Reset search
+                {translateText("Reset search")}
               </Button>
             }
           />
@@ -118,12 +142,14 @@ function AdminBorrowingsModule({
 }
 
 function AdminBorrowingsLoadingState() {
+  const { translateText } = useI18n();
+
   return (
     <div className="gap-section flex flex-col">
       <AdminPageHeader
-        eyebrow="Circulation"
-        title="Borrowing operations"
-        description="Loading borrowing operations surfaces."
+        eyebrow={translateText("Circulation")}
+        title={translateText("Borrowing operations")}
+        description={translateText("Loading borrowing operations surfaces.")}
       />
       <LoadingSkeleton count={2} variant="card" className="lg:hidden" />
       <LoadingSkeleton count={1} variant="table" />

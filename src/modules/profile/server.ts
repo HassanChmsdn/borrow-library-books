@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getStoredUserRecordById, listStoredBorrowRequestRecordsForUser } from "@/lib/data/server";
-
+import { getRequestLocale } from "@/lib/i18n/server";
 import type {
   ProfileAccountDetail,
   ProfileData,
@@ -9,18 +9,20 @@ import type {
   ProfileSummaryMetric,
 } from "./data";
 
-function formatCashAmount(cents: number) {
+function toIntlLocale(locale: "de" | "ar") {
+  return locale === "ar" ? "ar" : "de-DE";
+}
+function formatCashAmount(cents: number, locale: "de" | "ar") {
   if (cents === 0) {
     return "$0.00";
   }
 
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat(toIntlLocale(locale), {
     currency: "USD",
     minimumFractionDigits: 2,
     style: "currency",
   }).format(cents / 100);
 }
-
 function createInitials(fullName: string) {
   return fullName
     .split(/\s+/)
@@ -29,7 +31,6 @@ function createInitials(fullName: string) {
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
 }
-
 function buildSettingsSections(): ReadonlyArray<ProfileSettingsSection> {
   return [
     {
@@ -84,6 +85,7 @@ function buildSettingsSections(): ReadonlyArray<ProfileSettingsSection> {
 }
 
 export async function getProfileDataForUser(userId: string): Promise<ProfileData | null> {
+  const locale = await getRequestLocale();
   const [user, borrowings] = await Promise.all([
     getStoredUserRecordById(userId),
     listStoredBorrowRequestRecordsForUser(userId),
@@ -108,9 +110,10 @@ export async function getProfileDataForUser(userId: string): Promise<ProfileData
     { label: "Library card", value: user.id.slice(-8).toUpperCase() },
     {
       label: "Member since",
-      value: new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(
-        new Date(user.joinedOn),
-      ),
+      value: new Intl.DateTimeFormat(toIntlLocale(locale), {
+        month: "long",
+        year: "numeric",
+      }).format(new Date(user.joinedOn)),
     },
     { label: "Preferred pickup branch", value: "Main library desk" },
     { label: "Membership tier", value: user.membershipLabel },
@@ -141,7 +144,7 @@ export async function getProfileDataForUser(userId: string): Promise<ProfileData
       key: "cash-due",
       label: "Onsite cash due",
       supportingText: "Fees collected onsite only when the member visits.",
-      value: formatCashAmount(cashDueCents),
+      value: formatCashAmount(cashDueCents, locale),
     },
   ];
 

@@ -7,6 +7,7 @@ import {
 import { LoadingSkeleton } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
 import { useCanManageAdminSection } from "@/lib/auth/react";
+import { useI18n } from "@/lib/i18n";
 
 import { CategoriesTable, CategoriesToolbar, CategoryFormDialog } from "./components";
 import { getAdminCategoryDefaultValues } from "./mock-data";
@@ -21,6 +22,7 @@ function AdminCategoriesModule({
   onUpdateCategory,
   searchQuery,
 }: AdminCategoriesModuleProps) {
+  const { translateText } = useI18n();
   const canManageCategories = useCanManageAdminSection("categories");
   const {
     deleteCategory,
@@ -56,7 +58,7 @@ function AdminCategoriesModule({
         actions={
           canManageCategories ? (
             <Button size="sm" type="button" onClick={openCreateDialog}>
-              Add category
+              {translateText("Add category")}
             </Button>
           ) : undefined
         }
@@ -81,7 +83,7 @@ function AdminCategoriesModule({
               variant="ghost"
               onClick={() => setSearchValue("")}
             >
-              Clear search
+              {translateText("Clear search")}
             </Button>
           ) : null
         }
@@ -117,12 +119,14 @@ function AdminCategoriesModule({
 }
 
 function AdminCategoriesLoadingState() {
+  const { translateText } = useI18n();
+
   return (
     <div className="gap-section flex flex-col">
       <AdminPageHeader
-        eyebrow="Collections"
-        title="Category management"
-        description="Loading category management surfaces."
+        eyebrow={translateText("Collections")}
+        title={translateText("Category management")}
+        description={translateText("Loading category management surfaces.")}
       />
       <LoadingSkeleton count={2} variant="card" className="lg:hidden" />
       <LoadingSkeleton count={1} variant="table" />

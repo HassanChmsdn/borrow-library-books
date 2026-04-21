@@ -1,25 +1,33 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-import { buildMockSignOutHref, sanitizeRedirectTo } from "@/lib/auth";
-import { getAuth0Client, isAuth0Configured } from "@/lib/auth/auth0";
+import { MOCK_AUTH_COOKIE, sanitizeRedirectTo } from "@/lib/auth";
+import { getAuth0Client, getAuth0SessionForRequest } from "@/lib/auth/auth0";
 
-export async function GET(request: Request) {
+function clearMockAuthCookie(response: NextResponse) {
+  response.cookies.set(MOCK_AUTH_COOKIE, "", {
+    expires: new Date(0),
+    httpOnly: true,
+    path: "/",
+    sameSite: "lax",
+  });
+
+  return response;
+}
+
+export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const redirectTo = sanitizeRedirectTo(
     url.searchParams.get("returnTo") ?? url.searchParams.get("redirectTo"),
     "/books",
   );
 
-  if (!isAuth0Configured()) {
-    return NextResponse.redirect(
-      new URL(buildMockSignOutHref(redirectTo), request.url),
-    );
-  }
-
+  const auth0Session = await getAuth0SessionForRequest(request);
   const client = getAuth0Client();
 
-  if (!client) {
-    return NextResponse.redirect(new URL("/books", request.url));
+  if (!auth0Session || !client) {
+    return clearMockAuthCookie(
+      NextResponse.redirect(new URL(redirectTo, request.url)),
+    );
   }
 
   const logoutUrl = new URL(request.url);

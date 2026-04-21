@@ -1,4 +1,5 @@
 export { AdminContentWrapper, AdminShell, AdminTopHeader } from "./admin-shell";
+export { LanguageSwitcher } from "./language-switcher";
 export { PageActionBar } from "./page-action-bar";
 export { PageHeader } from "./page-header";
 export { PublicShell, PublicTopNavigation } from "./public-shell";

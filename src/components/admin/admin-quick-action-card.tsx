@@ -1,8 +1,7 @@
 import * as React from "react";
-import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/link-button";
 
 import { AdminSectionCard } from "./admin-section-card";
 
@@ -35,12 +34,10 @@ function AdminQuickActionCard({
         ) : (
           <span />
         )}
-        <Button asChild size="sm" variant="ghost">
-          <Link href={href}>
-            {actionLabel}
-            <ArrowRight aria-hidden="true" className="size-4" />
-          </Link>
-        </Button>
+        <LinkButton href={href} size="sm" variant="ghost">
+          {actionLabel}
+          <ArrowRight aria-hidden="true" className="size-4" />
+        </LinkButton>
       </div>
     </AdminSectionCard>
   );

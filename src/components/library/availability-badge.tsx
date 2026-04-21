@@ -1,6 +1,9 @@
+"use client";
+
 import * as React from "react";
 import { cva } from "class-variance-authority";
 
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 type AvailabilityBadgeTone =
@@ -37,13 +40,15 @@ function AvailabilityBadge({
   tone = "neutral",
   ...props
 }: AvailabilityBadgeProps) {
+  const { translateText } = useI18n();
+
   return (
     <span
       data-slot="availability-badge"
       className={cn(availabilityBadgeVariants({ tone }), className)}
       {...props}
     >
-      {label}
+      {translateText(label)}
     </span>
   );
 }

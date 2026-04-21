@@ -18,9 +18,11 @@ import { BorrowStatusBadge, FeeBadge } from "@/components/library";
 import type { BorrowStatusBadgeTone } from "@/components/library";
 import { PageHeader } from "@/components/layout";
 import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/link-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { MEMBER_AUTH_REGISTRATION_NAME_COOKIE } from "@/lib/auth/member-auth-flow";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { BookCoverArt } from "@/modules/catalog/book-cover-art";
 import {
@@ -97,6 +99,8 @@ function getBorrowingStatusTone(
 function BorrowingsMobileCard({
   record,
 }: Readonly<{ record: BorrowingRecord }>) {
+  const { translateText } = useI18n();
+
   return (
     <Card className="overflow-hidden md:hidden">
       <CardContent className="grid gap-4 p-4 sm:p-5">
@@ -130,7 +134,7 @@ function BorrowingsMobileCard({
                 {record.book.author}
               </p>
               <p className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-                {record.book.category}
+                {translateText(record.book.category)}
               </p>
             </div>
           </div>
@@ -139,11 +143,11 @@ function BorrowingsMobileCard({
         <div className="grid gap-3 rounded-2xl border border-dashed border-black/5 p-4">
           <div className="flex items-start justify-between gap-3">
             <span className="text-body-sm text-text-secondary">
-              {record.timelineLabel}
+              {translateText(record.timelineLabel)}
             </span>
             <span
               className={cn(
-                "text-body text-right font-medium",
+                "text-body text-end font-medium",
                 record.tab === "overdue" ? "text-danger" : "text-foreground",
               )}
             >
@@ -152,7 +156,7 @@ function BorrowingsMobileCard({
           </div>
           <div className="flex items-start justify-between gap-3">
             <span className="text-body-sm text-text-secondary">
-              Payment status
+              {translateText("Payment status")}
             </span>
             <BorrowStatusBadge
               className="shrink-0"
@@ -161,21 +165,20 @@ function BorrowingsMobileCard({
             />
           </div>
           <p className="text-body-sm text-text-secondary">
-            {record.supportingMeta}
+            {translateText(record.supportingMeta)}
           </p>
         </div>
 
         <div className="flex items-center justify-between gap-3">
           <p className="text-body-sm text-text-secondary max-w-[16rem]">
-            Fees are settled onsite in cash only when pickup or return requires
-            payment.
+            {translateText(
+              "Fees are settled onsite in cash only when pickup or return requires payment.",
+            )}
           </p>
-          <Button asChild size="sm" variant="outline">
-            <Link href={`/books/${record.book.id}`}>
+          <LinkButton href={`/books/${record.book.id}`} size="sm" variant="outline">
               View book
               <ArrowRight className="size-4" />
-            </Link>
-          </Button>
+          </LinkButton>
         </div>
       </CardContent>
     </Card>
@@ -185,17 +188,19 @@ function BorrowingsMobileCard({
 function BorrowingsDesktopTable({
   records,
 }: Readonly<{ records: ReadonlyArray<BorrowingRecord> }>) {
+  const { translateText } = useI18n();
+
   return (
     <div className="hidden md:block">
       <AdminTable>
         <AdminTableHeader>
           <AdminTableRow>
-            <AdminTableHead>Book</AdminTableHead>
-            <AdminTableHead>Status</AdminTableHead>
-            <AdminTableHead>{"Due / Pickup"}</AdminTableHead>
-            <AdminTableHead>Fee</AdminTableHead>
-            <AdminTableHead>Payment</AdminTableHead>
-            <AdminTableHead className="text-right">Action</AdminTableHead>
+            <AdminTableHead>{translateText("Book")}</AdminTableHead>
+            <AdminTableHead>{translateText("Status")}</AdminTableHead>
+            <AdminTableHead>{translateText("Due / Pickup")}</AdminTableHead>
+            <AdminTableHead>{translateText("Fee")}</AdminTableHead>
+            <AdminTableHead>{translateText("Payment")}</AdminTableHead>
+            <AdminTableHead className="text-end">{translateText("Action")}</AdminTableHead>
           </AdminTableRow>
         </AdminTableHeader>
         <AdminTableBody>
@@ -218,7 +223,7 @@ function BorrowingsDesktopTable({
                       {record.book.author}
                     </p>
                     <p className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
-                      {record.book.category}
+                      {translateText(record.book.category)}
                     </p>
                   </div>
                 </div>
@@ -241,7 +246,7 @@ function BorrowingsDesktopTable({
                     {record.timelineValue}
                   </p>
                   <p className="text-body-sm text-text-secondary">
-                    {record.timelineLabel}
+                    {translateText(record.timelineLabel)}
                   </p>
                 </div>
               </AdminTableCell>
@@ -258,21 +263,22 @@ function BorrowingsDesktopTable({
                     tone={record.paymentStatus.tone}
                   />
                   <p className="text-body-sm text-text-secondary">
-                    {record.supportingMeta}
+                    {translateText(record.supportingMeta)}
                   </p>
                 </div>
               </AdminTableCell>
-              <AdminTableCell className="text-right">
-                <Button asChild size="sm" variant="ghost">
-                  <Link href={`/books/${record.book.id}`}>View book</Link>
-                </Button>
+              <AdminTableCell className="text-end">
+                <LinkButton href={`/books/${record.book.id}`} size="sm" variant="ghost">
+                  View book
+                </LinkButton>
               </AdminTableCell>
             </AdminTableRow>
           ))}
         </AdminTableBody>
         <AdminTableCaption>
-          Borrowings on this page combine seeded account history and persisted
-          pending requests. Cash fees, when present, are paid onsite only.
+          {translateText(
+            "Borrowings on this page combine seeded account history and persisted pending requests. Cash fees, when present, are paid onsite only.",
+          )}
         </AdminTableCaption>
       </AdminTable>
     </div>
@@ -288,6 +294,7 @@ function MyBorrowingsModule({
   persistedRecords,
   signupConfirmationName,
 }: Readonly<MyBorrowingsModuleProps>) {
+  const { formatMessage, messages, translateText } = useI18n();
   const [activeTab, setActiveTab] = useState<MyBorrowingsTab>("active");
   const [showSignupConfirmation, setShowSignupConfirmation] = useState(
     Boolean(signupConfirmationName),
@@ -298,6 +305,15 @@ function MyBorrowingsModule({
   );
   const visibleRecords = records.filter((record) => record.tab === activeTab);
   const totalRecords = records.length;
+  const activeTabLabel =
+    myBorrowingsTabs.find((tab) => tab.value === activeTab)?.label ?? "";
+  const visibleItemsLabel = formatMessage(messages.templates.borrowings.sectionItems, {
+    count: visibleRecords.length,
+    itemLabel:
+      visibleRecords.length === 1
+        ? translateText("item")
+        : translateText("items"),
+  });
 
   useEffect(() => {
     if (!signupConfirmationName) {
@@ -314,9 +330,9 @@ function MyBorrowingsModule({
         title="My Borrowings"
         description="Track current loans, pending requests, desk pickups, and overdue items in the authenticated member account view."
         actions={
-          <Button asChild size="sm" variant="outline">
-            <Link href="/books">Browse more books</Link>
-          </Button>
+          <LinkButton href="/books" size="sm" variant="outline">
+            Browse more books
+          </LinkButton>
         }
       >
         <div className="rounded-card border-border-subtle bg-card grid gap-4 border p-4 shadow-xs sm:p-5">
@@ -324,10 +340,12 @@ function MyBorrowingsModule({
             <div className="rounded-2xl border border-success-border bg-success-surface flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="space-y-1">
                 <p className="text-label text-success font-medium">
-                  Registration details saved
+                  {translateText("Registration details saved")}
                 </p>
                 <p className="text-body-sm text-text-secondary max-w-2xl">
-                  Welcome, {signupConfirmationName}. Your Auth0 signup is complete, and this name is now ready for your local member profile.
+                  {translateText("Welcome")}, {signupConfirmationName}. {translateText(
+                    "Your Auth0 signup is complete, and this name is now ready for your local member profile.",
+                  )}
                 </p>
               </div>
 
@@ -346,10 +364,10 @@ function MyBorrowingsModule({
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-1">
               <p className="text-label text-foreground font-medium">
-                {totalRecords} borrowing records
+                {totalRecords} {translateText("borrowing records")}
               </p>
               <p className="text-body-sm text-text-secondary max-w-2xl">
-                {borrowingTabDescriptions[activeTab]}
+                {translateText(borrowingTabDescriptions[activeTab])}
               </p>
             </div>
 
@@ -360,11 +378,12 @@ function MyBorrowingsModule({
                 </div>
                 <div className="space-y-1.5">
                   <p className="text-label text-foreground font-medium">
-                    Payment note
+                    {translateText("Payment note")}
                   </p>
                   <p className="text-body-sm text-text-secondary">
-                    Borrowing fees are settled onsite in cash only when a title
-                    is picked up or returned with outstanding dues.
+                    {translateText(
+                      "Borrowing fees are settled onsite in cash only when a title is picked up or returned with outstanding dues.",
+                    )}
                   </p>
                 </div>
               </div>
@@ -411,16 +430,16 @@ function MyBorrowingsModule({
               id="my-borrowings-title"
               className="text-title-sm text-foreground font-semibold"
             >
-              {myBorrowingsTabs.find((tab) => tab.value === activeTab)?.label} records
+              {translateText(activeTabLabel)} {translateText("records")}
             </h2>
-            <p className="text-body-sm text-text-secondary">
-              {visibleRecords.length} {visibleRecords.length === 1 ? "item" : "items"} in this section.
-            </p>
+            <p className="text-body-sm text-text-secondary">{visibleItemsLabel}</p>
           </div>
 
           <p className="text-body-sm text-text-secondary flex items-center gap-2">
             <Clock3 className="size-4" />
-            Due and pickup timing stays visible in both mobile cards and the desktop table.
+            {translateText(
+              "Due and pickup timing stays visible in both mobile cards and the desktop table.",
+            )}
           </p>
         </div>
 
@@ -437,9 +456,7 @@ function MyBorrowingsModule({
         ) : (
           <EmptyState
             action={
-              <Button asChild>
-                <Link href="/books">Browse available books</Link>
-              </Button>
+              <LinkButton href="/books">Browse available books</LinkButton>
             }
             description={borrowingEmptyStates[activeTab].description}
             icon={<BookCopy className="size-5" />}
@@ -452,6 +469,8 @@ function MyBorrowingsModule({
 }
 
 function MyBorrowingsLoadingState() {
+  const { translateText } = useI18n();
+
   return (
     <div className="gap-section flex flex-col">
       <PageHeader
@@ -486,10 +505,10 @@ function MyBorrowingsLoadingState() {
             id="my-borrowings-loading-title"
             className="text-title-sm text-foreground font-semibold"
           >
-            Borrowing records
+            {translateText("Borrowing records")}
           </h2>
           <p className="text-body-sm text-text-secondary">
-            Loading the current account view.
+            {translateText("Loading the current account view.")}
           </p>
         </div>
 

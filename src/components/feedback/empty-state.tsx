@@ -1,12 +1,15 @@
+"use client";
+
 import * as React from "react";
 import { cva } from "class-variance-authority";
 
+import { translateNode, useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 type EmptyStateSize = "sm" | "md";
 
 const emptyStateVariants = cva(
-  "rounded-card border-border-subtle bg-elevated flex flex-col items-start gap-3 border border-dashed text-left",
+  "rounded-card border-border-subtle bg-elevated flex flex-col items-start gap-3 border border-dashed text-start",
   {
     variants: {
       size: {
@@ -37,6 +40,8 @@ function EmptyState({
   title,
   ...props
 }: EmptyStateProps) {
+  const { translateText } = useI18n();
+
   return (
     <div
       data-slot="empty-state"
@@ -49,9 +54,11 @@ function EmptyState({
         </div>
       ) : null}
       <div className="space-y-1.5">
-        <h3 className="text-title-sm text-foreground font-semibold">{title}</h3>
+        <h3 className="text-title-sm text-foreground font-semibold">
+          {translateNode(title, translateText)}
+        </h3>
         <p className="text-body-sm text-text-secondary max-w-prose">
-          {description}
+          {translateNode(description, translateText)}
         </p>
       </div>
       {action ? <div className="pt-1">{action}</div> : null}
