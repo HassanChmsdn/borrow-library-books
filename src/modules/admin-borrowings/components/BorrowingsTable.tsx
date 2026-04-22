@@ -31,6 +31,7 @@ interface BorrowingsTableProps extends AdminBorrowingActionHandlers {
 
 function BorrowingsTable({
   onApproveBorrowing,
+  onManageBorrowing,
   onMarkReturned,
   onRejectBorrowing,
   onSendReminder,
@@ -147,6 +148,7 @@ function BorrowingsTable({
                   align="end"
                   density="table"
                   onApproveBorrowing={onApproveBorrowing}
+                  onManageBorrowing={onManageBorrowing}
                   onMarkReturned={onMarkReturned}
                   onRejectBorrowing={onRejectBorrowing}
                   onSendReminder={onSendReminder}

@@ -340,12 +340,28 @@ export const getLibrarySnapshot = cache(async (): Promise<LibrarySnapshot> => {
       .filter((record) => supportedBorrowStatuses.has(record.status))
       .map((record) => {
         const copy = copyById.get(toId(record.bookCopyId));
+        const durationDays =
+          record.approvedDurationDays ?? record.requestedDurationDays;
+        const derivedDueAt = record.dueAt
+          ? record.dueAt.toISOString()
+          : record.startedAt
+            ? new Date(
+                record.startedAt.getTime() + durationDays * 24 * 60 * 60 * 1000,
+              ).toISOString()
+            : undefined;
+        const effectiveStatus =
+          record.status === "active" &&
+          derivedDueAt &&
+          new Date(derivedDueAt).getTime() < Date.now()
+            ? "overdue"
+            : record.status;
 
         return {
           bookId: toId(record.bookId),
+          bookCopyId: toId(record.bookCopyId),
           branch: copy?.branch ?? deriveBranchLabel(copy?.copyCode),
           customDuration: record.durationType === "custom",
-          durationDays: record.approvedDurationDays ?? record.requestedDurationDays,
+          durationDays,
           feeCents: record.feeCents,
           id: toId(record._id),
           note: record.notes,
@@ -353,7 +369,7 @@ export const getLibrarySnapshot = cache(async (): Promise<LibrarySnapshot> => {
           requestedOn: record.requestedAt.toISOString(),
           returnedOn: record.returnedAt?.toISOString(),
           startedOn: record.startedAt?.toISOString(),
-          status: record.status as BorrowRequestRepositoryRecord["status"],
+          status: effectiveStatus as BorrowRequestRepositoryRecord["status"],
           userId: toId(record.userId),
         };
       });

@@ -15,6 +15,7 @@ function BorrowingActions({
   align = "start",
   density = "card",
   onApproveBorrowing,
+  onManageBorrowing,
   onMarkReturned,
   onRejectBorrowing,
   onSendReminder,
@@ -23,6 +24,13 @@ function BorrowingActions({
   const actions =
     record.tab === "pending"
       ? [
+          {
+            label: "Manage",
+            onAction: onManageBorrowing
+              ? () => onManageBorrowing(record)
+              : undefined,
+            variant: "outline" as const,
+          },
           {
             label: "Approve",
             onAction: onApproveBorrowing
@@ -39,7 +47,7 @@ function BorrowingActions({
             confirm: {
               title: `Reject ${record.bookTitle}?`,
               description:
-                "This is a mock rejection flow. It keeps the UI ready for a future moderation API without deleting anything now.",
+                "Rejecting this request removes it from the pending queue and releases the borrowing slot for another member.",
               confirmLabel: "Reject request",
               tone: "danger" as const,
             },
@@ -47,6 +55,13 @@ function BorrowingActions({
         ]
       : record.tab === "active"
         ? [
+            {
+              label: "Manage",
+              onAction: onManageBorrowing
+                ? () => onManageBorrowing(record)
+                : undefined,
+              variant: "ghost" as const,
+            },
             {
               label: "Mark returned",
               onAction: onMarkReturned
@@ -56,7 +71,7 @@ function BorrowingActions({
               confirm: {
                 title: `Mark ${record.bookTitle} as returned?`,
                 description:
-                  "This mock action demonstrates the return workflow without persisting any server changes yet.",
+                  "This updates the borrowing lifecycle, records the return time, and makes the assigned copy available again.",
                 confirmLabel: "Mark returned",
                 tone: "default" as const,
               },
@@ -69,6 +84,13 @@ function BorrowingActions({
           ]
         : record.tab === "overdue"
           ? [
+              {
+                label: "Manage",
+                onAction: onManageBorrowing
+                  ? () => onManageBorrowing(record)
+                  : undefined,
+                variant: "ghost" as const,
+              },
               {
                 label: "Send reminder",
                 onAction: onSendReminder

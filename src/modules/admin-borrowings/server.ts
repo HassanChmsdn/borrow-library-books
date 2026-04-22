@@ -5,6 +5,7 @@ import { cache } from "react";
 import {
   getBookRecordByIdFromStore,
   getUserRecordByIdFromStore,
+  listStoredBookCopyRecordsForBook,
   listBorrowRequestRecordsFromStore,
 } from "@/lib/data/server";
 import {
@@ -21,10 +22,72 @@ export const listAdminBorrowingRecords = cache(
 
     const records = await Promise.all(
       borrowings.map(async (borrowing) => {
-        const [book, user] = await Promise.all([
+        const [book, copies, user] = await Promise.all([
           getBookRecordByIdFromStore(borrowing.bookId),
+          listStoredBookCopyRecordsForBook(borrowing.bookId),
           getUserRecordByIdFromStore(borrowing.userId),
         ]);
+        const assignedCopy = borrowing.bookCopyId
+          ? copies.find((copy) => copy.id === borrowing.bookCopyId) ?? null
+          : null;
+        const assignableCopies =
+          borrowing.status === "pending" ||
+          borrowing.status === "active" ||
+          borrowing.status === "overdue"
+            ? copies
+                .filter(
+                  (copy) =>
+                    copy.status === "available" || copy.id === borrowing.bookCopyId,
+                )
+                .sort((left, right) => left.copyCode.localeCompare(right.copyCode))
+                .map((copy) => ({
+                  label: `${copy.copyCode} - ${copy.branch}`,
+                  value: copy.id,
+                }))
+            : [];
+        const reviewStatusOptions =
+          borrowing.status === "pending"
+            ? [
+                {
+                  label: borrowing.customDuration ? "Needs review" : "Pending approval",
+                  value: "pending" as const,
+                },
+                {
+                  label: "Checked out",
+                  value: "active" as const,
+                },
+                {
+                  label: "Cancelled",
+                  value: "cancelled" as const,
+                },
+              ]
+            : borrowing.status === "active"
+              ? [
+                  {
+                    label: "Checked out",
+                    value: "active" as const,
+                  },
+                  {
+                    label: "Overdue",
+                    value: "overdue" as const,
+                  },
+                  {
+                    label: "Returned",
+                    value: "returned" as const,
+                  },
+                ]
+              : borrowing.status === "overdue"
+                ? [
+                    {
+                      label: "Overdue",
+                      value: "overdue" as const,
+                    },
+                    {
+                      label: "Returned",
+                      value: "returned" as const,
+                    },
+                  ]
+                : [];
         const dueOn = borrowing.startedOn
           ? new Date(
               new Date(borrowing.startedOn).getTime() + borrowing.durationDays * 24 * 60 * 60 * 1000,
@@ -41,6 +104,9 @@ export const listAdminBorrowingRecords = cache(
                 : "success";
 
         return {
+          assignedCopyCode: assignedCopy?.copyCode,
+          assignedCopyId: borrowing.bookCopyId,
+          assignableCopies,
           bookAuthor: book?.author ?? "Unknown author",
           bookCoverLabel: book?.coverLabel ?? "Book",
           bookCoverTone: book?.coverTone ?? "brand",
@@ -89,6 +155,7 @@ export const listAdminBorrowingRecords = cache(
                 ? "Unpaid cash"
                 : "No fee",
           paymentStatusTone,
+          reviewStatusOptions,
           tab: borrowing.status,
           timeline:
             borrowing.status === "pending"

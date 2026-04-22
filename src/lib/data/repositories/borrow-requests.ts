@@ -7,6 +7,7 @@ import type {
 
 export interface BorrowRequestRepositoryRecord {
   bookId: string;
+  bookCopyId?: string;
   branch: string;
   customDuration: boolean;
   durationDays: number;

@@ -24,8 +24,32 @@ export interface AdminBorrowingTimeline {
   secondaryValue?: string;
 }
 
+export const adminBorrowingManageStatusValues = [
+  "active",
+  "cancelled",
+  "overdue",
+  "pending",
+  "returned",
+] as const;
+
+export type AdminBorrowingManageStatus =
+  (typeof adminBorrowingManageStatusValues)[number];
+
+export interface AdminBorrowingCopyOption {
+  label: string;
+  value: string;
+}
+
+export interface AdminBorrowingStatusOption {
+  label: string;
+  value: AdminBorrowingManageStatus;
+}
+
 export interface AdminBorrowingRecord {
   id: string;
+  assignedCopyCode?: string;
+  assignedCopyId?: string;
+  assignableCopies?: ReadonlyArray<AdminBorrowingCopyOption>;
   bookAuthor: string;
   bookCoverLabel: string;
   bookCoverTone: BookCoverTone;
@@ -43,12 +67,14 @@ export interface AdminBorrowingRecord {
   paymentHelperText?: string;
   paymentStatusLabel: string;
   paymentStatusTone: AdminStatusBadgeTone;
+  reviewStatusOptions?: ReadonlyArray<AdminBorrowingStatusOption>;
   tab: AdminBorrowingsTab;
   timeline: AdminBorrowingTimeline;
 }
 
 export interface AdminBorrowingActionHandlers {
   onApproveBorrowing?: (record: AdminBorrowingRecord) => void;
+  onManageBorrowing?: (record: AdminBorrowingRecord) => void;
   onMarkReturned?: (record: AdminBorrowingRecord) => void;
   onRejectBorrowing?: (record: AdminBorrowingRecord) => void;
   onSendReminder?: (record: AdminBorrowingRecord) => void;

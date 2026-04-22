@@ -1,7 +1,12 @@
 import "server-only";
 
+import { ObjectId } from "mongodb";
+
 import {
   CreateBorrowRequestInputSchema,
+  UpdateBookCopyInputSchema,
+  UpdateBorrowRequestInputSchema,
+  getBookCopiesCollection,
   getBorrowRequestsCollection,
   isMongoConfigured,
   type BorrowDurationType,
@@ -35,24 +40,67 @@ interface CreateBorrowRequestForUserInput {
   userId: string;
 }
 
-async function listReservedCopyIds(bookId: string) {
+interface UpdateBorrowRequestManagementInput {
+  assignedCopyId?: string;
+  rejectionReason?: string;
+  reviewedByUserId?: string;
+  status: "active" | "cancelled" | "overdue" | "pending" | "returned";
+}
+
+function getAllowedManagementStatuses(currentStatus: string) {
+  if (currentStatus === "pending") {
+    return new Set(["pending", "active", "cancelled"]);
+  }
+
+  if (currentStatus === "active") {
+    return new Set(["active", "overdue", "returned"]);
+  }
+
+  if (currentStatus === "overdue") {
+    return new Set(["overdue", "returned"]);
+  }
+
+  return new Set<string>();
+}
+
+function toDatabaseId(id: string) {
+  return ObjectId.isValid(id) ? new ObjectId(id) : id;
+}
+
+function omitUndefined<T extends Record<string, unknown>>(value: T) {
+  return Object.fromEntries(
+    Object.entries(value).filter(([, entryValue]) => entryValue !== undefined),
+  ) as Partial<T>;
+}
+
+async function listReservedCopyIds(
+  bookId: string,
+  options?: { excludeRequestId?: string },
+) {
   if (!isMongoConfigured()) {
     return new Set<string>();
   }
 
   const borrowRequests = await getBorrowRequestsCollection();
+  const selector: {
+    _id?: { $ne: ObjectId | string };
+    bookId: string;
+    status: { $in: ["pending", "active", "overdue"] };
+  } = {
+    bookId,
+    status: { $in: ["pending", "active", "overdue"] },
+  };
+
+  if (options?.excludeRequestId) {
+    selector._id = { $ne: toDatabaseId(options.excludeRequestId) };
+  }
+
   const reserved = await borrowRequests
-    .find(
-      {
-        bookId,
-        status: { $in: ["pending", "active", "overdue"] },
+    .find(selector, {
+      projection: {
+        bookCopyId: 1,
       },
-      {
-        projection: {
-          bookCopyId: 1,
-        },
-      },
-    )
+    })
     .toArray();
 
   return new Set(
@@ -60,6 +108,59 @@ async function listReservedCopyIds(bookId: string) {
       .map((record) => String(record.bookCopyId))
       .filter((value) => value.length > 0),
   );
+}
+
+async function getBorrowRequestDocument(requestId: string) {
+  const borrowRequests = await getBorrowRequestsCollection();
+  const request = await borrowRequests.findOne({
+    _id: toDatabaseId(requestId),
+  });
+
+  if (!request?._id) {
+    throw new Error("The selected borrow request could not be found.");
+  }
+
+  return request;
+}
+
+async function resolveAssignableCopy(options: {
+  bookId: string;
+  currentCopyId?: string;
+  requestId: string;
+}) {
+  const reservedCopyIds = await listReservedCopyIds(options.bookId, {
+    excludeRequestId: options.requestId,
+  });
+  const availableCopies = (await listStoredBookCopyRecordsForBook(options.bookId))
+    .filter(
+      (copy) =>
+        (copy.status === "available" || copy.id === options.currentCopyId) &&
+        !reservedCopyIds.has(copy.id),
+    )
+    .sort((left, right) => left.copyCode.localeCompare(right.copyCode));
+
+  const currentCopy = options.currentCopyId
+    ? await getStoredBookCopyRecordById(options.currentCopyId)
+    : null;
+
+  if (
+    currentCopy &&
+    currentCopy.bookId === options.bookId &&
+    (currentCopy.status === "available" ||
+      currentCopy.status === "borrowed" ||
+      currentCopy.status === "reserved") &&
+    !reservedCopyIds.has(currentCopy.id)
+  ) {
+    return currentCopy;
+  }
+
+  const nextCopy = availableCopies[0] ?? null;
+
+  if (!nextCopy) {
+    throw new Error("No available physical copy could be assigned to this request.");
+  }
+
+  return nextCopy;
 }
 
 export async function createBorrowRequestForUser(
@@ -144,4 +245,330 @@ export async function createBorrowRequestForUser(
     status: "pending",
     userId: input.userId,
   } satisfies CreatedBorrowRequestRecord;
+}
+
+export async function approveBorrowRequest(
+  requestId: string,
+  options?: {
+    approvedDurationDays?: number;
+    reviewedByUserId?: string;
+  },
+) {
+  if (!isMongoConfigured()) {
+    throw new Error("Borrow request management requires MongoDB to be configured.");
+  }
+
+  const request = await getBorrowRequestDocument(requestId);
+
+  if (request.status !== "pending") {
+    throw new Error("Only pending borrow requests can be approved.");
+  }
+
+  const now = new Date();
+  const approvedDurationDays =
+    options?.approvedDurationDays ??
+    request.approvedDurationDays ??
+    request.requestedDurationDays;
+  const assignedCopy = await resolveAssignableCopy({
+    bookId: String(request.bookId),
+    currentCopyId: request.bookCopyId ? String(request.bookCopyId) : undefined,
+    requestId,
+  });
+  const dueAt = new Date(now.getTime() + approvedDurationDays * 24 * 60 * 60 * 1000);
+  const [borrowRequests, bookCopies] = await Promise.all([
+    getBorrowRequestsCollection(),
+    getBookCopiesCollection(),
+  ]);
+  const borrowRequestUpdate = UpdateBorrowRequestInputSchema.parse({
+    approvedDurationDays,
+    dueAt,
+    reviewedAt: now,
+    reviewedByUserId: options?.reviewedByUserId,
+    startedAt: now,
+    status: "active",
+  });
+  const copyUpdate = UpdateBookCopyInputSchema.parse({
+    status: "borrowed",
+  });
+
+  await borrowRequests.updateOne(
+    { _id: request._id },
+    {
+      $set: {
+        ...borrowRequestUpdate,
+        bookCopyId: toDatabaseId(assignedCopy.id),
+        updatedAt: now,
+      },
+      $unset: {
+        cancelledAt: "",
+        rejectionReason: "",
+      },
+    },
+  );
+
+  await bookCopies.updateOne(
+    { _id: toDatabaseId(assignedCopy.id) },
+    {
+      $set: {
+        ...copyUpdate,
+        updatedAt: now,
+      },
+    },
+  );
+
+  return {
+    bookCopyId: assignedCopy.id,
+    id: String(request._id),
+    status: "active" as const,
+  };
+}
+
+export async function rejectBorrowRequest(
+  requestId: string,
+  options?: {
+    rejectionReason?: string;
+    reviewedByUserId?: string;
+  },
+) {
+  if (!isMongoConfigured()) {
+    throw new Error("Borrow request management requires MongoDB to be configured.");
+  }
+
+  const request = await getBorrowRequestDocument(requestId);
+
+  if (request.status !== "pending") {
+    throw new Error("Only pending borrow requests can be rejected.");
+  }
+
+  const now = new Date();
+  const borrowRequests = await getBorrowRequestsCollection();
+  const borrowRequestUpdate = UpdateBorrowRequestInputSchema.parse({
+    cancelledAt: now,
+    rejectionReason:
+      options?.rejectionReason?.trim() || "Rejected by an admin operator.",
+    reviewedAt: now,
+    reviewedByUserId: options?.reviewedByUserId,
+    status: "cancelled",
+  });
+
+  await borrowRequests.updateOne(
+    { _id: request._id },
+    {
+      $set: {
+        ...borrowRequestUpdate,
+        updatedAt: now,
+      },
+    },
+  );
+
+  return {
+    id: String(request._id),
+    status: "cancelled" as const,
+  };
+}
+
+export async function markBorrowRequestReturned(
+  requestId: string,
+  options?: {
+    reviewedByUserId?: string;
+  },
+) {
+  if (!isMongoConfigured()) {
+    throw new Error("Borrow request management requires MongoDB to be configured.");
+  }
+
+  const request = await getBorrowRequestDocument(requestId);
+
+  if (request.status !== "active" && request.status !== "overdue") {
+    throw new Error("Only active or overdue borrow requests can be returned.");
+  }
+
+  const now = new Date();
+  const [borrowRequests, bookCopies] = await Promise.all([
+    getBorrowRequestsCollection(),
+    getBookCopiesCollection(),
+  ]);
+  const borrowRequestUpdate = UpdateBorrowRequestInputSchema.parse({
+    returnedAt: now,
+    reviewedAt: now,
+    reviewedByUserId: options?.reviewedByUserId,
+    status: "returned",
+  });
+  const copyUpdate = UpdateBookCopyInputSchema.parse({
+    status: "available",
+  });
+
+  await borrowRequests.updateOne(
+    { _id: request._id },
+    {
+      $set: {
+        ...borrowRequestUpdate,
+        updatedAt: now,
+      },
+    },
+  );
+
+  await bookCopies.updateOne(
+    { _id: toDatabaseId(String(request.bookCopyId)) },
+    {
+      $set: {
+        ...copyUpdate,
+        updatedAt: now,
+      },
+    },
+  );
+
+  return {
+    id: String(request._id),
+    status: "returned" as const,
+  };
+}
+
+export async function updateBorrowRequestManagement(
+  requestId: string,
+  input: UpdateBorrowRequestManagementInput,
+) {
+  if (!isMongoConfigured()) {
+    throw new Error("Borrow request management requires MongoDB to be configured.");
+  }
+
+  const request = await getBorrowRequestDocument(requestId);
+  const allowedStatuses = getAllowedManagementStatuses(request.status);
+
+  if (allowedStatuses.size === 0) {
+    throw new Error(
+      "Only pending, active, or overdue borrow requests can be managed manually.",
+    );
+  }
+
+  if (!allowedStatuses.has(input.status)) {
+    throw new Error("This borrowing request cannot move to the selected status.");
+  }
+
+  const now = new Date();
+  const currentCopyId = String(request.bookCopyId);
+  const requiresAssignedCopy =
+    input.status === "pending" ||
+    input.status === "active" ||
+    input.status === "overdue";
+  const nextCopy = requiresAssignedCopy
+    ? await resolveAssignableCopy({
+        bookId: String(request.bookId),
+        currentCopyId: input.assignedCopyId ?? currentCopyId,
+        requestId,
+      })
+    : null;
+  const nextCopyId = nextCopy?.id ?? currentCopyId;
+  const durationDays =
+    request.approvedDurationDays ?? request.requestedDurationDays;
+  const startedAt =
+    input.status === "pending" || input.status === "cancelled"
+      ? undefined
+      : request.startedAt ?? now;
+  const baseDueAt = startedAt
+    ? new Date(startedAt.getTime() + durationDays * 24 * 60 * 60 * 1000)
+    : undefined;
+  const dueAt =
+    input.status === "active"
+      ? request.dueAt ?? baseDueAt
+      : input.status === "overdue"
+        ? new Date(now.getTime() - 24 * 60 * 60 * 1000)
+        : input.status === "returned"
+          ? request.dueAt ?? baseDueAt
+          : undefined;
+  const trimmedReason = input.rejectionReason?.trim();
+  const [borrowRequests, bookCopies] = await Promise.all([
+    getBorrowRequestsCollection(),
+    getBookCopiesCollection(),
+  ]);
+  const borrowRequestUpdate = UpdateBorrowRequestInputSchema.parse(
+    omitUndefined({
+      approvedDurationDays:
+        input.status === "pending" ? request.approvedDurationDays : durationDays,
+      cancelledAt: input.status === "cancelled" ? now : undefined,
+      dueAt,
+      rejectionReason:
+        input.status === "cancelled"
+          ? trimmedReason || "Updated by an admin operator."
+          : undefined,
+      returnedAt: input.status === "returned" ? now : undefined,
+      reviewedAt: now,
+      reviewedByUserId: input.reviewedByUserId,
+      startedAt,
+      status: input.status,
+    }),
+  );
+  const setPayload = omitUndefined({
+    ...borrowRequestUpdate,
+    bookCopyId: toDatabaseId(nextCopyId),
+    updatedAt: now,
+  });
+  const unsetPayload: Record<string, ""> = {};
+
+  if (input.status !== "cancelled") {
+    unsetPayload.cancelledAt = "";
+    unsetPayload.rejectionReason = "";
+  }
+
+  if (dueAt === undefined) {
+    unsetPayload.dueAt = "";
+  }
+
+  if (input.status !== "returned") {
+    unsetPayload.returnedAt = "";
+  }
+
+  if (startedAt === undefined) {
+    unsetPayload.startedAt = "";
+  }
+
+  await borrowRequests.updateOne(
+    { _id: request._id },
+    {
+      $set: setPayload,
+      ...(Object.keys(unsetPayload).length > 0 ? { $unset: unsetPayload } : {}),
+    },
+  );
+
+  if (currentCopyId !== nextCopyId) {
+    const releasedCopyUpdate = UpdateBookCopyInputSchema.parse({
+      status: "available",
+    });
+
+    await bookCopies.updateOne(
+      { _id: toDatabaseId(currentCopyId) },
+      {
+        $set: {
+          ...releasedCopyUpdate,
+          updatedAt: now,
+        },
+      },
+    );
+  }
+
+  const nextCopyStatus =
+    input.status === "pending"
+      ? "reserved"
+      : input.status === "active" || input.status === "overdue"
+        ? "borrowed"
+        : "available";
+  const assignedCopyUpdate = UpdateBookCopyInputSchema.parse({
+    status: nextCopyStatus,
+  });
+
+  await bookCopies.updateOne(
+    { _id: toDatabaseId(nextCopyId) },
+    {
+      $set: {
+        ...assignedCopyUpdate,
+        updatedAt: now,
+      },
+    },
+  );
+
+  return {
+    bookCopyId: nextCopyId,
+    id: String(request._id),
+    status: input.status,
+  };
 }

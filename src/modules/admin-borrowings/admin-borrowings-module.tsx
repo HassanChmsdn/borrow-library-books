@@ -12,33 +12,44 @@ import { useI18n } from "@/lib/i18n";
 
 import {
   BorrowingsCardList,
+  BorrowingManagementDialog,
   BorrowingsTable,
   BorrowingsTabs,
 } from "./components";
-import { useAdminBorrowingsState } from "./hooks";
+import { useManagedAdminBorrowingsState } from "./hooks";
 import { adminBorrowingsTabLabels } from "./mock-data";
 import type { AdminBorrowingsModuleProps } from "./types";
 
 function AdminBorrowingsModule({
   isLoading = false,
-  onApproveBorrowing,
-  onMarkReturned,
-  onRejectBorrowing,
+  onApproveBorrowing: _onApproveBorrowing,
+  onManageBorrowing: _onManageBorrowing,
+  onMarkReturned: _onMarkReturned,
+  onRejectBorrowing: _onRejectBorrowing,
   onSendReminder,
   records: sourceRecords,
 }: AdminBorrowingsModuleProps) {
   const { translateText } = useI18n();
   const {
     activeTab,
+    approveBorrowing,
     clearSearch,
+    closeManagementDialog,
+    feedback,
     hasSearchValue,
+    isManagingBorrowing,
+    markReturned,
+    manageBorrowing,
+    managedRecord,
+    openManagementDialog,
     records,
     recordsInActiveTabCount,
+    rejectBorrowing,
     searchValue,
     setActiveTab,
     setSearchValue,
     tabs,
-  } = useAdminBorrowingsState(sourceRecords);
+  } = useManagedAdminBorrowingsState(sourceRecords);
 
   if (isLoading) {
     return <AdminBorrowingsLoadingState />;
@@ -103,6 +114,26 @@ function AdminBorrowingsModule({
           ) : null
         }
       >
+        {feedback ? (
+          <div
+            className={
+              feedback.tone === "success"
+                ? "rounded-card border border-success/20 bg-success/5 px-4 py-3"
+                : "rounded-card border border-danger/20 bg-danger-surface px-4 py-3"
+            }
+          >
+            <p
+              className={
+                feedback.tone === "success"
+                  ? "text-body-sm text-foreground font-medium"
+                  : "text-body-sm text-danger font-medium"
+              }
+            >
+              {translateText(feedback.message)}
+            </p>
+          </div>
+        ) : null}
+
         {isEmptyTab ? (
           <AdminEmptyState
             title={emptyStateByTab[activeTab].title}
@@ -122,21 +153,35 @@ function AdminBorrowingsModule({
           <>
             <BorrowingsCardList
               records={records}
-              onApproveBorrowing={onApproveBorrowing}
-              onMarkReturned={onMarkReturned}
-              onRejectBorrowing={onRejectBorrowing}
+              onApproveBorrowing={approveBorrowing}
+              onManageBorrowing={openManagementDialog}
+              onMarkReturned={markReturned}
+              onRejectBorrowing={rejectBorrowing}
               onSendReminder={onSendReminder}
             />
             <BorrowingsTable
               records={records}
-              onApproveBorrowing={onApproveBorrowing}
-              onMarkReturned={onMarkReturned}
-              onRejectBorrowing={onRejectBorrowing}
+              onApproveBorrowing={approveBorrowing}
+              onManageBorrowing={openManagementDialog}
+              onMarkReturned={markReturned}
+              onRejectBorrowing={rejectBorrowing}
               onSendReminder={onSendReminder}
             />
           </>
         )}
       </AdminDataTable>
+
+      <BorrowingManagementDialog
+        open={managedRecord !== null}
+        pending={isManagingBorrowing}
+        record={managedRecord}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeManagementDialog();
+          }
+        }}
+        onSubmit={manageBorrowing}
+      />
     </div>
   );
 }

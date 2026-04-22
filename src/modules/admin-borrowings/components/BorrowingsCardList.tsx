@@ -26,6 +26,7 @@ interface BorrowingsCardListProps extends AdminBorrowingActionHandlers {
 
 function BorrowingsCardList({
   onApproveBorrowing,
+  onManageBorrowing,
   onMarkReturned,
   onRejectBorrowing,
   onSendReminder,
@@ -125,6 +126,7 @@ function BorrowingsCardList({
           <BorrowingActions
             align="end"
             onApproveBorrowing={onApproveBorrowing}
+            onManageBorrowing={onManageBorrowing}
             onMarkReturned={onMarkReturned}
             onRejectBorrowing={onRejectBorrowing}
             onSendReminder={onSendReminder}
