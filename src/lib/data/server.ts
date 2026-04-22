@@ -1,7 +1,5 @@
 import "server-only";
 
-import { cache } from "react";
-
 import {
   getBookCopiesCollection,
   getBooksCollection,
@@ -62,7 +60,26 @@ interface LibrarySnapshot {
   users: ReadonlyArray<UserRepositoryRecord>;
 }
 
-const supportedBorrowStatuses = new Set(["pending", "active", "overdue", "returned"]);
+const supportedBorrowStatuses = new Set(["pending", "active", "overdue", "returned", "cancelled"]);
+
+function deriveEffectiveBookCopyStatus(
+  storedStatus: BookCopyRepositoryRecord["status"],
+  requestDrivenStatus?: BookCopyRepositoryRecord["status"],
+) {
+  if (requestDrivenStatus) {
+    return requestDrivenStatus;
+  }
+
+  if (storedStatus === "maintenance") {
+    return "maintenance";
+  }
+
+  if (storedStatus === "borrowed" || storedStatus === "reserved") {
+    return "available";
+  }
+
+  return storedStatus;
+}
 
 function toId(value: unknown) {
   return String(value);
@@ -208,7 +225,7 @@ function createMockSnapshot(): LibrarySnapshot {
   };
 }
 
-export const getLibrarySnapshot = cache(async (): Promise<LibrarySnapshot> => {
+export async function getLibrarySnapshot(): Promise<LibrarySnapshot> {
   if (!isMongoConfigured()) {
     return createMockSnapshot();
   }
@@ -246,6 +263,27 @@ export const getLibrarySnapshot = cache(async (): Promise<LibrarySnapshot> => {
 
     const categoryById = new Map(categories.map((category) => [category.id, category]));
 
+    const requestDrivenStatusByCopyId = new Map<
+      string,
+      BookCopyRepositoryRecord["status"]
+    >();
+
+    for (const request of borrowRequestDocs) {
+      const copyId = toId(request.bookCopyId);
+
+      if (request.status === "active" || request.status === "overdue") {
+        requestDrivenStatusByCopyId.set(copyId, "borrowed");
+        continue;
+      }
+
+      if (
+        request.status === "pending" &&
+        requestDrivenStatusByCopyId.get(copyId) !== "borrowed"
+      ) {
+        requestDrivenStatusByCopyId.set(copyId, "reserved");
+      }
+    }
+
     const bookCopies: BookCopyRepositoryRecord[] = copyDocs.map((copy) => ({
       bookId: toId(copy.bookId),
       branch: deriveBranchLabel(copy.copyCode),
@@ -254,7 +292,10 @@ export const getLibrarySnapshot = cache(async (): Promise<LibrarySnapshot> => {
       id: toId(copy._id),
       locationNote: copy.notes,
       shelfLabel: deriveShelfLabel(copy.copyCode),
-      status: copy.status,
+      status: deriveEffectiveBookCopyStatus(
+        copy.status,
+        requestDrivenStatusByCopyId.get(toId(copy._id)),
+      ),
       updatedOn: (copy.updatedAt ?? copy.createdAt ?? new Date()).toISOString(),
     }));
 
@@ -360,6 +401,7 @@ export const getLibrarySnapshot = cache(async (): Promise<LibrarySnapshot> => {
           bookId: toId(record.bookId),
           bookCopyId: toId(record.bookCopyId),
           branch: copy?.branch ?? deriveBranchLabel(copy?.copyCode),
+          cancelledOn: record.cancelledAt?.toISOString(),
           customDuration: record.durationType === "custom",
           durationDays,
           feeCents: record.feeCents,
@@ -385,7 +427,7 @@ export const getLibrarySnapshot = cache(async (): Promise<LibrarySnapshot> => {
     console.error("Failed to load Mongo-backed library snapshot, falling back to mock data.", error);
     return createMockSnapshot();
   }
-});
+}
 
 export async function listCategoryRecordsFromStore() {
   return (await getLibrarySnapshot()).categories;

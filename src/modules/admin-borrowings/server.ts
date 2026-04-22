@@ -1,7 +1,5 @@
 import "server-only";
 
-import { cache } from "react";
-
 import {
   getBookRecordByIdFromStore,
   getUserRecordByIdFromStore,
@@ -16,9 +14,10 @@ import {
 
 import type { AdminBorrowingRecord } from "./types";
 
-export const listAdminBorrowingRecords = cache(
-  async (): Promise<ReadonlyArray<AdminBorrowingRecord>> => {
-    const borrowings = await listBorrowRequestRecordsFromStore();
+export async function listAdminBorrowingRecords(): Promise<
+  ReadonlyArray<AdminBorrowingRecord>
+> {
+  const borrowings = await listBorrowRequestRecordsFromStore();
 
     const records = await Promise.all(
       borrowings.map(async (borrowing) => {
@@ -57,7 +56,7 @@ export const listAdminBorrowingRecords = cache(
                   value: "active" as const,
                 },
                 {
-                  label: "Cancelled",
+                  label: "Rejected",
                   value: "cancelled" as const,
                 },
               ]
@@ -119,6 +118,8 @@ export const listAdminBorrowingRecords = cache(
                 : "Pending approval"
               : borrowing.status === "active"
                 ? "Checked out"
+                : borrowing.status === "cancelled"
+                  ? "Rejected"
                 : borrowing.status === "overdue"
                   ? "Overdue"
                   : "Returned",
@@ -129,6 +130,8 @@ export const listAdminBorrowingRecords = cache(
                 : "warning"
               : borrowing.status === "active"
                 ? "success"
+                : borrowing.status === "cancelled"
+                  ? "neutral"
                 : borrowing.status === "overdue"
                   ? "danger"
                   : "neutral",
@@ -167,6 +170,15 @@ export const listAdminBorrowingRecords = cache(
                     new Date(new Date(borrowing.requestedOn).getTime() + 24 * 60 * 60 * 1000).toISOString(),
                   ),
                 }
+              : borrowing.status === "cancelled"
+                ? {
+                    primaryLabel: "Requested",
+                    primaryValue: formatAdminDateTime(borrowing.requestedOn),
+                    secondaryLabel: "Rejected",
+                    secondaryValue: borrowing.cancelledOn
+                      ? formatAdminDateTime(borrowing.cancelledOn)
+                      : undefined,
+                  }
               : borrowing.status === "returned"
                 ? {
                     primaryLabel: "Started",
@@ -197,6 +209,5 @@ export const listAdminBorrowingRecords = cache(
       }),
     );
 
-    return records;
-  },
-);
+  return records;
+}

@@ -1,7 +1,5 @@
 import "server-only";
 
-import { cache } from "react";
-
 import {
   listBookRecordsFromStore,
   listBorrowRequestRecordsFromStore,
@@ -43,7 +41,7 @@ function getPaymentStatusLabel(status: "cash-due" | "cash-settled" | "not-requir
 
 function getPaymentStatusTone(options: {
   paymentStatus: "cash-due" | "cash-settled" | "not-required";
-  borrowingStatus: "pending" | "active" | "overdue" | "returned";
+  borrowingStatus: "pending" | "active" | "overdue" | "returned" | "cancelled";
 }): AdminFinancialRecord["paymentStatusTone"] {
   if (options.paymentStatus === "cash-settled") {
     return "success";
@@ -72,9 +70,13 @@ function getPaymentHelperText(status: "cash-due" | "cash-settled" | "not-require
   return undefined;
 }
 
-function getActivityLabel(status: "pending" | "active" | "overdue" | "returned") {
+function getActivityLabel(status: "pending" | "active" | "overdue" | "returned" | "cancelled") {
   if (status === "returned") {
     return "Returned";
+  }
+
+  if (status === "cancelled") {
+    return "Rejected";
   }
 
   if (status === "pending") {
@@ -112,23 +114,22 @@ function createSummary(records: ReadonlyArray<AdminFinancialRecord>): AdminFinan
   };
 }
 
-export const getAdminFinancialModuleData = cache(
-  async (): Promise<AdminFinancialModuleData> => {
-    const [books, borrowings, users] = await Promise.all([
-      listBookRecordsFromStore(),
-      listBorrowRequestRecordsFromStore(),
-      listUserRecordsFromStore(),
-    ]);
-    const bookById = new Map(books.map((book) => [book.id, book]));
-    const userById = new Map(users.map((user) => [user.id, user]));
-    const recentRecords = borrowings
-      .filter((record) => record.feeCents > 0)
-      .sort((left, right) =>
-        getFinancialActivityTimestamp(right).localeCompare(getFinancialActivityTimestamp(left)),
-      )
-      .map((record) => {
-        const book = bookById.get(record.bookId);
-        const user = userById.get(record.userId);
+export async function getAdminFinancialModuleData(): Promise<AdminFinancialModuleData> {
+  const [books, borrowings, users] = await Promise.all([
+    listBookRecordsFromStore(),
+    listBorrowRequestRecordsFromStore(),
+    listUserRecordsFromStore(),
+  ]);
+  const bookById = new Map(books.map((book) => [book.id, book]));
+  const userById = new Map(users.map((user) => [user.id, user]));
+  const recentRecords = borrowings
+    .filter((record) => record.feeCents > 0 && record.status !== "cancelled")
+    .sort((left, right) =>
+      getFinancialActivityTimestamp(right).localeCompare(getFinancialActivityTimestamp(left)),
+    )
+    .map((record) => {
+      const book = bookById.get(record.bookId);
+      const user = userById.get(record.userId);
 
         return {
           activityLabel: getActivityLabel(record.status),
@@ -150,11 +151,10 @@ export const getAdminFinancialModuleData = cache(
         } satisfies AdminFinancialRecord;
       });
 
-    return {
-      recentRecords,
-      summary: createSummary(recentRecords),
-    };
-  },
-);
+  return {
+    recentRecords,
+    summary: createSummary(recentRecords),
+  };
+}
 
 export { formatAdminCurrency, formatAdminDateTime };

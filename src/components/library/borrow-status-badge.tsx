@@ -12,6 +12,7 @@ type BorrowStatus =
   | "ready-for-pickup"
   | "saved-for-later"
   | "checked-out"
+  | "cancelled"
   | "returned"
   | "overdue";
 
@@ -49,6 +50,7 @@ const borrowStatusConfig: Record<
   "ready-for-pickup": { label: "Ready for pickup", tone: "info" },
   "saved-for-later": { label: "Saved for later", tone: "neutral" },
   "checked-out": { label: "Checked out", tone: "success" },
+  cancelled: { label: "Rejected", tone: "neutral" },
   returned: { label: "Returned", tone: "neutral" },
   overdue: { label: "Overdue", tone: "danger" },
 };

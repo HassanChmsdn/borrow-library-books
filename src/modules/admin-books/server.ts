@@ -1,7 +1,5 @@
 import "server-only";
 
-import { cache } from "react";
-
 import {
   getBookInventorySnapshotFromStore,
   listBookRecordsFromStore,
@@ -47,16 +45,17 @@ function deriveAvailabilityState(availableCopies: number, totalCopies: number) {
   };
 }
 
-export const listAdminBookDetailRecords = cache(
-  async (): Promise<ReadonlyArray<AdminBookDetailsRecord>> => {
-    const [books, categories] = await Promise.all([
-      listBookRecordsFromStore(),
-      listCategoryRecordsFromStore(),
-    ]);
-    const categoryNameById = new Map(categories.map((category) => [category.id, category.name]));
+export async function listAdminBookDetailRecords(): Promise<
+  ReadonlyArray<AdminBookDetailsRecord>
+> {
+  const [books, categories] = await Promise.all([
+    listBookRecordsFromStore(),
+    listCategoryRecordsFromStore(),
+  ]);
+  const categoryNameById = new Map(categories.map((category) => [category.id, category.name]));
 
-    const records = await Promise.all(
-      books.map(async (book) => {
+  const records = await Promise.all(
+    books.map(async (book) => {
         const inventorySnapshot = await getBookInventorySnapshotFromStore(book.id);
         const totalCopies = Math.max(inventorySnapshot.totalCopies, 1);
 
@@ -97,12 +96,11 @@ export const listAdminBookDetailRecords = cache(
           totalCopies: inventorySnapshot.totalCopies,
           ...deriveAvailabilityState(inventorySnapshot.availableCopies, totalCopies),
         } satisfies AdminBookDetailsRecord;
-      }),
-    );
+    }),
+  );
 
-    return records.sort((left, right) => left.title.localeCompare(right.title));
-  },
-);
+  return records.sort((left, right) => left.title.localeCompare(right.title));
+}
 
 export async function listAdminBookRecords(): Promise<ReadonlyArray<AdminBookRecord>> {
   const records = await listAdminBookDetailRecords();

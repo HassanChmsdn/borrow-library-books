@@ -16,6 +16,7 @@ export const adminBorrowingsTabLabels: Record<AdminBorrowingsTab, string> = {
   active: "Active",
   overdue: "Overdue",
   returned: "Returned",
+  cancelled: "Rejected",
 };
 
 export const adminBorrowingsRecords: ReadonlyArray<AdminBorrowingRecord> =
@@ -112,6 +113,8 @@ export const adminBorrowingsRecords: ReadonlyArray<AdminBorrowingRecord> =
             : "Pending approval"
           : borrowing.status === "active"
             ? "Checked out"
+            : borrowing.status === "cancelled"
+              ? "Rejected"
             : borrowing.status === "overdue"
               ? "Overdue"
               : "Returned",
@@ -122,6 +125,8 @@ export const adminBorrowingsRecords: ReadonlyArray<AdminBorrowingRecord> =
             : "warning"
           : borrowing.status === "active"
             ? "success"
+            : borrowing.status === "cancelled"
+              ? "neutral"
             : borrowing.status === "overdue"
               ? "danger"
               : "neutral",

@@ -7,6 +7,7 @@ export const adminBorrowingTabValues = [
   "active",
   "overdue",
   "returned",
+  "cancelled",
 ] as const;
 
 export type AdminBorrowingsTab = (typeof adminBorrowingTabValues)[number];
@@ -82,6 +83,11 @@ export interface AdminBorrowingActionHandlers {
 
 export interface AdminBorrowingsModuleProps
   extends AdminBorrowingActionHandlers {
+  headerCopy?: {
+    description: string;
+    eyebrow: string;
+    title: string;
+  };
   isLoading?: boolean;
   records?: ReadonlyArray<AdminBorrowingRecord>;
 }

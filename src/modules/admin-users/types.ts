@@ -13,6 +13,7 @@ export type AdminUsersRoleFilter = "all" | AdminUserRole;
 
 export type AdminUserBorrowingStatus =
   | "active"
+  | "cancelled"
   | "overdue"
   | "returned"
   | "pending";

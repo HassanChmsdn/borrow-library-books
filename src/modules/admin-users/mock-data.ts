@@ -49,9 +49,17 @@ function toUserBorrowingRecord(
       ? `Started ${formatAdminShortDate(borrowing.startedOn)}`
       : `Requested ${formatAdminShortDate(borrowing.requestedOn)}`,
     dueDateLabel:
-      borrowing.status === "returned" || !dueOn ? undefined : `Due ${formatAdminShortDate(dueOn)}`,
+      borrowing.status === "returned" || borrowing.status === "cancelled" || !dueOn
+        ? undefined
+        : `Due ${formatAdminShortDate(dueOn)}`,
     completedDateLabel:
-      borrowing.returnedOn ? `Returned ${formatAdminShortDate(borrowing.returnedOn)}` : undefined,
+      borrowing.status === "cancelled"
+        ? borrowing.cancelledOn
+          ? `Rejected ${formatAdminShortDate(borrowing.cancelledOn)}`
+          : undefined
+        : borrowing.returnedOn
+          ? `Returned ${formatAdminShortDate(borrowing.returnedOn)}`
+          : undefined,
     feeLabel: getBorrowingFeeLabel(borrowing.feeCents),
     paymentStatus: borrowing.paymentStatus as AdminUserPaymentStatus,
     status: borrowing.status,
@@ -170,11 +178,16 @@ export const adminUserProfileRecords: ReadonlyArray<AdminUserProfileRecord> =
   listVisibleUserRecords().map((user) => {
     const borrowings = listBorrowRequestRecords().filter((record) => record.userId === user.id);
     const currentBorrowings = borrowings
-      .filter((record) => record.status !== "returned")
+      .filter((record) => record.status !== "returned" && record.status !== "cancelled")
       .map(toUserBorrowingRecord);
     const borrowingHistory = borrowings
-      .filter((record) => record.status === "returned")
-      .sort((left, right) => (right.returnedOn ?? "").localeCompare(left.returnedOn ?? ""))
+      .filter((record) => record.status === "returned" || record.status === "cancelled")
+      .sort((left, right) => {
+        const rightTimestamp = right.returnedOn ?? right.cancelledOn ?? right.requestedOn;
+        const leftTimestamp = left.returnedOn ?? left.cancelledOn ?? left.requestedOn;
+
+        return rightTimestamp.localeCompare(leftTimestamp);
+      })
       .map(toUserBorrowingRecord);
 
     const activeCount = currentBorrowings.filter((record) => record.status === "active").length;

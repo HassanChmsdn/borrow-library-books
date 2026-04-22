@@ -42,6 +42,7 @@ const borrowingTabDescriptions: Record<MyBorrowingsTab, string> = {
   pending: "Requests waiting for review or desk pickup confirmation.",
   returned: "Recently completed loans and their payment outcomes.",
   overdue: "Items that need attention before the next renewal cycle.",
+  cancelled: "Rejected requests kept for account history and follow-up context.",
 };
 
 const borrowingEmptyStates: Record<
@@ -68,6 +69,11 @@ const borrowingEmptyStates: Record<
     description:
       "Any overdue titles will appear here with the next due date and cash payment guidance where needed.",
   },
+  cancelled: {
+    title: "No rejected requests",
+    description:
+      "Rejected borrowing requests will appear here so the account keeps a lightweight request history.",
+  },
 };
 
 function getBorrowingStatusTone(
@@ -91,6 +97,10 @@ function getBorrowingStatusTone(
 
   if (record.status === "checked-out") {
     return "success";
+  }
+
+  if (record.status === "cancelled") {
+    return "neutral";
   }
 
   return "neutral";
@@ -328,7 +338,7 @@ function MyBorrowingsModule({
       <PageHeader
         eyebrow="Account"
         title="My Borrowings"
-        description="Track current loans, pending requests, desk pickups, and overdue items in the authenticated member account view."
+        description="Track current loans, pending requests, rejected history, and overdue items in the authenticated member account view."
         actions={
           <LinkButton href="/books" size="sm" variant="outline">
             Browse more books

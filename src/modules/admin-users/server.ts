@@ -1,7 +1,5 @@
 import "server-only";
 
-import { cache } from "react";
-
 import {
   getBookRecordByIdFromStore,
   listBorrowRequestRecordsFromStore,
@@ -52,10 +50,18 @@ async function toUserBorrowingRecord(
     bookHref: `/admin/books/${borrowing.bookId}`,
     bookTitle: book?.title ?? "Unknown book",
     completedDateLabel:
-      borrowing.returnedOn ? `Returned ${formatAdminShortDate(borrowing.returnedOn)}` : undefined,
+      borrowing.status === "cancelled"
+        ? borrowing.cancelledOn
+          ? `Rejected ${formatAdminShortDate(borrowing.cancelledOn)}`
+          : undefined
+        : borrowing.returnedOn
+          ? `Returned ${formatAdminShortDate(borrowing.returnedOn)}`
+          : undefined,
     customDurationRequested: borrowing.customDuration,
     dueDateLabel:
-      borrowing.status === "returned" || !dueOn ? undefined : `Due ${formatAdminShortDate(dueOn)}`,
+      borrowing.status === "returned" || borrowing.status === "cancelled" || !dueOn
+        ? undefined
+        : `Due ${formatAdminShortDate(dueOn)}`,
     durationLabel: `${borrowing.durationDays} days`,
     feeLabel: getBorrowingFeeLabel(borrowing.feeCents),
     id: borrowing.id,
@@ -136,25 +142,31 @@ function getBorrowingSummaryMeta(
     : "No borrowing activity yet";
 }
 
-export const listAdminUserProfileRecords = cache(
-  async (): Promise<ReadonlyArray<AdminUserProfileRecord>> => {
-    const [users, borrowings] = await Promise.all([
-      listUserRecordsFromStore(),
-      listBorrowRequestRecordsFromStore(),
-    ]);
+export async function listAdminUserProfileRecords(): Promise<
+  ReadonlyArray<AdminUserProfileRecord>
+> {
+  const [users, borrowings] = await Promise.all([
+    listUserRecordsFromStore(),
+    listBorrowRequestRecordsFromStore(),
+  ]);
 
-    return Promise.all(
-      users.map(async (user) => {
+  return Promise.all(
+    users.map(async (user) => {
         const userBorrowings = borrowings.filter((record) => record.userId === user.id);
         const currentBorrowings = await Promise.all(
           userBorrowings
-            .filter((record) => record.status !== "returned")
+            .filter((record) => record.status !== "returned" && record.status !== "cancelled")
             .map((record) => toUserBorrowingRecord(record)),
         );
         const borrowingHistory = await Promise.all(
           userBorrowings
-            .filter((record) => record.status === "returned")
-            .sort((left, right) => (right.returnedOn ?? "").localeCompare(left.returnedOn ?? ""))
+            .filter((record) => record.status === "returned" || record.status === "cancelled")
+            .sort((left, right) => {
+              const rightTimestamp = right.returnedOn ?? right.cancelledOn ?? right.requestedOn;
+              const leftTimestamp = left.returnedOn ?? left.cancelledOn ?? left.requestedOn;
+
+              return rightTimestamp.localeCompare(leftTimestamp);
+            })
             .map((record) => toUserBorrowingRecord(record)),
         );
         const role = user.role;
@@ -185,10 +197,9 @@ export const listAdminUserProfileRecords = cache(
           status: user.status,
           totalBorrowingsCount: userBorrowings.length,
         } satisfies AdminUserProfileRecord;
-      }),
-    );
-  },
-);
+    }),
+  );
+}
 
 export function toAdminUserRecord(user: AdminUserProfileRecord): AdminUserRecord {
   return {

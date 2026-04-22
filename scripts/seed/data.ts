@@ -1,6 +1,7 @@
 import type {
   CreateBookCopyInput,
   CreateBookInput,
+  CreateBorrowRequestInput,
   CreateCategoryInput,
   CreateUserInput,
 } from "@/lib/db";
@@ -22,6 +23,18 @@ export interface SeedBookCopy extends Omit<CreateBookCopyInput, "bookId"> {
 export interface SeedUser extends CreateUserInput {
   bootstrapAdmin?: boolean;
   key: string;
+}
+
+export interface SeedBorrowRequest
+  extends Omit<CreateBorrowRequestInput, "bookCopyId" | "bookId" | "requestedAt" | "userId"> {
+  approvedDurationDays?: number;
+  bookCopyKey: string;
+  bookKey: string;
+  key: string;
+  requestedDaysAgo: number;
+  reviewedByUserKey?: string;
+  startedDaysAgo?: number;
+  userKey: string;
 }
 
 export const seedCategories: SeedCategory[] = [
@@ -199,7 +212,7 @@ export const seedBookCopies: SeedBookCopy[] = [
     bookKey: "brief-history",
     copyCode: "SCI-002",
     condition: "fair",
-    status: "borrowed",
+    status: "available",
   },
   {
     key: "design-everyday-1",
@@ -221,7 +234,7 @@ export const seedBookCopies: SeedBookCopy[] = [
     bookKey: "ways-of-seeing",
     copyCode: "DSN-003",
     condition: "good",
-    status: "reserved",
+    status: "available",
   },
   {
     key: "into-the-wild-1",
@@ -235,7 +248,7 @@ export const seedBookCopies: SeedBookCopy[] = [
     bookKey: "clean-code",
     copyCode: "TEC-001",
     condition: "good",
-    status: "borrowed",
+    status: "available",
   },
   {
     key: "clean-code-2",
@@ -301,5 +314,39 @@ export const seedUsers: SeedUser[] = [
     name: "Noor Haddad",
     role: "member",
     status: "suspended",
+  },
+];
+
+export const seedBorrowRequests: SeedBorrowRequest[] = [
+  {
+    key: "brief-history-pending-sara",
+    bookCopyKey: "brief-history-2",
+    bookKey: "brief-history",
+    durationType: "predefined",
+    feeCents: 0,
+    notes: "Seed scenario [brief-history-pending-sara]: Pending approval sample.",
+    paymentMethod: "onsite-cash",
+    paymentStatus: "waived",
+    requestedDaysAgo: 2,
+    requestedDurationDays: 14,
+    status: "pending",
+    userKey: "member-sara",
+  },
+  {
+    key: "clean-code-active-maya",
+    approvedDurationDays: 14,
+    bookCopyKey: "clean-code-1",
+    bookKey: "clean-code",
+    durationType: "predefined",
+    feeCents: 250,
+    notes: "Seed scenario [clean-code-active-maya]: Active borrowing sample.",
+    paymentMethod: "onsite-cash",
+    paymentStatus: "paid",
+    requestedDaysAgo: 6,
+    requestedDurationDays: 14,
+    reviewedByUserKey: "admin-samira",
+    startedDaysAgo: 5,
+    status: "active",
+    userKey: "member-maya",
   },
 ];

@@ -1,7 +1,5 @@
 import "server-only";
 
-import { cache } from "react";
-
 import {
   listBookCopyRecordsFromStore,
   listBookRecordsFromStore,
@@ -16,16 +14,17 @@ export interface AdminInventoryBookOption {
   value: string;
 }
 
-export const listAdminInventoryRecords = cache(
-  async (): Promise<ReadonlyArray<AdminInventoryRecord>> => {
-    const [copies, books] = await Promise.all([
-      listBookCopyRecordsFromStore(),
-      listBookRecordsFromStore(),
-    ]);
-    const bookById = new Map(books.map((book) => [book.id, book]));
+export async function listAdminInventoryRecords(): Promise<
+  ReadonlyArray<AdminInventoryRecord>
+> {
+  const [copies, books] = await Promise.all([
+    listBookCopyRecordsFromStore(),
+    listBookRecordsFromStore(),
+  ]);
+  const bookById = new Map(books.map((book) => [book.id, book]));
 
-    return copies.map((copy) => {
-      const book = bookById.get(copy.bookId);
+  return copies.map((copy) => {
+    const book = bookById.get(copy.bookId);
 
       return {
         bookAuthor: book?.author ?? "Unknown author",
@@ -37,25 +36,24 @@ export const listAdminInventoryRecords = cache(
         status: copy.status === "reserved" ? "borrowed" : copy.status,
         updatedAtLabel: formatAdminRelativeAuditLabel(copy.updatedOn),
       } satisfies AdminInventoryRecord;
-    });
-  },
-);
+  });
+}
 
-export const listAdminInventoryBookOptions = cache(
-  async (): Promise<ReadonlyArray<AdminInventoryBookOption>> => {
-    const books = await listBookRecordsFromStore();
+export async function listAdminInventoryBookOptions(): Promise<
+  ReadonlyArray<AdminInventoryBookOption>
+> {
+  const books = await listBookRecordsFromStore();
 
-    return [
-      {
-        description: "Choose an existing catalog record.",
-        label: "Select a book",
-        value: "",
-      },
-      ...books.map((book) => ({
-        description: `${book.author} · ${book.shelfCode}`,
-        label: book.title,
-        value: book.id,
-      })),
-    ];
-  },
-);
+  return [
+    {
+      description: "Choose an existing catalog record.",
+      label: "Select a book",
+      value: "",
+    },
+    ...books.map((book) => ({
+      description: `${book.author} · ${book.shelfCode}`,
+      label: book.title,
+      value: book.id,
+    })),
+  ];
+}

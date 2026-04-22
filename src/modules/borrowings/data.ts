@@ -3,7 +3,7 @@ import {
   type AllBooksItem,
 } from "@/modules/catalog/all-books-data";
 
-type MyBorrowingsTab = "active" | "pending" | "returned" | "overdue";
+type MyBorrowingsTab = "active" | "pending" | "returned" | "overdue" | "cancelled";
 type PaymentStatusTone = "success" | "warning" | "danger" | "info" | "neutral";
 
 interface BorrowingPaymentStatus {
@@ -20,6 +20,7 @@ interface BorrowingRecord {
     | "due-soon"
     | "ready-for-pickup"
     | "checked-out"
+    | "cancelled"
     | "returned"
     | "overdue";
   timelineLabel: string;
@@ -33,6 +34,7 @@ const myBorrowingsTabs = [
   { value: "pending", label: "Pending" },
   { value: "returned", label: "Returned" },
   { value: "overdue", label: "Overdue" },
+  { value: "cancelled", label: "Rejected" },
 ] as const;
 
 function requireMockBook(bookId: string) {

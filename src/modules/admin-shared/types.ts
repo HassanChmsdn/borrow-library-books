@@ -41,6 +41,7 @@ export type AdminSharedInventoryCondition = "new" | "good" | "fair" | "poor";
 
 export type AdminSharedBorrowingStatus =
   | "active"
+  | "cancelled"
   | "overdue"
   | "pending"
   | "returned";
@@ -107,6 +108,7 @@ export interface AdminSharedUserRecord {
 export interface AdminSharedBorrowingRecord {
   bookId: string;
   branch: string;
+  cancelledOn?: string;
   customDuration: boolean;
   durationDays: number;
   feeCents: number;

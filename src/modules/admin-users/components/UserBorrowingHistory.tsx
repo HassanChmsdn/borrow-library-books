@@ -30,6 +30,8 @@ function getBorrowingTone(
   switch (status) {
     case "active":
       return "info";
+    case "cancelled":
+      return "neutral";
     case "overdue":
       return "danger";
     case "pending":
@@ -43,6 +45,8 @@ function getBorrowingLabel(status: AdminUserBorrowingStatus) {
   switch (status) {
     case "active":
       return "Active";
+    case "cancelled":
+      return "Rejected";
     case "overdue":
       return "Overdue";
     case "pending":

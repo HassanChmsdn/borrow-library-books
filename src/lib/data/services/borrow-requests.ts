@@ -73,6 +73,62 @@ function omitUndefined<T extends Record<string, unknown>>(value: T) {
   ) as Partial<T>;
 }
 
+async function deriveRemainingCopyStatus(
+  copyId: string,
+  excludedRequestId: string,
+) {
+  const borrowRequests = await getBorrowRequestsCollection();
+  const relatedRequests = await borrowRequests
+    .find(
+      {
+        _id: { $ne: toDatabaseId(excludedRequestId) },
+        bookCopyId: toDatabaseId(copyId),
+        status: { $in: ["pending", "active", "overdue"] },
+      },
+      {
+        projection: {
+          status: 1,
+        },
+      },
+    )
+    .toArray();
+
+  if (
+    relatedRequests.some(
+      (request) => request.status === "active" || request.status === "overdue",
+    )
+  ) {
+    return "borrowed" as const;
+  }
+
+  if (relatedRequests.some((request) => request.status === "pending")) {
+    return "reserved" as const;
+  }
+
+  return "available" as const;
+}
+
+async function updateBookCopyStatus(
+  copyId: string,
+  status: "available" | "borrowed" | "reserved",
+  updatedAt: Date,
+) {
+  const bookCopies = await getBookCopiesCollection();
+  const copyUpdate = UpdateBookCopyInputSchema.parse({
+    status,
+  });
+
+  await bookCopies.updateOne(
+    { _id: toDatabaseId(copyId) },
+    {
+      $set: {
+        ...copyUpdate,
+        updatedAt,
+      },
+    },
+  );
+}
+
 async function listReservedCopyIds(
   bookId: string,
   options?: { excludeRequestId?: string },
@@ -233,6 +289,8 @@ export async function createBorrowRequestForUser(
     updatedAt: requestedAt,
   });
 
+  await updateBookCopyStatus(copy.id, "reserved", requestedAt);
+
   return {
     bookCopyId: copy.id,
     bookId: input.bookId,
@@ -265,6 +323,7 @@ export async function approveBorrowRequest(
   }
 
   const now = new Date();
+  const currentCopyId = request.bookCopyId ? String(request.bookCopyId) : undefined;
   const approvedDurationDays =
     options?.approvedDurationDays ??
     request.approvedDurationDays ??
@@ -275,10 +334,7 @@ export async function approveBorrowRequest(
     requestId,
   });
   const dueAt = new Date(now.getTime() + approvedDurationDays * 24 * 60 * 60 * 1000);
-  const [borrowRequests, bookCopies] = await Promise.all([
-    getBorrowRequestsCollection(),
-    getBookCopiesCollection(),
-  ]);
+  const borrowRequests = await getBorrowRequestsCollection();
   const borrowRequestUpdate = UpdateBorrowRequestInputSchema.parse({
     approvedDurationDays,
     dueAt,
@@ -287,10 +343,6 @@ export async function approveBorrowRequest(
     startedAt: now,
     status: "active",
   });
-  const copyUpdate = UpdateBookCopyInputSchema.parse({
-    status: "borrowed",
-  });
-
   await borrowRequests.updateOne(
     { _id: request._id },
     {
@@ -306,15 +358,12 @@ export async function approveBorrowRequest(
     },
   );
 
-  await bookCopies.updateOne(
-    { _id: toDatabaseId(assignedCopy.id) },
-    {
-      $set: {
-        ...copyUpdate,
-        updatedAt: now,
-      },
-    },
-  );
+  await updateBookCopyStatus(assignedCopy.id, "borrowed", now);
+
+  if (currentCopyId && currentCopyId !== assignedCopy.id) {
+    const releasedCopyStatus = await deriveRemainingCopyStatus(currentCopyId, requestId);
+    await updateBookCopyStatus(currentCopyId, releasedCopyStatus, now);
+  }
 
   return {
     bookCopyId: assignedCopy.id,
@@ -341,6 +390,7 @@ export async function rejectBorrowRequest(
   }
 
   const now = new Date();
+  const currentCopyId = request.bookCopyId ? String(request.bookCopyId) : undefined;
   const borrowRequests = await getBorrowRequestsCollection();
   const borrowRequestUpdate = UpdateBorrowRequestInputSchema.parse({
     cancelledAt: now,
@@ -360,6 +410,11 @@ export async function rejectBorrowRequest(
       },
     },
   );
+
+  if (currentCopyId) {
+    const releasedCopyStatus = await deriveRemainingCopyStatus(currentCopyId, requestId);
+    await updateBookCopyStatus(currentCopyId, releasedCopyStatus, now);
+  }
 
   return {
     id: String(request._id),
@@ -384,20 +439,14 @@ export async function markBorrowRequestReturned(
   }
 
   const now = new Date();
-  const [borrowRequests, bookCopies] = await Promise.all([
-    getBorrowRequestsCollection(),
-    getBookCopiesCollection(),
-  ]);
+  const currentCopyId = String(request.bookCopyId);
+  const borrowRequests = await getBorrowRequestsCollection();
   const borrowRequestUpdate = UpdateBorrowRequestInputSchema.parse({
     returnedAt: now,
     reviewedAt: now,
     reviewedByUserId: options?.reviewedByUserId,
     status: "returned",
   });
-  const copyUpdate = UpdateBookCopyInputSchema.parse({
-    status: "available",
-  });
-
   await borrowRequests.updateOne(
     { _id: request._id },
     {
@@ -408,15 +457,8 @@ export async function markBorrowRequestReturned(
     },
   );
 
-  await bookCopies.updateOne(
-    { _id: toDatabaseId(String(request.bookCopyId)) },
-    {
-      $set: {
-        ...copyUpdate,
-        updatedAt: now,
-      },
-    },
-  );
+  const releasedCopyStatus = await deriveRemainingCopyStatus(currentCopyId, requestId);
+  await updateBookCopyStatus(currentCopyId, releasedCopyStatus, now);
 
   return {
     id: String(request._id),
@@ -477,10 +519,7 @@ export async function updateBorrowRequestManagement(
           ? request.dueAt ?? baseDueAt
           : undefined;
   const trimmedReason = input.rejectionReason?.trim();
-  const [borrowRequests, bookCopies] = await Promise.all([
-    getBorrowRequestsCollection(),
-    getBookCopiesCollection(),
-  ]);
+  const borrowRequests = await getBorrowRequestsCollection();
   const borrowRequestUpdate = UpdateBorrowRequestInputSchema.parse(
     omitUndefined({
       approvedDurationDays:
@@ -530,21 +569,7 @@ export async function updateBorrowRequestManagement(
     },
   );
 
-  if (currentCopyId !== nextCopyId) {
-    const releasedCopyUpdate = UpdateBookCopyInputSchema.parse({
-      status: "available",
-    });
-
-    await bookCopies.updateOne(
-      { _id: toDatabaseId(currentCopyId) },
-      {
-        $set: {
-          ...releasedCopyUpdate,
-          updatedAt: now,
-        },
-      },
-    );
-  }
+  const releasedCopyStatus = await deriveRemainingCopyStatus(currentCopyId, requestId);
 
   const nextCopyStatus =
     input.status === "pending"
@@ -552,19 +577,16 @@ export async function updateBorrowRequestManagement(
       : input.status === "active" || input.status === "overdue"
         ? "borrowed"
         : "available";
-  const assignedCopyUpdate = UpdateBookCopyInputSchema.parse({
-    status: nextCopyStatus,
-  });
 
-  await bookCopies.updateOne(
-    { _id: toDatabaseId(nextCopyId) },
-    {
-      $set: {
-        ...assignedCopyUpdate,
-        updatedAt: now,
-      },
-    },
-  );
+  if (currentCopyId !== nextCopyId) {
+    await updateBookCopyStatus(currentCopyId, releasedCopyStatus, now);
+  }
+
+  if (requiresAssignedCopy) {
+    await updateBookCopyStatus(nextCopyId, nextCopyStatus, now);
+  } else {
+    await updateBookCopyStatus(currentCopyId, releasedCopyStatus, now);
+  }
 
   return {
     bookCopyId: nextCopyId,

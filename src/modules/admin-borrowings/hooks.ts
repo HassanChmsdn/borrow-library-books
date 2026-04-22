@@ -26,6 +26,29 @@ interface AdminBorrowingsFeedbackState {
   tone: "danger" | "success";
 }
 
+function createOptimisticBorrowingRecord(
+  record: AdminBorrowingRecord,
+  status: AdminBorrowingManageStatus,
+): AdminBorrowingRecord {
+  if (status !== "cancelled") {
+    return record;
+  }
+
+  return {
+    ...record,
+    borrowingStatusLabel: "Rejected",
+    borrowingStatusTone: "neutral",
+    reviewStatusOptions: [],
+    tab: "cancelled",
+    timeline: {
+      primaryLabel: "Requested",
+      primaryValue: record.timeline.primaryValue,
+      secondaryLabel: "Rejected",
+      secondaryValue: record.timeline.secondaryValue,
+    },
+  };
+}
+
 export function useAdminBorrowingsModuleState() {
   return useManagedAdminBorrowingsState(adminBorrowingsRecords);
 }
@@ -52,6 +75,7 @@ export function useManagedAdminBorrowingsState(
   async function handleMutation(
     record: AdminBorrowingRecord,
     mutation: () => Promise<{ message: string; status: "error" | "success" }>,
+    optimisticStatus?: AdminBorrowingManageStatus,
   ) {
     setFeedback(null);
     const result = await mutation();
@@ -62,6 +86,16 @@ export function useManagedAdminBorrowingsState(
     });
 
     if (result.status === "success") {
+      if (optimisticStatus) {
+        setRecords((currentRecords) =>
+          currentRecords.map((currentRecord) =>
+            currentRecord.id === record.id
+              ? createOptimisticBorrowingRecord(currentRecord, optimisticStatus)
+              : currentRecord,
+          ),
+        );
+      }
+
       router.refresh();
     }
 
@@ -101,14 +135,17 @@ export function useManagedAdminBorrowingsState(
       setIsManagingBorrowing(true);
 
       try {
-        const result = await handleMutation(managedRecord, () =>
-          manageAdminBorrowingAction({
-            assignedCopyId: values.assignedCopyId || undefined,
-            bookId: managedRecord.bookId,
-            rejectionReason: values.rejectionReason || undefined,
-            requestId: managedRecord.id,
-            status: values.status,
-          }),
+        const result = await handleMutation(
+          managedRecord,
+          () =>
+            manageAdminBorrowingAction({
+              assignedCopyId: values.assignedCopyId || undefined,
+              bookId: managedRecord.bookId,
+              rejectionReason: values.rejectionReason || undefined,
+              requestId: managedRecord.id,
+              status: values.status,
+            }),
+          values.status,
         );
 
         if (result.status === "success") {
@@ -124,8 +161,10 @@ export function useManagedAdminBorrowingsState(
       setManagedRecord(record);
     },
     async rejectBorrowing(record: AdminBorrowingRecord) {
-      await handleMutation(record, () =>
-        rejectAdminBorrowingAction({ requestId: record.id }),
+      await handleMutation(
+        record,
+        () => rejectAdminBorrowingAction({ requestId: record.id }),
+        "cancelled",
       );
     },
   };
@@ -158,7 +197,7 @@ export function useAdminBorrowingsState(
   });
 
   const tabs = (
-    ["pending", "active", "overdue", "returned"] as const
+    ["pending", "active", "overdue", "returned", "cancelled"] as const
   ).map((value) => ({
     count: sourceRecords.filter((record) => record.tab === value).length,
     label: adminBorrowingsTabLabels[value],

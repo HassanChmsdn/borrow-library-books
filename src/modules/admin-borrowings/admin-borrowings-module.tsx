@@ -21,6 +21,7 @@ import { adminBorrowingsTabLabels } from "./mock-data";
 import type { AdminBorrowingsModuleProps } from "./types";
 
 function AdminBorrowingsModule({
+  headerCopy,
   isLoading = false,
   onApproveBorrowing: _onApproveBorrowing,
   onManageBorrowing: _onManageBorrowing,
@@ -30,6 +31,12 @@ function AdminBorrowingsModule({
   records: sourceRecords,
 }: AdminBorrowingsModuleProps) {
   const { translateText } = useI18n();
+  const resolvedHeaderCopy = headerCopy ?? {
+    description:
+      "Review pending approvals, active loans, overdue follow-up, returned records, and rejected request history in a dense but readable circulation workspace.",
+    eyebrow: "Circulation",
+    title: "Borrowing operations",
+  };
   const {
     activeTab,
     approveBorrowing,
@@ -78,14 +85,19 @@ function AdminBorrowingsModule({
         "Borrowing records in the returned queue will appear here once circulation data is available.",
       title: "No returned borrowings",
     },
+    cancelled: {
+      description:
+        "Rejected borrowing requests will appear here to preserve circulation history without affecting inventory counts.",
+      title: "No rejected requests",
+    },
   } as const;
 
   return (
     <div className="gap-section flex flex-col">
       <AdminPageHeader
-        eyebrow="Circulation"
-        title="Borrowing operations"
-        description="Review pending approvals, active loans, overdue follow-up, and returned records in a dense but readable circulation workspace."
+        eyebrow={resolvedHeaderCopy.eyebrow}
+        title={resolvedHeaderCopy.title}
+        description={resolvedHeaderCopy.description}
         controls={
           <div className="grid gap-3">
             <AdminSearchBar

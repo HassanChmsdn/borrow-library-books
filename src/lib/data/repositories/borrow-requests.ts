@@ -9,6 +9,7 @@ export interface BorrowRequestRepositoryRecord {
   bookId: string;
   bookCopyId?: string;
   branch: string;
+  cancelledOn?: string;
   customDuration: boolean;
   durationDays: number;
   feeCents: number;

@@ -5,6 +5,7 @@ import type { DatabaseId } from "@/lib/db";
 import {
   seedBookCopies,
   seedBooks,
+  seedBorrowRequests,
   seedCategories,
   seedUsers,
   type SeedUser,
@@ -177,6 +178,7 @@ async function seedBookDocuments(categoryIds: IdMap, reset: boolean) {
 async function seedBookCopyDocuments(bookIds: IdMap, reset: boolean) {
   const { CreateBookCopyInputSchema, getBookCopiesCollection } = await getDbApi();
   const bookCopiesCollection = await getBookCopiesCollection();
+  const copyIds: IdMap = new Map();
 
   for (const bookCopy of seedBookCopies) {
     const bookId = bookIds.get(bookCopy.bookKey);
@@ -194,15 +196,140 @@ async function seedBookCopyDocuments(bookIds: IdMap, reset: boolean) {
     });
 
     if (reset) {
-      await bookCopiesCollection.insertOne(timestamped(parsed));
+      const result = await bookCopiesCollection.insertOne(timestamped(parsed));
+      copyIds.set(bookCopy.key, result.insertedId);
       continue;
     }
 
-    await bookCopiesCollection.updateOne(
+    const result = await bookCopiesCollection.findOneAndUpdate(
       { copyCode: parsed.copyCode },
       {
         $set: {
           ...parsed,
+          updatedAt: new Date(),
+        },
+        $setOnInsert: {
+          createdAt: new Date(),
+        },
+      },
+      {
+        upsert: true,
+        returnDocument: "after",
+      },
+    );
+
+    if (!result?._id) {
+      throw new Error(`Failed to upsert book copy: ${bookCopy.copyCode}`);
+    }
+
+    copyIds.set(bookCopy.key, result._id);
+  }
+
+  return copyIds;
+}
+
+async function seedBorrowRequestDocuments({
+  bookIds,
+  copyIds,
+  reset,
+  userIds,
+}: {
+  bookIds: IdMap;
+  copyIds: IdMap;
+  reset: boolean;
+  userIds: IdMap;
+}) {
+  const {
+    CreateBorrowRequestInputSchema,
+    UpdateBorrowRequestInputSchema,
+    getBorrowRequestsCollection,
+  } = await getDbApi();
+  const borrowRequestsCollection = await getBorrowRequestsCollection();
+
+  for (const borrowRequest of seedBorrowRequests) {
+    const bookId = bookIds.get(borrowRequest.bookKey);
+    const bookCopyId = copyIds.get(borrowRequest.bookCopyKey);
+    const userId = userIds.get(borrowRequest.userKey);
+    const reviewedByUserId = borrowRequest.reviewedByUserKey
+      ? userIds.get(borrowRequest.reviewedByUserKey)
+      : undefined;
+
+    if (!bookId) {
+      throw new Error(`Missing book id for borrow request seed: ${borrowRequest.key}`);
+    }
+
+    if (!bookCopyId) {
+      throw new Error(`Missing copy id for borrow request seed: ${borrowRequest.key}`);
+    }
+
+    if (!userId) {
+      throw new Error(`Missing user id for borrow request seed: ${borrowRequest.key}`);
+    }
+
+    if (borrowRequest.reviewedByUserKey && !reviewedByUserId) {
+      throw new Error(`Missing reviewer id for borrow request seed: ${borrowRequest.key}`);
+    }
+
+    const requestedAt = new Date(
+      Date.now() - borrowRequest.requestedDaysAgo * 24 * 60 * 60 * 1000,
+    );
+    const startedAt =
+      borrowRequest.startedDaysAgo !== undefined
+        ? new Date(Date.now() - borrowRequest.startedDaysAgo * 24 * 60 * 60 * 1000)
+        : undefined;
+    const approvedDurationDays =
+      borrowRequest.approvedDurationDays ?? borrowRequest.requestedDurationDays;
+    const dueAt = startedAt
+      ? new Date(startedAt.getTime() + approvedDurationDays * 24 * 60 * 60 * 1000)
+      : undefined;
+    const parsed = CreateBorrowRequestInputSchema.parse({
+      bookCopyId,
+      bookId,
+      durationType: borrowRequest.durationType,
+      feeCents: borrowRequest.feeCents,
+      notes: borrowRequest.notes,
+      paymentMethod: borrowRequest.paymentMethod,
+      paymentStatus: borrowRequest.paymentStatus,
+      requestedAt,
+      requestedDurationDays: borrowRequest.requestedDurationDays,
+      status: borrowRequest.status,
+      userId,
+    });
+    const lifecycleFields = UpdateBorrowRequestInputSchema.parse(
+      borrowRequest.status === "active"
+        ? {
+            approvedDurationDays,
+            dueAt,
+            reviewedAt: startedAt,
+            reviewedByUserId,
+            startedAt,
+            status: "active",
+          }
+        : {
+            status: "pending",
+          },
+    );
+
+    if (reset) {
+      await borrowRequestsCollection.insertOne(
+        timestamped({
+          ...parsed,
+          ...lifecycleFields,
+          requestedAt,
+        }),
+      );
+      continue;
+    }
+
+    await borrowRequestsCollection.updateOne(
+      {
+        notes: parsed.notes,
+      },
+      {
+        $set: {
+          ...parsed,
+          ...lifecycleFields,
+          requestedAt,
           updatedAt: new Date(),
         },
         $setOnInsert: {
@@ -216,10 +343,79 @@ async function seedBookCopyDocuments(bookIds: IdMap, reset: boolean) {
   }
 }
 
+async function reconcileBookCopyStatuses() {
+  const {
+    UpdateBookCopyInputSchema,
+    getBookCopiesCollection,
+    getBorrowRequestsCollection,
+  } = await getDbApi();
+  const [bookCopiesCollection, borrowRequestsCollection] = await Promise.all([
+    getBookCopiesCollection(),
+    getBorrowRequestsCollection(),
+  ]);
+  const [copies, borrowRequests] = await Promise.all([
+    bookCopiesCollection
+      .find({}, { projection: { _id: 1, status: 1 } })
+      .toArray(),
+    borrowRequestsCollection
+      .find({}, { projection: { bookCopyId: 1, status: 1 } })
+      .toArray(),
+  ]);
+  const requestDrivenStatusByCopyId = new Map<string, "borrowed" | "reserved">();
+  let repairedCopies = 0;
+
+  for (const borrowRequest of borrowRequests) {
+    const copyId = String(borrowRequest.bookCopyId);
+
+    if (borrowRequest.status === "active" || borrowRequest.status === "overdue") {
+      requestDrivenStatusByCopyId.set(copyId, "borrowed");
+      continue;
+    }
+
+    if (
+      borrowRequest.status === "pending" &&
+      requestDrivenStatusByCopyId.get(copyId) !== "borrowed"
+    ) {
+      requestDrivenStatusByCopyId.set(copyId, "reserved");
+    }
+  }
+
+  for (const copy of copies) {
+    const requestDrivenStatus = requestDrivenStatusByCopyId.get(String(copy._id));
+    const nextStatus = requestDrivenStatus
+      ? requestDrivenStatus
+      : copy.status === "maintenance"
+        ? "maintenance"
+        : "available";
+
+    if (nextStatus === copy.status) {
+      continue;
+    }
+
+    const parsed = UpdateBookCopyInputSchema.parse({
+      status: nextStatus,
+    });
+
+    await bookCopiesCollection.updateOne(
+      { _id: copy._id },
+      {
+        $set: {
+          ...parsed,
+          updatedAt: new Date(),
+        },
+      },
+    );
+    repairedCopies += 1;
+  }
+
+  return repairedCopies;
+}
+
 async function seedUserDocuments(reset: boolean) {
   const { CreateUserInputSchema, getUsersCollection } = await getDbApi();
   const usersCollection = await getUsersCollection();
   const bootstrapAdmins: SeedUser[] = [];
+  const userIds: IdMap = new Map();
 
   for (const user of seedUsers) {
     const parsed = CreateUserInputSchema.parse({
@@ -236,11 +432,12 @@ async function seedUserDocuments(reset: boolean) {
     }
 
     if (reset) {
-      await usersCollection.insertOne(timestamped(parsed));
+      const result = await usersCollection.insertOne(timestamped(parsed));
+      userIds.set(user.key, result.insertedId);
       continue;
     }
 
-    await usersCollection.updateOne(
+    const result = await usersCollection.findOneAndUpdate(
       { auth0UserId: parsed.auth0UserId },
       {
         $set: {
@@ -253,11 +450,21 @@ async function seedUserDocuments(reset: boolean) {
       },
       {
         upsert: true,
+        returnDocument: "after",
       },
     );
+
+    if (!result?._id) {
+      throw new Error(`Failed to upsert user: ${parsed.auth0UserId}`);
+    }
+
+    userIds.set(user.key, result._id);
   }
 
-  return bootstrapAdmins;
+  return {
+    bootstrapAdmins,
+    userIds,
+  };
 }
 
 async function seedDevelopmentData({ reset }: { reset: boolean }) {
@@ -265,14 +472,18 @@ async function seedDevelopmentData({ reset }: { reset: boolean }) {
     await clearCollections();
   }
 
-  const bootstrapAdmins = await seedUserDocuments(reset);
+  const { bootstrapAdmins, userIds } = await seedUserDocuments(reset);
   const categoryIds = await seedCategoryDocuments(reset);
   const bookIds = await seedBookDocuments(categoryIds, reset);
-  await seedBookCopyDocuments(bookIds, reset);
+  const copyIds = await seedBookCopyDocuments(bookIds, reset);
+  await seedBorrowRequestDocuments({ bookIds, copyIds, reset, userIds });
+  const repairedCopies = await reconcileBookCopyStatuses();
 
   return {
     bootstrapAdmins,
+    repairedCopies,
     seededBooks: seedBooks.length,
+    seededBorrowRequests: seedBorrowRequests.length,
     seededCategories: seedCategories.length,
     seededCopies: seedBookCopies.length,
     seededUsers: seedUsers.length,
@@ -300,8 +511,12 @@ async function main() {
     const summary = await seedDevelopmentData({ reset });
 
     console.log(
-      `Seed complete: ${summary.seededCategories} categories, ${summary.seededBooks} books, ${summary.seededCopies} copies, ${summary.seededUsers} users.`,
+      `Seed complete: ${summary.seededCategories} categories, ${summary.seededBooks} books, ${summary.seededCopies} copies, ${summary.seededBorrowRequests} borrow requests, ${summary.seededUsers} users.`,
     );
+
+    if (summary.repairedCopies > 0) {
+      console.log(`Reconciled ${summary.repairedCopies} copy statuses from live borrow request state.`);
+    }
 
     for (const admin of summary.bootstrapAdmins) {
       console.log(

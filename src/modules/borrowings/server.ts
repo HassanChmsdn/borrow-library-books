@@ -20,6 +20,10 @@ function formatBorrowingShortDate(value: Date) {
 function buildPaymentStatus(
   record: Awaited<ReturnType<typeof listStoredBorrowRequestRecordsForUser>>[number],
 ): BorrowingPaymentStatus {
+  if (record.status === "cancelled") {
+    return { label: "No payment due", tone: "neutral" };
+  }
+
   if (record.paymentStatus === "cash-settled") {
     return { label: "Paid onsite", tone: "success" };
   }
@@ -52,6 +56,21 @@ async function mapPersistedBorrowRequest(
       requestedAt: record.requestedOn,
       requestedDurationDays: record.durationDays,
     });
+  }
+
+  if (record.status === "cancelled") {
+    return {
+      id: record.id,
+      book,
+      paymentStatus: buildPaymentStatus(record),
+      status: "cancelled",
+      supportingMeta: record.customDuration
+        ? "Custom duration request declined"
+        : "Request declined by library staff",
+      tab: "cancelled",
+      timelineLabel: "Rejected on",
+      timelineValue: formatBorrowingShortDate(new Date(record.cancelledOn ?? record.requestedOn)),
+    };
   }
 
   const timelineDate =
