@@ -6,6 +6,7 @@ import {
   getBorrowRequestsCollection,
   getCategoriesCollection,
   getUsersCollection,
+  getMongoAppEnvironment,
   isMongoConfigured,
   type BorrowRequestDocument,
 } from "@/lib/db";
@@ -60,7 +61,13 @@ interface LibrarySnapshot {
   users: ReadonlyArray<UserRepositoryRecord>;
 }
 
-const supportedBorrowStatuses = new Set(["pending", "active", "overdue", "returned", "cancelled"]);
+const supportedBorrowStatuses = new Set([
+  "pending",
+  "active",
+  "overdue",
+  "returned",
+  "cancelled",
+]);
 
 function deriveEffectiveBookCopyStatus(
   storedStatus: BookCopyRepositoryRecord["status"],
@@ -133,7 +140,10 @@ function deriveMarkerTone(slug: string, name: string): AdminSharedMarkerTone {
   return "brand";
 }
 
-function deriveCoverTone(slug: string, name: string): BookRepositoryRecord["coverTone"] {
+function deriveCoverTone(
+  slug: string,
+  name: string,
+): BookRepositoryRecord["coverTone"] {
   const key = `${slug} ${name}`.toLowerCase();
 
   if (/(art|design)/.test(key)) {
@@ -191,7 +201,11 @@ function deriveShelfLabel(copyCode?: string) {
   return prefix ? `${prefix} shelf` : "General shelf";
 }
 
-function deriveShelfCode(book: { title: string }, copies: ReadonlyArray<{ copyCode: string }>, fallback: string) {
+function deriveShelfCode(
+  book: { title: string },
+  copies: ReadonlyArray<{ copyCode: string }>,
+  fallback: string,
+) {
   const primaryCode = copies[0]?.copyCode;
 
   if (primaryCode) {
@@ -203,7 +217,9 @@ function deriveShelfCode(book: { title: string }, copies: ReadonlyArray<{ copyCo
     .toUpperCase()}`;
 }
 
-function mapPaymentStatus(record: BorrowRequestDocument): BorrowRequestRepositoryRecord["paymentStatus"] {
+function mapPaymentStatus(
+  record: BorrowRequestDocument,
+): BorrowRequestRepositoryRecord["paymentStatus"] {
   if (record.paymentStatus === "paid") {
     return "cash-settled";
   }
@@ -225,43 +241,59 @@ function createMockSnapshot(): LibrarySnapshot {
   };
 }
 
+function canFallbackToMockSnapshot() {
+  const appEnv = getMongoAppEnvironment();
+
+  return appEnv === "local" || appEnv === "development";
+}
+
 export async function getLibrarySnapshot(): Promise<LibrarySnapshot> {
   if (!isMongoConfigured()) {
     return createMockSnapshot();
   }
 
   try {
-    const [categoriesCollection, booksCollection, bookCopiesCollection, usersCollection, borrowRequestsCollection] =
-      await Promise.all([
-        getCategoriesCollection(),
-        getBooksCollection(),
-        getBookCopiesCollection(),
-        getUsersCollection(),
-        getBorrowRequestsCollection(),
-      ]);
-
-    const [categoryDocs, bookDocs, copyDocs, userDocs, borrowRequestDocs] = await Promise.all([
-      categoriesCollection.find({}).sort({ name: 1 }).toArray(),
-      booksCollection.find({}).sort({ title: 1 }).toArray(),
-      bookCopiesCollection.find({}).sort({ copyCode: 1 }).toArray(),
-      usersCollection.find({}).sort({ name: 1 }).toArray(),
-      borrowRequestsCollection.find({}).sort({ requestedAt: -1 }).toArray(),
+    const [
+      categoriesCollection,
+      booksCollection,
+      bookCopiesCollection,
+      usersCollection,
+      borrowRequestsCollection,
+    ] = await Promise.all([
+      getCategoriesCollection(),
+      getBooksCollection(),
+      getBookCopiesCollection(),
+      getUsersCollection(),
+      getBorrowRequestsCollection(),
     ]);
 
-    const categories: CategoryRepositoryRecord[] = categoryDocs.map((category) => {
-      const slug = category.slug?.trim() || slugify(category.name);
+    const [categoryDocs, bookDocs, copyDocs, userDocs, borrowRequestDocs] =
+      await Promise.all([
+        categoriesCollection.find({}).sort({ name: 1 }).toArray(),
+        booksCollection.find({}).sort({ title: 1 }).toArray(),
+        bookCopiesCollection.find({}).sort({ copyCode: 1 }).toArray(),
+        usersCollection.find({}).sort({ name: 1 }).toArray(),
+        borrowRequestsCollection.find({}).sort({ requestedAt: -1 }).toArray(),
+      ]);
 
-      return {
-        description: category.description ?? "",
-        iconKey: slug,
-        id: toId(category._id),
-        markerTone: deriveMarkerTone(slug, category.name),
-        name: category.name,
-        slug,
-      };
-    });
+    const categories: CategoryRepositoryRecord[] = categoryDocs.map(
+      (category) => {
+        const slug = category.slug?.trim() || slugify(category.name);
 
-    const categoryById = new Map(categories.map((category) => [category.id, category]));
+        return {
+          description: category.description ?? "",
+          iconKey: slug,
+          id: toId(category._id),
+          markerTone: deriveMarkerTone(slug, category.name),
+          name: category.name,
+          slug,
+        };
+      },
+    );
+
+    const categoryById = new Map(
+      categories.map((category) => [category.id, category]),
+    );
 
     const requestDrivenStatusByCopyId = new Map<
       string,
@@ -319,7 +351,8 @@ export async function getLibrarySnapshot(): Promise<LibrarySnapshot> {
         author: book.author,
         categoryId: toId(book.categoryId),
         coverImageFileName:
-          book.coverImageUrl?.split("/").pop() ?? `${slugify(book.title) || "book"}.jpg`,
+          book.coverImageUrl?.split("/").pop() ??
+          `${slugify(book.title) || "book"}.jpg`,
         coverLabel: createCoverLabel(book.title),
         coverTone: deriveCoverTone(categorySlug, categoryName),
         description: book.description,
@@ -332,7 +365,8 @@ export async function getLibrarySnapshot(): Promise<LibrarySnapshot> {
           publishedYear: book.metadata?.publishedYear ?? "",
           publisher: book.metadata?.publisher ?? "",
         },
-        predefinedDurations: book.predefinedDurations as ReadonlyArray<AdminSharedDurationPreset>,
+        predefinedDurations:
+          book.predefinedDurations as ReadonlyArray<AdminSharedDurationPreset>,
         recordStatus: book.status,
         shelfCode: deriveShelfCode(book, copies, categorySlug),
         title: book.title,
@@ -342,7 +376,11 @@ export async function getLibrarySnapshot(): Promise<LibrarySnapshot> {
     const users: UserRepositoryRecord[] = userDocs.map((user) => {
       const role = user.role;
       const managementRole = hasAdminAccessRole(role) ? "admin" : "user";
-      const joinedOn = (user.createdAt ?? user.lastLoginAt ?? new Date()).toISOString();
+      const joinedOn = (
+        user.createdAt ??
+        user.lastLoginAt ??
+        new Date()
+      ).toISOString();
       const membershipLabel = deriveMembershipLabel(role);
 
       return {
@@ -424,7 +462,14 @@ export async function getLibrarySnapshot(): Promise<LibrarySnapshot> {
       users,
     };
   } catch (error) {
-    console.error("Failed to load Mongo-backed library snapshot, falling back to mock data.", error);
+    if (!canFallbackToMockSnapshot()) {
+      throw error;
+    }
+
+    console.error(
+      "Failed to load Mongo-backed library snapshot, falling back to mock data.",
+      error,
+    );
     return createMockSnapshot();
   }
 }
@@ -434,7 +479,11 @@ export async function listCategoryRecordsFromStore() {
 }
 
 export async function getCategoryRecordByIdFromStore(categoryId: string) {
-  return (await getLibrarySnapshot()).categories.find((category) => category.id === categoryId) ?? null;
+  return (
+    (await getLibrarySnapshot()).categories.find(
+      (category) => category.id === categoryId,
+    ) ?? null
+  );
 }
 
 export async function listBookRecordsFromStore() {
@@ -442,11 +491,16 @@ export async function listBookRecordsFromStore() {
 }
 
 export async function getBookRecordByIdFromStore(bookId: string) {
-  return (await getLibrarySnapshot()).books.find((book) => book.id === bookId) ?? null;
+  return (
+    (await getLibrarySnapshot()).books.find((book) => book.id === bookId) ??
+    null
+  );
 }
 
 export async function listBookRecordsByCategoryFromStore(categoryId: string) {
-  return (await getLibrarySnapshot()).books.filter((book) => book.categoryId === categoryId);
+  return (await getLibrarySnapshot()).books.filter(
+    (book) => book.categoryId === categoryId,
+  );
 }
 
 export async function countBookRecordsByCategoryFromStore(categoryId: string) {
@@ -458,11 +512,17 @@ export async function listBookCopyRecordsFromStore() {
 }
 
 export async function getBookCopyRecordByIdFromStore(copyId: string) {
-  return (await getLibrarySnapshot()).bookCopies.find((copy) => copy.id === copyId) ?? null;
+  return (
+    (await getLibrarySnapshot()).bookCopies.find(
+      (copy) => copy.id === copyId,
+    ) ?? null
+  );
 }
 
 export async function listBookCopyRecordsForBookFromStore(bookId: string) {
-  return (await getLibrarySnapshot()).bookCopies.filter((copy) => copy.bookId === bookId);
+  return (await getLibrarySnapshot()).bookCopies.filter(
+    (copy) => copy.bookId === bookId,
+  );
 }
 
 export async function listBorrowRequestRecordsFromStore() {
@@ -470,15 +530,23 @@ export async function listBorrowRequestRecordsFromStore() {
 }
 
 export async function getBorrowRequestRecordByIdFromStore(requestId: string) {
-  return (await getLibrarySnapshot()).borrowRequests.find((record) => record.id === requestId) ?? null;
+  return (
+    (await getLibrarySnapshot()).borrowRequests.find(
+      (record) => record.id === requestId,
+    ) ?? null
+  );
 }
 
 export async function listBorrowRequestRecordsForBookFromStore(bookId: string) {
-  return (await getLibrarySnapshot()).borrowRequests.filter((record) => record.bookId === bookId);
+  return (await getLibrarySnapshot()).borrowRequests.filter(
+    (record) => record.bookId === bookId,
+  );
 }
 
 export async function listBorrowRequestRecordsForUserFromStore(userId: string) {
-  return (await getLibrarySnapshot()).borrowRequests.filter((record) => record.userId === userId);
+  return (await getLibrarySnapshot()).borrowRequests.filter(
+    (record) => record.userId === userId,
+  );
 }
 
 export async function listUserRecordsFromStore() {
@@ -486,14 +554,21 @@ export async function listUserRecordsFromStore() {
 }
 
 export async function listVisibleUserRecordsFromStore() {
-  return (await getLibrarySnapshot()).users.filter((user) => user.visibleInAdminDirectory);
+  return (await getLibrarySnapshot()).users.filter(
+    (user) => user.visibleInAdminDirectory,
+  );
 }
 
 export async function getUserRecordByIdFromStore(userId: string) {
-  return (await getLibrarySnapshot()).users.find((user) => user.id === userId) ?? null;
+  return (
+    (await getLibrarySnapshot()).users.find((user) => user.id === userId) ??
+    null
+  );
 }
 
-export async function getBookInventorySnapshotFromStore(bookId: string): Promise<BookInventorySnapshot> {
+export async function getBookInventorySnapshotFromStore(
+  bookId: string,
+): Promise<BookInventorySnapshot> {
   const [copies, book] = await Promise.all([
     listBookCopyRecordsForBookFromStore(bookId),
     getBookRecordByIdFromStore(bookId),
@@ -501,9 +576,15 @@ export async function getBookInventorySnapshotFromStore(bookId: string): Promise
   const updatedTimestamps = copies
     .map((copy) => copy.updatedOn)
     .sort((left, right) => right.localeCompare(left));
-  const availableCopies = copies.filter((copy) => copy.status === "available").length;
-  const borrowedCopies = copies.filter((copy) => copy.status === "borrowed").length;
-  const reservedCopies = copies.filter((copy) => copy.status === "reserved").length;
+  const availableCopies = copies.filter(
+    (copy) => copy.status === "available",
+  ).length;
+  const borrowedCopies = copies.filter(
+    (copy) => copy.status === "borrowed",
+  ).length;
+  const reservedCopies = copies.filter(
+    (copy) => copy.status === "reserved",
+  ).length;
 
   return {
     availableCopies,
@@ -522,7 +603,9 @@ export async function getStoredCategoryRecordById(categoryId: string) {
 }
 
 export async function getStoredBookRecordById(bookId: string) {
-  return isMongoConfigured() ? getBookRecordByIdFromStore(bookId) : getBookRecordById(bookId);
+  return isMongoConfigured()
+    ? getBookRecordByIdFromStore(bookId)
+    : getBookRecordById(bookId);
 }
 
 export async function getStoredBookCopyRecordById(copyId: string) {
@@ -544,15 +627,21 @@ export async function listStoredBorrowRequestRecordsForUser(userId: string) {
 }
 
 export async function listStoredBorrowRequestRecords() {
-  return isMongoConfigured() ? listBorrowRequestRecordsFromStore() : listBorrowRequestRecords();
+  return isMongoConfigured()
+    ? listBorrowRequestRecordsFromStore()
+    : listBorrowRequestRecords();
 }
 
 export async function getStoredUserRecordById(userId: string) {
-  return isMongoConfigured() ? getUserRecordByIdFromStore(userId) : getUserRecordById(userId);
+  return isMongoConfigured()
+    ? getUserRecordByIdFromStore(userId)
+    : getUserRecordById(userId);
 }
 
 export async function listStoredVisibleUserRecords() {
-  return isMongoConfigured() ? listVisibleUserRecordsFromStore() : listVisibleUserRecords();
+  return isMongoConfigured()
+    ? listVisibleUserRecordsFromStore()
+    : listVisibleUserRecords();
 }
 
 export async function countStoredBookRecordsByCategory(categoryId: string) {

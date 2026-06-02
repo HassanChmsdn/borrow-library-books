@@ -31,14 +31,24 @@ export interface AdminCategoryDialogState {
   record?: AdminCategoryRecord;
 }
 
+export interface AdminCategoryMutationResult {
+  categoryId?: string;
+  message: string;
+  status: "error" | "success";
+}
+
 export interface AdminCategoriesModuleProps {
   initialRecords?: ReadonlyArray<AdminCategoryRecord>;
   isLoading?: boolean;
-  onCreateCategory?: (values: AdminCategoryFormValues) => void;
-  onDeleteCategory?: (category: AdminCategoryRecord) => void;
+  onCreateCategory?: (
+    values: AdminCategoryFormValues,
+  ) => Promise<AdminCategoryMutationResult>;
+  onDeleteCategory?: (
+    category: AdminCategoryRecord,
+  ) => Promise<AdminCategoryMutationResult>;
   onUpdateCategory?: (
     category: AdminCategoryRecord,
     values: AdminCategoryFormValues,
-  ) => void;
+  ) => Promise<AdminCategoryMutationResult>;
   searchQuery?: string;
 }

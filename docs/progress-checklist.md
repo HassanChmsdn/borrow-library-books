@@ -14,7 +14,7 @@
 - Completed: admin dashboard, books list, book create/edit, categories list, borrowings list, inventory list, users list, user profile, and admin self-profile.
 - Completed: admin loading states across major routes and shared admin error presentation.
 - Completed: admin detail routes for books and users.
-- Legacy note: `src/modules/admin-overview` still exists as an earlier scaffold and can be retired.
+- Completed: obsolete `src/modules/admin-overview` scaffold was retired after the newer admin workspace replaced it.
 
 ### Layout shells
 
@@ -36,7 +36,7 @@
 
 ### Unnecessary sections
 
-- `src/modules/admin-overview` appears obsolete now that the newer admin workspace is in place.
+- Earlier admin overview scaffold has been removed.
 
 ### Responsive issues
 
@@ -57,16 +57,17 @@
 - Implemented: centralized auth helpers and access guards under `src/lib/auth/`, with shared state helpers in `src/lib/auth/index.ts`, server session helpers in `src/lib/auth/server.ts`, and client hooks/provider utilities in `src/lib/auth/react.tsx`.
 - Implemented: member-only access for `/account/*` and admin-only access for `/admin/*`.
 
-### Missing real auth integration
+### Auth0 integration status
 
-- Missing: Auth0 integration.
-- Missing: persistent user sessions backed by a real identity provider.
-- Missing: real user profile synchronization and role claims from an external auth source.
+- Partial: Auth0 login, callback, logout, session lookup, and app-user resolution helpers exist.
+- Implemented: app authorization resolves from MongoDB app-user records when MongoDB is configured.
+- Remaining: production validation of Auth0 tenant configuration, callback/logout behavior, and unauthorized identity handling.
 
 ### Missing role enforcement areas
 
 - No obvious route-level gaps remain in the mocked access model.
-- Missing: backend/API-level authorization because there is no real server data layer yet.
+- Partial: server actions use centralized staff/section authorization helpers.
+- Remaining: broaden authorization tests around every persisted mutation.
 
 ## 4. Data Layer
 
@@ -76,33 +77,37 @@
 - Implemented: feature-level mock data for public catalog, borrowings, and profile pages.
 - Implemented: typed mock view models across admin books, categories, borrowings, inventory, users, dashboard, and admin profile.
 
-### Missing database integration
+### Database integration status
 
-- Missing: MongoDB integration.
-- Missing: server persistence for books, copies, borrowings, users, categories, and dashboard metrics.
-- Missing: API routes, server actions, or repository layer for CRUD operations.
+- Implemented: MongoDB client, collection initialization, validators, indexes, seed scripts, and app-user provisioning script.
+- Implemented: Mongo-backed snapshot adapter for public catalog, member borrowings/profile, dashboard, financials, access control, users, books, categories, inventory, and borrowings.
+- Implemented: server actions/services for books, users, access control, borrowing lifecycle/payment updates, categories, and inventory copy saves.
+- Remaining: richer transactional handling across multi-collection borrowing/inventory updates and production observability for persistence failures.
 
-### Missing schemas/models
+### Schemas/models
 
-- Missing: real database schemas/models.
-- Partial: Zod-ready form/value types exist in several modules, but there is no shared domain schema layer for persisted entities.
+- Implemented: shared Zod document/input schemas for users, categories, books, book copies, borrow requests, payment status, and lifecycle statuses.
+- Remaining: domain service tests should expand around schema-to-workflow behavior as CRUD coverage grows.
 
 ## 5. Core Features
 
 ### Borrowing flow (UI vs real logic)
 
 - Completed: public browsing, book details, borrow CTA behavior, and member-only My Borrowings UI.
-- Missing: real borrow request creation, approval flow persistence, due-date calculations, and server-backed status changes.
+- Partial: real borrow request creation, approval, rejection/cancellation, return, due-date calculation, copy reservation/borrowed/release updates, and payment status updates exist behind MongoDB-backed services.
+- Remaining: transaction boundaries, stronger concurrency handling, and reminder/audit event integration.
 
 ### Admin management features (UI vs real logic)
 
 - Completed: UI for managing books, categories, borrowings, inventory, users, dashboard, and profiles.
-- Missing: real create/edit/delete/update logic against a backend.
+- Partial: books, users, access control, borrowings, categories, and inventory copy saves have server-backed mutations when MongoDB is configured.
+- Remaining: full CRUD coverage for every management edge case, bulk operations, and richer delete/archive policy.
 
 ### Inventory logic
 
 - Completed: inventory copy management UI, Add Copy flow, and book reference selection from existing mock books.
-- Missing: true copy lifecycle logic, stock rules, and persistence.
+- Partial: inventory copy persistence exists, and open borrowing records constrain unsafe copy/book/status changes.
+- Remaining: full lifecycle audit history, transfer/location rules, and staff-facing conflict resolution.
 
 ### User management
 
@@ -113,7 +118,7 @@
 
 - Missing: email notifications.
 - Missing: reminder scheduling for due/overdue borrowings.
-- Missing: payment handling beyond mocked onsite-cash status labels.
+- Partial: onsite-cash payment status can now be updated independently from borrowing lifecycle at the service/action layer.
 - Missing: domain-level validation beyond UI/form validation.
 - Missing: audit logging, admin activity history persistence, and operational event trails.
 
@@ -126,17 +131,17 @@
 
 ### CI/CD
 
-- Missing: GitHub Actions or any CI pipeline.
-- Missing: automated lint/typecheck/build/test workflow on push or pull request.
+- Implemented: GitHub Actions workflow for install, lint, typecheck, tests, and build.
+- Remaining: repo-wide format check currently reports pre-existing drift and should be enabled in CI after a dedicated formatting pass.
 
 ### Testing
 
-- Missing: unit tests.
+- Partial: Node test runner script and initial schema/business-rule unit tests added.
 - Missing: integration tests.
 - Missing: end-to-end tests.
-- Missing: test runner configuration.
+- Implemented: test runner configuration through the `npm test` script.
 
 ### Deployment readiness
 
 - Partial: app builds successfully, uses typed env validation, and has route-level error boundaries.
-- Missing: deployment config, hosting pipeline, database/auth integration, monitoring, secrets setup, and production observability.
+- Missing: deployment config, hosting pipeline, production validation for database/auth integration, monitoring, secrets setup, and production observability.

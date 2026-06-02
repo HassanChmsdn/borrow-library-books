@@ -1,6 +1,7 @@
 import "server-only";
 
 export {
+  getMongoAppEnvironment,
   getMongoClient,
   getMongoDatabaseName,
   hasExplicitMongoDatabaseName,

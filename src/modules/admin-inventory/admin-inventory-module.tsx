@@ -33,10 +33,12 @@ function AdminInventoryModule({
   const {
     clearFilters,
     filteredRecords,
+    feedback,
     formMode,
     hasActiveFilters,
     inventoryFormInitialValues,
     isFormOpen,
+    isSubmittingCopy,
     openCreateForm,
     openEditForm,
     recordsCount,
@@ -87,12 +89,37 @@ function AdminInventoryModule({
           description="Desktop uses a dense copy table, while mobile falls back to stacked cards that preserve the same hierarchy for status and condition."
           actions={
             hasActiveFilters ? (
-              <Button type="button" size="sm" variant="ghost" onClick={clearFilters}>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={clearFilters}
+              >
                 {translateText("Reset filters")}
               </Button>
             ) : null
           }
         >
+          {feedback ? (
+            <div
+              className={
+                feedback.status === "success"
+                  ? "rounded-card border-success/20 bg-success/5 border px-4 py-3"
+                  : "rounded-card border-danger/20 bg-danger-surface border px-4 py-3"
+              }
+            >
+              <p
+                className={
+                  feedback.status === "success"
+                    ? "text-body-sm text-foreground font-medium"
+                    : "text-body-sm text-danger font-medium"
+                }
+              >
+                {translateText(feedback.message)}
+              </p>
+            </div>
+          ) : null}
+
           {isEmpty ? (
             <AdminEmptyState
               title="No inventory copies yet"
@@ -111,7 +138,12 @@ function AdminInventoryModule({
               title="No copies match these filters"
               description="Try another copy code, title, author, or status filter to find the physical record you need."
               action={
-                <Button type="button" size="sm" variant="outline" onClick={clearFilters}>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={clearFilters}
+                >
                   {translateText("Clear search and status")}
                 </Button>
               }
@@ -138,6 +170,7 @@ function AdminInventoryModule({
           onOpenChange={setIsFormOpen}
           mode={formMode}
           initialValues={inventoryFormInitialValues}
+          isSubmitting={isSubmittingCopy}
           onSubmit={saveCopy}
         />
       ) : null}

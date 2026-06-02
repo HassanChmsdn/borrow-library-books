@@ -1,32 +1,30 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 
-import {
-  adminCategoryRecords,
-  createAdminCategoryId,
-} from "./mock-data";
+import { adminCategoryRecords, createAdminCategoryId } from "./mock-data";
+import { deleteAdminCategoryAction, saveAdminCategoryAction } from "./actions";
 import type {
   AdminCategoryDialogState,
   AdminCategoryFormValues,
+  AdminCategoryMutationResult,
   AdminCategoryRecord,
 } from "./types";
 
 interface UseAdminCategoriesModuleStateOptions {
   initialRecords?: ReadonlyArray<AdminCategoryRecord>;
-  onCreateCategory?: (values: AdminCategoryFormValues) => void;
-  onDeleteCategory?: (category: AdminCategoryRecord) => void;
+  onCreateCategory?: (
+    values: AdminCategoryFormValues,
+  ) => Promise<AdminCategoryMutationResult>;
+  onDeleteCategory?: (
+    category: AdminCategoryRecord,
+  ) => Promise<AdminCategoryMutationResult>;
   onUpdateCategory?: (
     category: AdminCategoryRecord,
     values: AdminCategoryFormValues,
-  ) => void;
+  ) => Promise<AdminCategoryMutationResult>;
   searchQuery?: string;
-}
-
-function sleep(duration: number) {
-  return new Promise<void>((resolve) => {
-    window.setTimeout(resolve, duration);
-  });
 }
 
 export function useAdminCategoriesModuleState({
@@ -36,11 +34,14 @@ export function useAdminCategoriesModuleState({
   onUpdateCategory,
   searchQuery = "",
 }: UseAdminCategoriesModuleStateOptions) {
+  const router = useRouter();
   const [records, setRecords] =
     React.useState<ReadonlyArray<AdminCategoryRecord>>(initialRecords);
   const [searchValue, setSearchValue] = React.useState(searchQuery);
   const [dialogState, setDialogState] =
     React.useState<AdminCategoryDialogState | null>(null);
+  const [feedback, setFeedback] =
+    React.useState<AdminCategoryMutationResult | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   React.useEffect(() => {
@@ -61,50 +62,82 @@ export function useAdminCategoriesModuleState({
 
   async function submitCategory(values: AdminCategoryFormValues) {
     setIsSubmitting(true);
-    await sleep(250);
 
-    setRecords((current) => {
-      if (dialogState?.mode === "edit" && dialogState.record) {
-        return current.map((record) =>
-          record.id === dialogState.record?.id
-            ? {
-                ...record,
-                ...values,
-              }
-            : record,
-        );
+    try {
+      const result =
+        dialogState?.mode === "edit" && dialogState.record
+          ? await (onUpdateCategory?.(dialogState.record, values) ??
+              saveAdminCategoryAction({
+                categoryId: dialogState.record.id,
+                mode: "edit",
+                values,
+              }))
+          : await (onCreateCategory?.(values) ??
+              saveAdminCategoryAction({ mode: "create", values }));
+
+      if (result) {
+        setFeedback(result);
+
+        if (result.status === "success") {
+          setDialogState(null);
+          router.refresh();
+        }
+
+        return;
       }
 
-      return [
-        {
-          id: createAdminCategoryId(values.name),
-          bookCount: 0,
-          description: values.description,
-          name: values.name,
-        },
-        ...current,
-      ];
-    });
+      setRecords((current) => {
+        if (dialogState?.mode === "edit" && dialogState.record) {
+          return current.map((record) =>
+            record.id === dialogState.record?.id
+              ? {
+                  ...record,
+                  ...values,
+                }
+              : record,
+          );
+        }
 
-    if (dialogState?.mode === "edit" && dialogState.record) {
-      onUpdateCategory?.(dialogState.record, values);
-    } else {
-      onCreateCategory?.(values);
+        return [
+          {
+            id: createAdminCategoryId(values.name),
+            bookCount: 0,
+            description: values.description,
+            name: values.name,
+          },
+          ...current,
+        ];
+      });
+      setDialogState(null);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsSubmitting(false);
-    setDialogState(null);
   }
 
-  function deleteCategory(category: AdminCategoryRecord) {
+  async function deleteCategory(category: AdminCategoryRecord) {
+    const result =
+      (await onDeleteCategory?.(category)) ??
+      (await deleteAdminCategoryAction(category.id));
+
+    if (result) {
+      setFeedback(result);
+
+      if (result.status === "success") {
+        router.refresh();
+      }
+
+      return;
+    }
+
     setRecords((current) =>
       current.filter((record) => record.id !== category.id),
     );
-    onDeleteCategory?.(category);
   }
 
   return {
+    deleteCategory,
     dialogState,
+    feedback,
     filteredRecords,
     hasNoResults: records.length > 0 && filteredRecords.length === 0,
     isEmpty: records.length === 0,
@@ -122,6 +155,5 @@ export function useAdminCategoriesModuleState({
     searchValue,
     setSearchValue,
     submitCategory,
-    deleteCategory,
   };
 }

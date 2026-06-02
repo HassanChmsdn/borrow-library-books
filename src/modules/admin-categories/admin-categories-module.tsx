@@ -1,15 +1,16 @@
 "use client";
 
-import {
-  AdminDataTable,
-  AdminPageHeader,
-} from "@/components/admin";
+import { AdminDataTable, AdminPageHeader } from "@/components/admin";
 import { LoadingSkeleton } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
 import { useCanManageAdminSection } from "@/lib/auth/react";
 import { useI18n } from "@/lib/i18n";
 
-import { CategoriesTable, CategoriesToolbar, CategoryFormDialog } from "./components";
+import {
+  CategoriesTable,
+  CategoriesToolbar,
+  CategoryFormDialog,
+} from "./components";
 import { getAdminCategoryDefaultValues } from "./mock-data";
 import { useAdminCategoriesModuleState } from "./hooks";
 import type { AdminCategoriesModuleProps } from "./types";
@@ -27,6 +28,7 @@ function AdminCategoriesModule({
   const {
     deleteCategory,
     dialogState,
+    feedback,
     filteredRecords,
     hasNoResults,
     isSubmitting,
@@ -88,6 +90,26 @@ function AdminCategoriesModule({
           ) : null
         }
       >
+        {feedback ? (
+          <div
+            className={
+              feedback.status === "success"
+                ? "rounded-card border-success/20 bg-success/5 border px-4 py-3"
+                : "rounded-card border-danger/20 bg-danger-surface border px-4 py-3"
+            }
+          >
+            <p
+              className={
+                feedback.status === "success"
+                  ? "text-body-sm text-foreground font-medium"
+                  : "text-body-sm text-danger font-medium"
+              }
+            >
+              {translateText(feedback.message)}
+            </p>
+          </div>
+        ) : null}
+
         <CategoriesTable
           categories={filteredRecords}
           canManage={canManageCategories}

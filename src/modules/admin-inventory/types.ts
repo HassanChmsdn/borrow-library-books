@@ -57,11 +57,17 @@ export interface AdminInventorySaveContext {
   record?: AdminInventoryRecord;
 }
 
+export interface AdminInventoryMutationResult {
+  copyId?: string;
+  message: string;
+  status: "error" | "success";
+}
+
 export interface AdminInventoryActionHandlers {
   onSaveCopy?: (
     values: AdminInventoryFormValues,
     context: AdminInventorySaveContext,
-  ) => void;
+  ) => Promise<AdminInventoryMutationResult>;
 }
 
 export interface AdminInventoryModuleProps extends AdminInventoryActionHandlers {

@@ -4,6 +4,7 @@ import { ObjectId } from "mongodb";
 
 import {
   CreateBorrowRequestInputSchema,
+  PaymentStatusSchema,
   UpdateBookCopyInputSchema,
   UpdateBorrowRequestInputSchema,
   getBookCopiesCollection,
@@ -140,10 +141,10 @@ async function listReservedCopyIds(
   const borrowRequests = await getBorrowRequestsCollection();
   const selector: {
     _id?: { $ne: ObjectId | string };
-    bookId: string;
+    bookId: ObjectId | string;
     status: { $in: ["pending", "active", "overdue"] };
   } = {
-    bookId,
+    bookId: toDatabaseId(bookId),
     status: { $in: ["pending", "active", "overdue"] },
   };
 
@@ -187,7 +188,9 @@ async function resolveAssignableCopy(options: {
   const reservedCopyIds = await listReservedCopyIds(options.bookId, {
     excludeRequestId: options.requestId,
   });
-  const availableCopies = (await listStoredBookCopyRecordsForBook(options.bookId))
+  const availableCopies = (
+    await listStoredBookCopyRecordsForBook(options.bookId)
+  )
     .filter(
       (copy) =>
         (copy.status === "available" || copy.id === options.currentCopyId) &&
@@ -213,7 +216,9 @@ async function resolveAssignableCopy(options: {
   const nextCopy = availableCopies[0] ?? null;
 
   if (!nextCopy) {
-    throw new Error("No available physical copy could be assigned to this request.");
+    throw new Error(
+      "No available physical copy could be assigned to this request.",
+    );
   }
 
   return nextCopy;
@@ -237,21 +242,24 @@ export async function createBorrowRequestForUser(
   const reservedCopyIds = await listReservedCopyIds(input.bookId);
   const availableCopies = (await listStoredBookCopyRecordsForBook(input.bookId))
     .filter(
-      (copy) =>
-        copy.status === "available" && !reservedCopyIds.has(copy.id),
+      (copy) => copy.status === "available" && !reservedCopyIds.has(copy.id),
     )
     .sort((left, right) => left.copyCode.localeCompare(right.copyCode));
 
   const copy = input.bookCopyId
     ? await getStoredBookCopyRecordById(input.bookCopyId)
-    : availableCopies[0] ?? null;
+    : (availableCopies[0] ?? null);
 
   if (!copy || copy.bookId !== input.bookId) {
-    throw new Error("No available physical copy could be assigned to this request.");
+    throw new Error(
+      "No available physical copy could be assigned to this request.",
+    );
   }
 
   if (copy.status !== "available" || reservedCopyIds.has(copy.id)) {
-    throw new Error("No available physical copy could be assigned to this request.");
+    throw new Error(
+      "No available physical copy could be assigned to this request.",
+    );
   }
 
   if (input.durationType === "custom" && !book.allowCustomDuration) {
@@ -269,8 +277,8 @@ export async function createBorrowRequestForUser(
 
   const requestedAt = new Date();
   const parsed = CreateBorrowRequestInputSchema.parse({
-    bookCopyId: copy.id,
-    bookId: input.bookId,
+    bookCopyId: toDatabaseId(copy.id),
+    bookId: toDatabaseId(input.bookId),
     durationType: input.durationType,
     feeCents: book.feeCents,
     paymentMethod: "onsite-cash",
@@ -278,7 +286,7 @@ export async function createBorrowRequestForUser(
     requestedAt,
     requestedDurationDays: input.requestedDurationDays,
     status: "pending",
-    userId: input.userId,
+    userId: toDatabaseId(input.userId),
   });
 
   const borrowRequests = await getBorrowRequestsCollection();
@@ -313,7 +321,9 @@ export async function approveBorrowRequest(
   },
 ) {
   if (!isMongoConfigured()) {
-    throw new Error("Borrow request management requires MongoDB to be configured.");
+    throw new Error(
+      "Borrow request management requires MongoDB to be configured.",
+    );
   }
 
   const request = await getBorrowRequestDocument(requestId);
@@ -323,7 +333,9 @@ export async function approveBorrowRequest(
   }
 
   const now = new Date();
-  const currentCopyId = request.bookCopyId ? String(request.bookCopyId) : undefined;
+  const currentCopyId = request.bookCopyId
+    ? String(request.bookCopyId)
+    : undefined;
   const approvedDurationDays =
     options?.approvedDurationDays ??
     request.approvedDurationDays ??
@@ -333,7 +345,9 @@ export async function approveBorrowRequest(
     currentCopyId: request.bookCopyId ? String(request.bookCopyId) : undefined,
     requestId,
   });
-  const dueAt = new Date(now.getTime() + approvedDurationDays * 24 * 60 * 60 * 1000);
+  const dueAt = new Date(
+    now.getTime() + approvedDurationDays * 24 * 60 * 60 * 1000,
+  );
   const borrowRequests = await getBorrowRequestsCollection();
   const borrowRequestUpdate = UpdateBorrowRequestInputSchema.parse({
     approvedDurationDays,
@@ -361,7 +375,10 @@ export async function approveBorrowRequest(
   await updateBookCopyStatus(assignedCopy.id, "borrowed", now);
 
   if (currentCopyId && currentCopyId !== assignedCopy.id) {
-    const releasedCopyStatus = await deriveRemainingCopyStatus(currentCopyId, requestId);
+    const releasedCopyStatus = await deriveRemainingCopyStatus(
+      currentCopyId,
+      requestId,
+    );
     await updateBookCopyStatus(currentCopyId, releasedCopyStatus, now);
   }
 
@@ -380,7 +397,9 @@ export async function rejectBorrowRequest(
   },
 ) {
   if (!isMongoConfigured()) {
-    throw new Error("Borrow request management requires MongoDB to be configured.");
+    throw new Error(
+      "Borrow request management requires MongoDB to be configured.",
+    );
   }
 
   const request = await getBorrowRequestDocument(requestId);
@@ -390,7 +409,9 @@ export async function rejectBorrowRequest(
   }
 
   const now = new Date();
-  const currentCopyId = request.bookCopyId ? String(request.bookCopyId) : undefined;
+  const currentCopyId = request.bookCopyId
+    ? String(request.bookCopyId)
+    : undefined;
   const borrowRequests = await getBorrowRequestsCollection();
   const borrowRequestUpdate = UpdateBorrowRequestInputSchema.parse({
     cancelledAt: now,
@@ -412,7 +433,10 @@ export async function rejectBorrowRequest(
   );
 
   if (currentCopyId) {
-    const releasedCopyStatus = await deriveRemainingCopyStatus(currentCopyId, requestId);
+    const releasedCopyStatus = await deriveRemainingCopyStatus(
+      currentCopyId,
+      requestId,
+    );
     await updateBookCopyStatus(currentCopyId, releasedCopyStatus, now);
   }
 
@@ -429,7 +453,9 @@ export async function markBorrowRequestReturned(
   },
 ) {
   if (!isMongoConfigured()) {
-    throw new Error("Borrow request management requires MongoDB to be configured.");
+    throw new Error(
+      "Borrow request management requires MongoDB to be configured.",
+    );
   }
 
   const request = await getBorrowRequestDocument(requestId);
@@ -457,7 +483,10 @@ export async function markBorrowRequestReturned(
     },
   );
 
-  const releasedCopyStatus = await deriveRemainingCopyStatus(currentCopyId, requestId);
+  const releasedCopyStatus = await deriveRemainingCopyStatus(
+    currentCopyId,
+    requestId,
+  );
   await updateBookCopyStatus(currentCopyId, releasedCopyStatus, now);
 
   return {
@@ -471,7 +500,9 @@ export async function updateBorrowRequestManagement(
   input: UpdateBorrowRequestManagementInput,
 ) {
   if (!isMongoConfigured()) {
-    throw new Error("Borrow request management requires MongoDB to be configured.");
+    throw new Error(
+      "Borrow request management requires MongoDB to be configured.",
+    );
   }
 
   const request = await getBorrowRequestDocument(requestId);
@@ -484,7 +515,9 @@ export async function updateBorrowRequestManagement(
   }
 
   if (!allowedStatuses.has(input.status)) {
-    throw new Error("This borrowing request cannot move to the selected status.");
+    throw new Error(
+      "This borrowing request cannot move to the selected status.",
+    );
   }
 
   const now = new Date();
@@ -506,24 +539,26 @@ export async function updateBorrowRequestManagement(
   const startedAt =
     input.status === "pending" || input.status === "cancelled"
       ? undefined
-      : request.startedAt ?? now;
+      : (request.startedAt ?? now);
   const baseDueAt = startedAt
     ? new Date(startedAt.getTime() + durationDays * 24 * 60 * 60 * 1000)
     : undefined;
   const dueAt =
     input.status === "active"
-      ? request.dueAt ?? baseDueAt
+      ? (request.dueAt ?? baseDueAt)
       : input.status === "overdue"
         ? new Date(now.getTime() - 24 * 60 * 60 * 1000)
         : input.status === "returned"
-          ? request.dueAt ?? baseDueAt
+          ? (request.dueAt ?? baseDueAt)
           : undefined;
   const trimmedReason = input.rejectionReason?.trim();
   const borrowRequests = await getBorrowRequestsCollection();
   const borrowRequestUpdate = UpdateBorrowRequestInputSchema.parse(
     omitUndefined({
       approvedDurationDays:
-        input.status === "pending" ? request.approvedDurationDays : durationDays,
+        input.status === "pending"
+          ? request.approvedDurationDays
+          : durationDays,
       cancelledAt: input.status === "cancelled" ? now : undefined,
       dueAt,
       rejectionReason:
@@ -569,7 +604,10 @@ export async function updateBorrowRequestManagement(
     },
   );
 
-  const releasedCopyStatus = await deriveRemainingCopyStatus(currentCopyId, requestId);
+  const releasedCopyStatus = await deriveRemainingCopyStatus(
+    currentCopyId,
+    requestId,
+  );
 
   const nextCopyStatus =
     input.status === "pending"
@@ -592,5 +630,46 @@ export async function updateBorrowRequestManagement(
     bookCopyId: nextCopyId,
     id: String(request._id),
     status: input.status,
+  };
+}
+
+export async function updateBorrowRequestPaymentStatus(
+  requestId: string,
+  paymentStatus: PaymentStatus,
+) {
+  if (!isMongoConfigured()) {
+    throw new Error(
+      "Borrow request payment updates require MongoDB to be configured.",
+    );
+  }
+
+  const parsedPaymentStatus = PaymentStatusSchema.parse(paymentStatus);
+  const request = await getBorrowRequestDocument(requestId);
+
+  if (request.status === "cancelled") {
+    throw new Error(
+      "Cancelled borrowing requests cannot receive payment updates.",
+    );
+  }
+
+  const now = new Date();
+  const borrowRequests = await getBorrowRequestsCollection();
+  const borrowRequestUpdate = UpdateBorrowRequestInputSchema.parse({
+    paymentStatus: parsedPaymentStatus,
+  });
+
+  await borrowRequests.updateOne(
+    { _id: request._id },
+    {
+      $set: {
+        ...borrowRequestUpdate,
+        updatedAt: now,
+      },
+    },
+  );
+
+  return {
+    id: String(request._id),
+    paymentStatus: parsedPaymentStatus,
   };
 }

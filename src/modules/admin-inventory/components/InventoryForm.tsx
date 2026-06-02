@@ -28,15 +28,17 @@ import type {
 interface InventoryFormProps {
   bookOptions?: ReadonlyArray<AdminInventoryBookOption>;
   initialValues: AdminInventoryFormValues;
+  isSubmitting?: boolean;
   mode: AdminInventoryFormMode;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (values: AdminInventoryFormValues) => void;
+  onSubmit: (values: AdminInventoryFormValues) => Promise<void> | void;
   open: boolean;
 }
 
 function InventoryForm({
   bookOptions = adminInventoryBookOptions,
   initialValues,
+  isSubmitting = false,
   mode,
   onOpenChange,
   onSubmit,
@@ -72,7 +74,7 @@ function InventoryForm({
 
     const originalOverflow = document.body.style.overflow;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+      if (event.key === "Escape" && !isSubmitting) {
         onOpenChange(false);
       }
     };
@@ -84,7 +86,7 @@ function InventoryForm({
       document.body.style.overflow = originalOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [mounted, onOpenChange, open]);
+  }, [isSubmitting, mounted, onOpenChange, open]);
 
   const updateField = <T extends keyof AdminInventoryFormValues>(
     field: T,
@@ -102,7 +104,7 @@ function InventoryForm({
     });
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const result = adminInventoryFormSchema.safeParse(values);
@@ -122,28 +124,32 @@ function InventoryForm({
       return;
     }
 
-    onSubmit(result.data);
+    await onSubmit(result.data);
   };
 
   if (!mounted || !open) {
     return null;
   }
 
-  const dialogTitle = mode === "create" ? "Add inventory copy" : "Edit inventory copy";
+  const dialogTitle =
+    mode === "create" ? "Add inventory copy" : "Edit inventory copy";
   const dialogDescription =
     mode === "create"
       ? "Create a new physical copy record with future-ready fields for search, filtering, and CRUD integration."
       : "Update copy metadata, shelf placement, and operational status without leaving the inventory workspace.";
 
-  const fieldClassName =
-    "grid gap-1.5 text-body-sm text-text-secondary";
+  const fieldClassName = "grid gap-1.5 text-body-sm text-text-secondary";
   const helperClassName = "text-caption text-text-tertiary";
   const errorClassName = "text-caption text-danger";
 
   return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-stone-950/35 p-4 sm:items-center"
-      onClick={() => onOpenChange(false)}
+      onClick={() => {
+        if (!isSubmitting) {
+          onOpenChange(false);
+        }
+      }}
     >
       <div
         className="rounded-card border-border-subtle bg-card flex max-h-[calc(100vh-2rem)] w-full max-w-3xl flex-col overflow-hidden border shadow-2xl"
@@ -170,13 +176,24 @@ function InventoryForm({
                 <Input
                   value={values.copyCode}
                   aria-invalid={Boolean(errors.copyCode)}
-                  onChange={(event) => updateField("copyCode", event.target.value)}
+                  disabled={isSubmitting}
+                  onChange={(event) =>
+                    updateField("copyCode", event.target.value)
+                  }
                   placeholder={translateText("DT-FIC-1984-04")}
                 />
-                <span className={cn(helperClassName, errors.copyCode && "hidden")}>
-                  {translateText("Use a clear branch and shelf-safe identifier.")}
+                <span
+                  className={cn(helperClassName, errors.copyCode && "hidden")}
+                >
+                  {translateText(
+                    "Use a clear branch and shelf-safe identifier.",
+                  )}
                 </span>
-                {errors.copyCode ? <span className={errorClassName}>{translateText(errors.copyCode)}</span> : null}
+                {errors.copyCode ? (
+                  <span className={errorClassName}>
+                    {translateText(errors.copyCode)}
+                  </span>
+                ) : null}
               </label>
 
               <label className={fieldClassName}>
@@ -184,70 +201,99 @@ function InventoryForm({
                   label="Book title"
                   options={bookOptions}
                   value={values.bookId}
+                  disabled={isSubmitting}
                   onValueChange={(value) => updateField("bookId", value)}
-                  className={cn(errors.bookId ? "aria-invalid:border-destructive" : undefined)}
+                  className={cn(
+                    errors.bookId
+                      ? "aria-invalid:border-destructive"
+                      : undefined,
+                  )}
                 />
-                <span className={cn(helperClassName, errors.bookId && "hidden")}>
+                <span
+                  className={cn(helperClassName, errors.bookId && "hidden")}
+                >
                   {translateText(
                     "Select an existing catalog record so this copy stays linked to the canonical book entry.",
                   )}
                 </span>
                 {selectedBook ? (
-                  <span className={cn(helperClassName, errors.bookId && "hidden")}>
+                  <span
+                    className={cn(helperClassName, errors.bookId && "hidden")}
+                  >
                     {translateText(selectedBook.description)}
                   </span>
                 ) : null}
-                {errors.bookId ? <span className={errorClassName}>{translateText(errors.bookId)}</span> : null}
+                {errors.bookId ? (
+                  <span className={errorClassName}>
+                    {translateText(errors.bookId)}
+                  </span>
+                ) : null}
               </label>
 
               <div className={fieldClassName}>
                 <AdminFilterSelect<AdminInventoryCondition>
                   label="Condition"
-                  options={([
-                    "new",
-                    "good",
-                    "fair",
-                    "poor",
-                  ] as const).map((condition) => ({
-                    label: adminInventoryConditionLabels[condition],
-                    value: condition,
-                  }))}
+                  options={(["new", "good", "fair", "poor"] as const).map(
+                    (condition) => ({
+                      label: adminInventoryConditionLabels[condition],
+                      value: condition,
+                    }),
+                  )}
                   value={values.condition}
+                  disabled={isSubmitting}
                   onValueChange={(value) => updateField("condition", value)}
                 />
-                {errors.condition ? <span className={errorClassName}>{translateText(errors.condition)}</span> : null}
+                {errors.condition ? (
+                  <span className={errorClassName}>
+                    {translateText(errors.condition)}
+                  </span>
+                ) : null}
               </div>
 
               <div className={fieldClassName}>
                 <AdminFilterSelect<AdminInventoryStatus>
                   label="Status"
-                  options={([
-                    "available",
-                    "borrowed",
-                    "maintenance",
-                  ] as const).map((status) => ({
+                  options={(
+                    ["available", "borrowed", "maintenance"] as const
+                  ).map((status) => ({
                     label: adminInventoryStatusLabels[status],
                     value: status,
                   }))}
                   value={values.status}
+                  disabled={isSubmitting}
                   onValueChange={(value) => updateField("status", value)}
                 />
-                <span className={cn(helperClassName, errors.status && "hidden")}>
-                  {translateText("Use maintenance for staff-held or repair-bound copies.")}
+                <span
+                  className={cn(helperClassName, errors.status && "hidden")}
+                >
+                  {translateText(
+                    "Use maintenance for staff-held or repair-bound copies.",
+                  )}
                 </span>
-                {errors.status ? <span className={errorClassName}>{translateText(errors.status)}</span> : null}
+                {errors.status ? (
+                  <span className={errorClassName}>
+                    {translateText(errors.status)}
+                  </span>
+                ) : null}
               </div>
             </div>
           </div>
 
           <div className="flex flex-col-reverse gap-2 border-t border-black/5 p-5 sm:flex-row sm:justify-end sm:p-6">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isSubmitting}
+              onClick={() => onOpenChange(false)}
+            >
               Cancel
             </Button>
-            <Button type="submit">
-              {mode === "create"
-                ? translateText("Save copy")
-                : translateText("Save changes")}
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting
+                ? translateText("Saving...")
+                : mode === "create"
+                  ? translateText("Save copy")
+                  : translateText("Save changes")}
             </Button>
           </div>
         </form>

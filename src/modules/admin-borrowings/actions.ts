@@ -8,8 +8,10 @@ import {
   approveBorrowRequest,
   markBorrowRequestReturned,
   rejectBorrowRequest,
+  updateBorrowRequestPaymentStatus,
   updateBorrowRequestManagement,
 } from "@/lib/data/services/borrow-requests";
+import { PaymentStatusSchema } from "@/lib/db";
 
 interface AdminBorrowingMutationResult {
   message: string;
@@ -25,6 +27,11 @@ interface ManageAdminBorrowingInput extends UpdateAdminBorrowingInput {
   bookId?: string;
   rejectionReason?: string;
   status: "active" | "cancelled" | "overdue" | "pending" | "returned";
+}
+
+interface UpdateAdminBorrowingPaymentInput extends UpdateAdminBorrowingInput {
+  bookId?: string;
+  paymentStatus: "paid" | "pending" | "unpaid" | "waived";
 }
 
 function normalizeMutationError(error: unknown) {
@@ -144,6 +151,40 @@ export async function manageAdminBorrowingAction(
 
     return {
       message: "Borrow request updated.",
+      status: "success",
+    };
+  } catch (error) {
+    return {
+      message: normalizeMutationError(error),
+      status: "error",
+    };
+  }
+}
+
+export async function updateAdminBorrowingPaymentStatusAction(
+  input: UpdateAdminBorrowingPaymentInput,
+): Promise<AdminBorrowingMutationResult> {
+  await requireAdminSectionManagement("financial", "/admin/financial");
+  const parsedPaymentStatus = PaymentStatusSchema.safeParse(
+    input.paymentStatus,
+  );
+
+  if (!parsedPaymentStatus.success) {
+    return {
+      message: "Select a valid payment status before saving.",
+      status: "error",
+    };
+  }
+
+  try {
+    await updateBorrowRequestPaymentStatus(
+      input.requestId,
+      parsedPaymentStatus.data,
+    );
+    revalidateAdminBorrowingRoutes(input.bookId);
+
+    return {
+      message: "Payment status updated.",
       status: "success",
     };
   } catch (error) {

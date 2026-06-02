@@ -1,4 +1,5 @@
 export {
+  getMongoAppEnvironment,
   getMongoClient,
   getMongoDatabaseName,
   hasExplicitMongoDatabaseName,

@@ -9,4 +9,3 @@ Feature-oriented modules live in this directory.
 - `admin-borrowings/` holds circulation oversight workflows.
 - `admin-inventory/` holds stock health and restock planning surfaces.
 - `admin-users/` holds member management surfaces.
-- `admin-overview/` is the earlier admin scaffold and can be retired after the new modules fully replace it.
