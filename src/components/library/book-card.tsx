@@ -71,9 +71,14 @@ function BookCard({
   const { translateText } = useI18n();
 
   return (
-    <Card className={cn("overflow-hidden", className)}>
+    <Card
+      className={cn(
+        "hover:border-input overflow-hidden transition-[border-color,box-shadow,transform] duration-200 hover:shadow-md",
+        className,
+      )}
+    >
       {cover ? (
-        <div className="border-border-subtle bg-elevated border-b p-4 sm:p-5">
+        <div className="border-border-subtle bg-muted/45 border-b p-4 sm:p-5">
           {cover}
         </div>
       ) : null}

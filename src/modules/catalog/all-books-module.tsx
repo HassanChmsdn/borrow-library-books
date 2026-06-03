@@ -112,13 +112,13 @@ function AllBooksModule({ books }: Readonly<AllBooksModuleProps>) {
       <PageHeader
         eyebrow="Catalog"
         title="All Books"
-        description="Discover and borrow from the full library catalog. Search, refine, and scan availability at a glance with the same mobile-first spacing and tokens used throughout the shell."
+        description="Discover titles, compare availability, and start a borrowing request when a copy is ready."
       >
-        <div className="rounded-card border-border-subtle bg-card grid gap-4 border p-4 shadow-xs sm:p-5">
+        <div className="rounded-card border-border-subtle bg-card/90 shadow-card grid gap-4 border p-4 sm:p-5">
           <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_15rem] lg:items-center">
             <label className="relative block">
               <span className="sr-only">{searchLabel}</span>
-              <Search className="text-text-tertiary pointer-events-none absolute top-1/2 start-4 size-4 -translate-y-1/2" />
+              <Search className="text-text-tertiary pointer-events-none absolute start-4 top-1/2 size-4 -translate-y-1/2" />
               <Input
                 aria-label={searchLabel}
                 className="ps-11"
@@ -133,10 +133,10 @@ function AllBooksModule({ books }: Readonly<AllBooksModuleProps>) {
                 {translateText("Sort by")}
               </span>
               <div className="relative">
-                <SlidersHorizontal className="text-text-tertiary pointer-events-none absolute top-1/2 start-4 size-4 -translate-y-1/2" />
+                <SlidersHorizontal className="text-text-tertiary pointer-events-none absolute start-4 top-1/2 size-4 -translate-y-1/2" />
                 <select
                   aria-label={translateText("Sort all books")}
-                  className="rounded-input border-input bg-card text-body text-foreground focus-visible:border-border-strong focus-visible:bg-elevated focus-visible:ring-ring flex h-11 w-full appearance-none border py-2 pe-10 ps-11 shadow-xs transition-[border-color,box-shadow,background-color,color] duration-200 outline-none focus-visible:ring-4"
+                  className="rounded-input border-input bg-card text-body text-foreground focus-visible:border-border-strong focus-visible:bg-elevated focus-visible:ring-ring flex h-11 w-full appearance-none border py-2 ps-11 pe-10 shadow-xs transition-[border-color,box-shadow,background-color,color] duration-200 outline-none focus-visible:ring-4"
                   onChange={(event) =>
                     setSortValue(event.target.value as AllBooksSortValue)
                   }
@@ -183,7 +183,9 @@ function AllBooksModule({ books }: Readonly<AllBooksModuleProps>) {
             >
               {translateText("Collection")}
             </h2>
-            <p className="text-body-sm text-text-secondary">{booksFoundLabel}</p>
+            <p className="text-body-sm text-text-secondary">
+              {booksFoundLabel}
+            </p>
           </div>
 
           {(activeCategory !== "All" || searchValue.length > 0) && (
@@ -208,7 +210,11 @@ function AllBooksModule({ books }: Readonly<AllBooksModuleProps>) {
               <BookCard
                 key={book.id}
                 action={
-                  <LinkButton href={`/books/${book.id}`} size="sm" variant="outline">
+                  <LinkButton
+                    href={`/books/${book.id}`}
+                    size="sm"
+                    variant="outline"
+                  >
                     View book
                   </LinkButton>
                 }
@@ -290,7 +296,7 @@ function AllBooksLoadingState() {
             {translateText("Collection")}
           </h2>
           <p className="text-body-sm text-text-secondary">
-            {translateText("Preparing catalog cards and filters.")}
+            {translateText("Preparing the collection.")}
           </p>
         </div>
         <LoadingSkeleton

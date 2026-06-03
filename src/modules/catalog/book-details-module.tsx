@@ -54,7 +54,10 @@ interface BookDetailsModuleProps {
   book: AllBooksItem;
 }
 
-function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps) {
+function BookDetailsModule({
+  allowCustomDuration,
+  book,
+}: BookDetailsModuleProps) {
   const { translateText } = useI18n();
   const [selectedDuration, setSelectedDuration] = useState("14");
   const [customDurationRequest, setCustomDurationRequest] = useState("");
@@ -77,7 +80,10 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
   );
   const feeTone = getBookFeeTone(book.feeCents);
   const isUnavailable = book.availableCopies === 0;
-  const customDurationAllowed = useMemo(() => allowCustomDuration, [allowCustomDuration]);
+  const customDurationAllowed = useMemo(
+    () => allowCustomDuration,
+    [allowCustomDuration],
+  );
   const memberBorrowingHref = `/books/${encodeURIComponent(book.id)}`;
   const borrowHref = isMember
     ? memberBorrowingHref
@@ -100,6 +106,15 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
     : hasAdminAccess
       ? "Mock admin sessions cannot borrow titles directly. Switch to a member session to continue into the borrowing flow."
       : "Borrowing actions require a member session. Guests can keep browsing publicly and sign in only when they are ready to borrow.";
+  const selectedDurationLabel =
+    borrowDurationOptions.find((option) => option.value === selectedDuration)
+      ?.label ?? "";
+  const borrowingSummaryItems = [
+    { label: "Duration", value: selectedDurationLabel },
+    { label: "Fee due onsite", value: feeLabel },
+    { label: "Availability", value: availabilityLabel },
+    { label: "Copy", value: "First available copy" },
+  ] as const;
 
   const handleBorrowRequest = (mode: "custom" | "predefined") => {
     if (!isMember || isUnavailable) {
@@ -158,27 +173,27 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
         description="Review availability, borrowing duration options, and onsite fee policy before placing a borrowing request."
         actions={
           <LinkButton href="/books" size="sm" variant="outline">
-              <ArrowLeft className="size-4" />
-              Back to catalog
+            <ArrowLeft className="size-4" />
+            Back to catalog
           </LinkButton>
         }
       />
 
-      <section className="grid gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(18rem,22rem)] xl:items-start">
-        <div className="grid gap-5 lg:grid-cols-[minmax(14rem,18rem)_minmax(0,1fr)] lg:items-start">
-          <div className="mx-auto w-full max-w-sm lg:mx-0">
-            <BookCoverArt
-              author={book.author}
-              coverLabel={book.coverLabel}
-              size="detail"
-              title={book.title}
-              tone={book.coverTone}
-            />
-          </div>
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_21rem] xl:items-start">
+        <div className="grid gap-6">
+          <article className="rounded-card border-border-subtle bg-card shadow-card overflow-hidden border">
+            <div className="grid lg:grid-cols-[minmax(14rem,18rem)_minmax(0,1fr)]">
+              <div className="border-border-subtle bg-muted/45 border-b p-5 sm:p-6 lg:border-e lg:border-b-0">
+                <BookCoverArt
+                  author={book.author}
+                  coverLabel={book.coverLabel}
+                  size="detail"
+                  title={book.title}
+                  tone={book.coverTone}
+                />
+              </div>
 
-          <div className="space-y-5">
-            <Card>
-              <CardHeader className="gap-4">
+              <div className="grid content-start gap-6 p-5 sm:p-6">
                 <div className="flex flex-wrap items-center gap-2">
                   <AvailabilityBadge
                     label={availabilityLabel}
@@ -192,94 +207,105 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
                 </div>
 
                 <div className="space-y-2">
-                  <CardTitle className="font-heading text-title text-balance lg:text-title-lg">
+                  <p className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
+                    {translateText("Catalog record")}
+                  </p>
+                  <h2 className="font-heading text-title text-foreground lg:text-title-lg font-semibold text-balance">
                     {book.title}
-                  </CardTitle>
-                  <CardDescription className="text-body">
-                    {book.author}
-                  </CardDescription>
+                  </h2>
+                  <p className="text-body text-text-secondary">{book.author}</p>
                 </div>
-              </CardHeader>
 
-              <CardContent className="grid gap-5">
-                <dl className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <dt className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
+                <dl className="border-border-subtle rounded-card grid gap-0 overflow-hidden border sm:grid-cols-3">
+                  <div className="border-border-subtle grid gap-1 border-b p-4 sm:border-e sm:border-b-0">
+                    <dt className="text-caption text-text-tertiary font-medium tracking-[0.16em] uppercase">
                       {translateText("Category")}
                     </dt>
                     <dd className="text-body text-foreground font-medium">
                       {translateText(book.category)}
                     </dd>
                   </div>
-                  <div className="space-y-1.5">
-                    <dt className="text-caption text-text-tertiary font-medium tracking-[0.18em] uppercase">
+                  <div className="border-border-subtle grid gap-1 border-b p-4 sm:border-e sm:border-b-0">
+                    <dt className="text-caption text-text-tertiary font-medium tracking-[0.16em] uppercase">
                       {translateText("Borrow fee")}
                     </dt>
                     <dd className="text-body text-foreground font-medium">
                       {feeLabel}
                     </dd>
                   </div>
+                  <div className="grid gap-1 p-4">
+                    <dt className="text-caption text-text-tertiary font-medium tracking-[0.16em] uppercase">
+                      {translateText("Availability")}
+                    </dt>
+                    <dd className="text-body text-foreground font-medium">
+                      {availabilityLabel}
+                    </dd>
+                  </div>
                 </dl>
 
                 <div className="space-y-2">
-                  <h2 className="text-title-sm text-foreground font-semibold">
+                  <h3 className="text-title-sm text-foreground font-semibold">
                     {translateText("Description")}
-                  </h2>
+                  </h3>
                   <p className="text-body text-text-secondary text-pretty">
                     {book.description}
                   </p>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
+          </article>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>{translateText("Borrowing details")}</CardTitle>
-                <CardDescription>
-                  {translateText(
-                    "Choose a standard duration or request a custom number of days for staff review.",
-                  )}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-5">
-                <BorrowDurationSelector
-                  description={translateText(
-                    "Predefined durations keep the selection quick on mobile while still scaling to larger screens.",
-                  )}
-                  label="Borrow duration"
-                  options={borrowDurationOptions}
-                  onValueChange={setSelectedDuration}
-                  value={selectedDuration}
-                />
+          <Card>
+            <CardHeader>
+              <CardTitle>{translateText("Borrowing details")}</CardTitle>
+              <CardDescription>
+                {translateText(
+                  "Choose a standard duration or request a custom number of days for staff review.",
+                )}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-5">
+              <BorrowDurationSelector
+                description={translateText(
+                  "Standard durations are fastest for staff confirmation.",
+                )}
+                label="Borrow duration"
+                options={borrowDurationOptions}
+                onValueChange={setSelectedDuration}
+                value={selectedDuration}
+              />
 
-                <label className="grid gap-1.5">
-                  <span className="text-label text-foreground font-medium">
-                    {translateText("Custom duration request")}
-                  </span>
-                  <Input
-                    disabled={!customDurationAllowed}
-                    inputMode="numeric"
-                    onChange={(event) =>
-                      setCustomDurationRequest(event.target.value)
-                    }
-                    placeholder={
-                      customDurationAllowed
-                        ? translateText("Request a custom number of days")
-                        : translateText("Custom requests are unavailable for this title")
-                    }
-                    value={customDurationRequest}
-                  />
-                  <span className="text-body-sm text-text-secondary">
-                    {customDurationAllowed
-                      ? translateText(
-                          "Leave blank to use the predefined option above. The first available copy is assigned automatically.",
+              <label className="grid gap-1.5">
+                <span className="text-label text-foreground font-medium">
+                  {translateText("Custom duration request")}
+                </span>
+                <Input
+                  disabled={!customDurationAllowed}
+                  inputMode="numeric"
+                  onChange={(event) =>
+                    setCustomDurationRequest(event.target.value)
+                  }
+                  placeholder={
+                    customDurationAllowed
+                      ? translateText("Request a custom number of days")
+                      : translateText(
+                          "Custom requests are unavailable for this title",
                         )
-                      : translateText("This title uses predefined borrowing durations only.")}
-                  </span>
-                </label>
-              </CardContent>
-            </Card>
-          </div>
+                  }
+                  value={customDurationRequest}
+                />
+                <span className="text-body-sm text-text-secondary">
+                  {customDurationAllowed
+                    ? translateText(
+                        "Leave blank to use the selected standard duration.",
+                      )
+                    : translateText(
+                        "This title uses predefined borrowing durations only.",
+                      )}
+                </span>
+              </label>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="xl:sticky xl:top-28">
@@ -293,9 +319,9 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
-              <div className="bg-elevated rounded-2xl border border-dashed border-black/5 p-4">
+              <div className="border-warning-border bg-warning-surface rounded-card border p-4">
                 <div className="flex items-start gap-3">
-                  <div className="bg-secondary text-primary flex size-10 shrink-0 items-center justify-center rounded-xl">
+                  <div className="bg-card text-warning rounded-card flex size-10 shrink-0 items-center justify-center shadow-xs">
                     <HandCoins className="size-4" />
                   </div>
                   <div className="space-y-1.5">
@@ -311,56 +337,40 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
                 </div>
               </div>
 
-              <div className="grid gap-3 rounded-2xl border border-dashed border-black/5 p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-body-sm text-text-secondary">
-                    {translateText("Selected duration")}
-                  </span>
-                  <span className="text-body text-foreground font-medium">
-                    {translateText(
-                      borrowDurationOptions.find(
-                        (option) => option.value === selectedDuration,
-                      )?.label ?? "",
-                    )}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-body-sm text-text-secondary">
-                    {translateText("Fee due onsite")}
-                  </span>
-                  <span className="text-body text-foreground font-medium">
-                    {feeLabel}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-body-sm text-text-secondary">
-                    {translateText("Availability")}
-                  </span>
-                  <span className="text-body text-foreground font-medium">
-                    {availabilityLabel}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-body-sm text-text-secondary">
-                    {translateText("Copy assignment")}
-                  </span>
-                  <span className="text-body text-foreground font-medium">
-                    {translateText("First available copy")}
-                  </span>
-                </div>
-              </div>
+              <dl className="border-border-subtle rounded-card border">
+                {borrowingSummaryItems.map((item) => (
+                  <div
+                    className="grid grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] items-start gap-3 border-b px-4 py-3 last:border-b-0"
+                    key={item.label}
+                  >
+                    <dt className="text-body-sm text-text-secondary">
+                      {translateText(item.label)}
+                    </dt>
+                    <dd className="text-body text-foreground min-w-0 text-end font-medium break-words">
+                      {translateText(item.value)}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
 
               {requestState.message ? (
                 <div
                   className={
                     requestState.status === "success"
-                      ? "border-success-border bg-success-surface text-success rounded-2xl border px-4 py-3"
-                      : "border-danger-border bg-danger-surface text-danger rounded-2xl border px-4 py-3"
+                      ? "border-success-border bg-success-surface text-success rounded-card border px-4 py-3"
+                      : "border-danger-border bg-danger-surface text-danger rounded-card border px-4 py-3"
                   }
                 >
-                  <p className="text-body-sm font-medium">{requestState.message}</p>
+                  <p className="text-body-sm font-medium">
+                    {requestState.message}
+                  </p>
                   {requestState.status === "success" ? (
-                    <LinkButton className="mt-3" href="/account/borrowings" size="sm" variant="outline">
+                    <LinkButton
+                      className="mt-3"
+                      href="/account/borrowings"
+                      size="sm"
+                      variant="outline"
+                    >
                       View My Borrowings
                     </LinkButton>
                   ) : null}
@@ -369,12 +379,18 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
 
               <div className="grid gap-3">
                 {isUnavailable ? (
-                  <Button disabled size="lg" type="button">
+                  <Button
+                    className="text-primary-foreground"
+                    disabled
+                    size="lg"
+                    type="button"
+                  >
                     <BookMarked className="size-4" />
                     {translateText("Currently unavailable")}
                   </Button>
                 ) : isMember ? (
                   <Button
+                    className="text-primary-foreground"
                     disabled={submittingMode !== null}
                     onClick={() => handleBorrowRequest("predefined")}
                     size="lg"
@@ -386,9 +402,13 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
                       : borrowPrimaryLabel}
                   </Button>
                 ) : (
-                  <LinkButton href={borrowHref} size="lg">
-                      <BookMarked className="size-4" />
-                      {borrowPrimaryLabel}
+                  <LinkButton
+                    className="text-primary-foreground"
+                    href={borrowHref}
+                    size="lg"
+                  >
+                    <BookMarked className="size-4" />
+                    {borrowPrimaryLabel}
                   </LinkButton>
                 )}
 
@@ -409,8 +429,8 @@ function BookDetailsModule({ allowCustomDuration, book }: BookDetailsModuleProps
                   </Button>
                 ) : (
                   <LinkButton href={borrowHref} size="lg" variant="outline">
-                      <Clock3 className="size-4" />
-                      {customDurationLabel}
+                    <Clock3 className="size-4" />
+                    {customDurationLabel}
                   </LinkButton>
                 )}
               </div>
@@ -436,11 +456,9 @@ function BookDetailsEmptyState() {
       />
 
       <EmptyState
-        action={
-          <LinkButton href="/books">Browse Books</LinkButton>
-        }
-        description="Try another book from the catalog grid. This state is rendered locally so it can be iterated on safely before any backend wiring exists."
-        title="Book not available in the mock catalog"
+        action={<LinkButton href="/books">Browse Books</LinkButton>}
+        description="Try another title from the catalog or return to the full collection."
+        title="Book not available"
       />
     </div>
   );

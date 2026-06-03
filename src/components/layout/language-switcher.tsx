@@ -38,8 +38,8 @@ function LanguageSwitcher() {
   }
 
   return (
-    <label className="grid gap-1.5">
-      <span className="text-caption text-text-tertiary hidden font-medium tracking-[0.18em] uppercase sm:inline">
+    <label className="relative block">
+      <span className="text-caption text-text-tertiary absolute start-0 -top-5 hidden font-medium tracking-[0.18em] uppercase sm:inline">
         {messages.ui.languageSwitcher.label}
       </span>
       <select

@@ -72,7 +72,7 @@ function BookCoverArt({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-2xl border border-black/5 shadow-xs",
+        "rounded-card border-border-subtle relative overflow-hidden border shadow-sm",
         coverTone.body,
         size === "detail" ? "p-5 sm:p-6" : "p-4",
         className,
@@ -81,6 +81,8 @@ function BookCoverArt({
       {...props}
     >
       <div className={cn("absolute inset-y-0 start-0 w-3", coverTone.accent)} />
+      <div className="absolute inset-x-5 top-5 h-px bg-white/60" />
+      <div className="absolute inset-y-0 end-0 w-5 bg-black/10" />
       <div
         className={cn(
           "flex h-full flex-col justify-between",

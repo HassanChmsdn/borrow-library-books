@@ -54,7 +54,7 @@ function PublicTopNavigation({
     <header
       data-slot="public-top-navigation"
       className={cn(
-        "border-border-subtle bg-background/95 supports-backdrop-filter:bg-background/80 sticky top-0 z-40 border-b backdrop-blur",
+        "border-border-subtle bg-card/95 supports-backdrop-filter:bg-card/90 sticky top-0 z-40 border-b shadow-xs backdrop-blur",
         className,
       )}
       {...props}
@@ -79,13 +79,17 @@ function PublicTopNavigation({
                       href={item.href}
                       aria-current={isCurrent ? "page" : undefined}
                       className={cn(
-                        "rounded-pill text-body-sm focus-visible:ring-ring/60 focus-visible:ring-offset-background inline-flex min-h-10 items-center gap-2 px-4 font-medium transition-[background-color,color,box-shadow] duration-200 focus-visible:ring-4 focus-visible:ring-offset-2 focus-visible:outline-none",
+                        "rounded-input text-body-sm focus-visible:ring-ring/60 focus-visible:ring-offset-background inline-flex min-h-10 items-center gap-2 px-4 font-medium transition-[background-color,color,box-shadow] duration-200 focus-visible:ring-4 focus-visible:ring-offset-2 focus-visible:outline-none",
                         isCurrent
                           ? "bg-primary text-primary-foreground shadow-sm"
                           : "text-text-secondary hover:bg-secondary hover:text-foreground",
                       )}
                     >
-                      <span>{typeof item.label === "string" ? translateText(item.label) : item.label}</span>
+                      <span>
+                        {typeof item.label === "string"
+                          ? translateText(item.label)
+                          : item.label}
+                      </span>
                       {item.badge ? (
                         <span
                           className={cn(
@@ -142,7 +146,7 @@ function PublicShell({
         utilitySlot={utilitySlot}
       />
 
-      <main className={cn("py-6 sm:py-8 lg:py-10", mainClassName)}>
+      <main className={cn("py-5 sm:py-7 lg:py-9", mainClassName)}>
         <ShellContainer className="gap-section flex flex-col">
           {header}
           {children}
