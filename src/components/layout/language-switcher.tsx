@@ -38,10 +38,7 @@ function LanguageSwitcher() {
   }
 
   return (
-    <label className="relative block">
-      <span className="text-caption text-text-tertiary absolute start-0 -top-5 hidden font-medium tracking-[0.18em] uppercase sm:inline">
-        {messages.ui.languageSwitcher.label}
-      </span>
+    <label className="block">
       <select
         aria-label={messages.ui.languageSwitcher.selectLabel}
         className={cn(
